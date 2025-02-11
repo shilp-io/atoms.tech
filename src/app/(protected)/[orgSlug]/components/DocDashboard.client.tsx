@@ -14,6 +14,7 @@ import { Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { Toolbar } from '@/components/custom/BlockCanvas/modern-toolbar';
+import { useDocumentBlocksAndRequirements } from '@/hooks/queries/useDocument';
 
 export default function DocDashboard() {
   const params = useParams();
@@ -21,11 +22,8 @@ export default function DocDashboard() {
   const { setBlocks } = useDocumentStore();
   const [isFlipped, setIsFlipped] = useState(false);
 
-  const { data: blocks, isLoading, error } = useQuery({
-    queryKey: queryKeys.blocks.byDocument(documentId),
-    queryFn: () => getDocumentBlocksAndRequirements(documentId),
-  });
-
+  const { data: blocks, isLoading, error } = useDocumentBlocksAndRequirements(documentId);
+  
   const { data: documentInfo } = useQuery({
     queryKey: queryKeys.documents.detail(documentId),
     queryFn: () => getDocumentData(documentId),

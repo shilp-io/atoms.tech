@@ -4,7 +4,7 @@ import { queryKeys } from '@/lib/constants/queryKeys';
 import { Document, Block } from '@/types/base/documents.types';
 import { QueryFilters } from '@/types/base/filters.types';
 import { buildQuery } from '@/lib/utils/queryFactory';
-import { getProjectDocuments } from '@/lib/db/client';
+import { getDocumentBlocksAndRequirements, getProjectDocuments } from '@/lib/db/client';
 
 
 export function useProjectDocuments(projectId: string) {
@@ -63,26 +63,11 @@ export function useUpdateDocument(documentId: string) {
     });
 }
 
-export function useDocumentBlocks(
-    documentId: string,
-    queryFilters?: Omit<QueryFilters, 'filters'>,
-) {
+export function useDocumentBlocksAndRequirements(documentId: string) {
     return useQuery({
         queryKey: queryKeys.blocks.byDocument(documentId),
-        queryFn: async () => {
-            const { data } = await buildQuery('blocks', {
-                ...queryFilters,
-                filters: [
-                    { field: 'document_id', operator: 'eq', value: documentId },
-                ],
-                sort: queryFilters?.sort || [
-                    { field: 'position', direction: 'asc' },
-                ],
-            });
-            return data;
-        },
-        enabled: !!documentId,
-    });
+        queryFn: () => getDocumentBlocksAndRequirements(documentId),
+      });    
 }
 
 export function useBlock(blockId: string) {

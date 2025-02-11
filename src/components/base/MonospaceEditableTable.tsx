@@ -165,6 +165,30 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
         setIsAddingNew(true);
     };
 
+    const handleSaveNewRow = async () => {
+        const newItem = editingData['new'];
+        if (!newItem) return;
+
+        try {
+            await onSave?.(newItem, true);
+            setIsAddingNew(false);
+            setEditingData(prev => {
+                const { new: _, ...rest } = prev;
+                return rest;
+            });
+        } catch (error) {
+            console.error('Failed to save new row:', error);
+        }
+    };
+
+    const handleCancelNewRow = () => {
+        setIsAddingNew(false);
+        setEditingData(prev => {
+            const { new: _, ...rest } = prev;
+            return rest;
+        });
+    };
+
     const renderCell = (item: T, column: EditableColumn<T>, rowIndex: number, colIndex: number) => {
         const isEditing = isEditMode || item.id === 'new';
         const value = isEditing ? editingData[item.id as string]?.[column.accessor] : item[column.accessor];
@@ -352,6 +376,36 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                                         )}
                                     </TableRow>
                                 ))}
+                                {/* New row being added */}
+                                {isAddingNew && (
+                                    <TableRow className="font-mono">
+                                        {columns.map((column, colIndex) => (
+                                            <TableCell
+                                                key={`new-${String(column.accessor)}`}
+                                            >
+                                                {renderCell({ id: 'new', ...editingData['new'] } as T, column, -1, colIndex)}
+                                            </TableCell>
+                                        ))}
+                                        <TableCell>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={handleSaveNewRow}
+                                                >
+                                                    <Check className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={handleCancelNewRow}
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                                 {/* Mock row for adding new items */}
                                 {!isAddingNew && (
                                     <TableRow 
