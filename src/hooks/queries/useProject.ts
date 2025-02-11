@@ -1,9 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { queryKeys } from '@/lib/constants/queryKeys';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Project } from '@/types/base/projects.types';
 import { ProjectSchema } from '@/types/validation/projects.validation';
 import { getUserProjects } from '@/lib/db/client';
+import { useQuery } from '@tanstack/react-query';
 
 export function useProject(projectId: string) {
     return useQuery({

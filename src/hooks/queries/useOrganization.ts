@@ -1,13 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
 // import { supabase } from '@/lib/supabase/supabaseClient'
 import { queryKeys } from '@/lib/constants/queryKeys';
-import {
-    Organization,
-    OrganizationMembers,
-} from '@/types/base/organizations.types';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { OrganizationSchema } from '@/types/validation/organizations.validation';
 import { getUserOrganizations } from '@/lib/db/client';
+import { useQuery } from '@tanstack/react-query';
 
 export function useOrganization(orgId: string) {
     return useQuery({
@@ -34,7 +30,7 @@ export function useOrganizations(organizationIds?: string[]) {
     return useQuery({
         queryKey: queryKeys.organizations.list(organizationIds || {}),
         queryFn: async () => {
-            let query = supabase
+            const query = supabase
                 .from('organizations')
                 .select('*')
                 .in('id', organizationIds || [])
