@@ -1,7 +1,4 @@
-import DashboardView, {
-    Column,
-    SupportedDataTypes,
-} from '@/components/base/DashboardView';
+import DashboardView, { Column } from '@/components/base/DashboardView';
 import { useUser } from '@/lib/providers/user.provider';
 <<<<<<< HEAD:src/app/(protected)/[orgSlug]/components/OrgDashboard.client.tsx
 import { getUserProjects } from '@/lib/db/client';
@@ -24,21 +21,20 @@ export default function OrgDashboard() {
     const { setCurrentProjectId } = useContextStore();
     const { data, isLoading: projectsLoading } = useUserProjects(profile?.id || '', profile?.current_organization_id || '');
 
-    const columns: Column[] = [
+    const columns: Column<Project>[] = [
         {
             header: 'Name',
-            accessor: (item: SupportedDataTypes) => (item as Project).name,
+            accessor: (item: Project) => (item as Project).name,
         },
         {
             header: 'Status',
-            accessor: (item: SupportedDataTypes) =>
-                (item as Project).status || 'N/A',
+            accessor: (item: Project) => (item as Project).status || 'N/A',
         },
     ];
 
-    const handleRowClick = (item: SupportedDataTypes) => {
-        setCurrentProjectId((item as Project).id);
-        router.push(`/project/${(item as Project).slug}`);
+    const handleRowClick = (item: Project) => {
+        setCurrentProjectId(item.id);
+        router.push(`/project/${item.slug}`);
     };
 
     return (
