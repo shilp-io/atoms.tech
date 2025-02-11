@@ -27,7 +27,6 @@ import { useProjectStore } from '@/lib/store/project.store';
 import { ProjectStatus, Visibility } from '@/types/base/enums.types';
 import { useCreateProject } from '@/hooks/mutations/useProjectMutations';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
 
 const projectFormSchema = z.object({
     name: z.string().min(1, 'Project name is required'),

@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { Project } from '@/types/base/projects.types';
 import { ProjectSchema } from '@/types/validation/projects.validation';
+import { getUserProjects } from '@/lib/db/client';
 
 export function useProject(projectId: string) {
     return useQuery({
@@ -60,20 +61,11 @@ export function useOrganizationProjects(organizationId: string) {
     });
 }
 
-export function useUserProjects(userId: string) {
+export function useUserProjects(userId: string, orgId: string) {
     return useQuery({
-        queryKey: queryKeys.projects.byUser(userId),
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('owned_by', userId)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            return data as Project[];
-        },
-        enabled: !!userId,
+        queryKey: queryKeys.projects.byOrganization(orgId),
+        queryFn: async () => getUserProjects(userId, orgId),
+        enabled: !!userId && !!orgId,
     });
 }
 

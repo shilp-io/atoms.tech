@@ -7,6 +7,7 @@ import {
     OrganizationMembers,
 } from '@/types/base/organizations.types';
 import { OrganizationSchema } from '@/types/validation/organizations.validation';
+import { getUserOrganizations } from '@/lib/db/client';
 
 export function useOrganization(orgId: string) {
     return useQuery({
@@ -109,5 +110,14 @@ export function useOrganizationsByMembership(userId: string) {
             return organizations.map((org) => OrganizationSchema.parse(org));
         },
         enabled: !!userId, // Only run the query if userId is provided
+    });
+}
+
+export function useOrgByUser(userId: string) {
+    return useQuery({
+        queryKey: queryKeys.organizations.all,
+        queryFn: async () => {
+            return await getUserOrganizations(userId);
+        },
     });
 }

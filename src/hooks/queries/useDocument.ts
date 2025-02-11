@@ -4,6 +4,20 @@ import { queryKeys } from '@/lib/constants/queryKeys';
 import { Document, Block } from '@/types/base/documents.types';
 import { QueryFilters } from '@/types/base/filters.types';
 import { buildQuery } from '@/lib/utils/queryFactory';
+import { getProjectDocuments } from '@/lib/db/client';
+
+
+export function useProjectDocuments(projectId: string) {
+    return useQuery({
+        queryKey: queryKeys.documents.byProject(projectId),
+        queryFn: async () => {
+            const data = await getProjectDocuments(projectId);
+            if (!data) throw new Error('No documents found');
+            return data;
+        },
+        enabled: !!projectId,
+    });
+}
 
 export function useDocument(documentId: string) {
     return useQuery({
@@ -13,6 +27,7 @@ export function useDocument(documentId: string) {
                 .from('documents')
                 .select('*')
                 .eq('id', documentId)
+                .eq('is_deleted', false)
                 .single();
 
             if (error) throw error;

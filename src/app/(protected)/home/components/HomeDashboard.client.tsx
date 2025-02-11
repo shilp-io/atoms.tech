@@ -5,7 +5,7 @@ import DashboardView, {
     SupportedDataTypes,
 } from '@/components/base/DashboardView';
 import { Organization } from '@/types';
-import { useOrganizationsByMembership } from '@/hooks/queries/useOrganization';
+import { useOrgByUser } from '@/hooks/queries/useOrganization';
 import { useRouter } from 'next/navigation';
 import { useContextStore } from '@/lib/store/context.store';
 import RenderCounter from '@/components/RerenderCount';
@@ -16,9 +16,7 @@ export default function HomeDashboard() {
     const router = useRouter();
     const { setCurrentUserId, setCurrentOrgId } = useContextStore();
     const { setOrganization } = useOrganization();
-    const { data: organizations, isLoading } = useOrganizationsByMembership(
-        user?.id || '',
-    );
+    const { data: organizations, isLoading } = useOrgByUser(user?.id || '');
 
     const columns: Column[] = [
         {

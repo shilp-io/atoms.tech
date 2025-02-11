@@ -1,17 +1,22 @@
+'use server';
+
 import { UserProvider } from '@/lib/providers/user.provider';
-import { getAuthUser, getUserProfile } from '@/lib/db';
+import { OrganizationProvider } from '@/lib/providers/organization.provider';
+import { getAuthUserServer, getUserProfileServer } from '@/lib/db/server';
 
 export default async function ProtectedLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    const user = await getAuthUser();
-    const profile = await getUserProfile(user.user.id);
+    const user = await getAuthUserServer();
+    const profile = await getUserProfileServer(user.user.id);
 
     return (
         <UserProvider initialUser={user.user} initialProfile={profile}>
-            {children}
+            <OrganizationProvider>
+                {children}
+            </OrganizationProvider>
         </UserProvider>
     );
 }
