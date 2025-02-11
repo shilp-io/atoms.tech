@@ -6,11 +6,12 @@ import DashboardView, {
 } from '@/components/base/DashboardView';
 import { Organization } from '@/types';
 import { useOrgByUser } from '@/hooks/queries/useOrganization';
-import { useRouter } from 'next/navigation';
 import { useContextStore } from '@/lib/store/context.store';
 import RenderCounter from '@/components/custom/RerenderCount';
 import { useUser } from '@/lib/providers/user.provider';
 import { useOrganization } from '@/lib/providers/organization.provider';
+import { useRouter } from 'next/navigation';
+
 export default function HomeDashboard() {
     const { user } = useUser();
     const router = useRouter();
@@ -42,7 +43,7 @@ export default function HomeDashboard() {
     const handleRowClick = (item: SupportedDataTypes) => {
         setCurrentUserId(user?.id || '');
         setOrganization(item as Organization);
-        router.push(`/${(item as Organization).slug}`);
+        router.push(`/org/${(item as Organization).slug}`);
     };
 
     return (
