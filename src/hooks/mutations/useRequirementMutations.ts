@@ -30,7 +30,7 @@ export function useCreateRequirement() {
                     description: input.description,
                     document_id: input.document_id,
                     enchanced_requirement: input.enchanced_requirement,
-                    external_id: input.external_id,
+                    external_id: 'REQ-001',
                     format: input.format,
                     level: input.level,
                     name: input.name,
@@ -40,6 +40,7 @@ export function useCreateRequirement() {
                     tags: input.tags,
                     created_by: input.created_by,
                     updated_by: input.updated_by,
+                    version: 1,
                 })
                 .select()
                 .single();
@@ -54,57 +55,6 @@ export function useCreateRequirement() {
             }
 
             return RequirementSchema.parse(requirement);
-        },
-        onMutate: async (newRequirement) => {
-            // Cancel any outgoing refetches
-            await queryClient.cancelQueries({ 
-                queryKey: queryKeys.requirements.byBlock(newRequirement.block_id)
-            });
-
-            // Snapshot the previous value
-            const previousRequirements = queryClient.getQueryData<Requirement[]>(
-                queryKeys.requirements.byBlock(newRequirement.block_id)
-            );
-
-            // Optimistically update the cache
-            const optimisticRequirement = {
-                ...newRequirement,
-                id: `temp-${Date.now()}`,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                version: 1,
-            } as Requirement;
-
-            queryClient.setQueryData<Requirement[]>(
-                queryKeys.requirements.byBlock(newRequirement.block_id),
-                old => [...(old || []), optimisticRequirement]
-            );
-
-            // Also update the document's block content
-            const block = queryClient.getQueryData<any>(
-                queryKeys.blocks.detail(newRequirement.block_id)
-            );
-            if (block) {
-                const updatedContent = {
-                    ...block.content,
-                    requirements: [...(block.content.requirements || []), optimisticRequirement],
-                };
-                queryClient.setQueryData(
-                    queryKeys.blocks.detail(newRequirement.block_id),
-                    { ...block, content: updatedContent }
-                );
-            }
-
-            return { previousRequirements };
-        },
-        onError: (err, newRequirement, context) => {
-            // Revert the optimistic update
-            if (context?.previousRequirements) {
-                queryClient.setQueryData(
-                    queryKeys.requirements.byBlock(newRequirement.block_id),
-                    context.previousRequirements
-                );
-            }
         },
         onSuccess: (data) => {
             invalidateRequirementQueries(queryClient, data);
@@ -140,60 +90,6 @@ export function useUpdateRequirement() {
 
             return RequirementSchema.parse(requirement);
         },
-        onMutate: async ({ id, ...updates }) => {
-            // Cancel any outgoing refetches
-            await queryClient.cancelQueries({ 
-                queryKey: queryKeys.requirements.detail(id)
-            });
-
-            // Snapshot the previous value
-            const previousRequirement = queryClient.getQueryData<Requirement>(
-                queryKeys.requirements.detail(id)
-            );
-
-            if (!previousRequirement) return { previousRequirement: null };
-
-            // Optimistically update the cache
-            const optimisticRequirement = {
-                ...previousRequirement,
-                ...updates,
-                updated_at: new Date().toISOString(),
-            };
-
-            queryClient.setQueryData(
-                queryKeys.requirements.detail(id),
-                optimisticRequirement
-            );
-
-            // Also update in the block's requirements list
-            const blockId = previousRequirement.block_id;
-            const block = queryClient.getQueryData<any>(
-                queryKeys.blocks.detail(blockId)
-            );
-            if (block) {
-                const updatedContent = {
-                    ...block.content,
-                    requirements: block.content.requirements.map((req: Requirement) =>
-                        req.id === id ? optimisticRequirement : req
-                    ),
-                };
-                queryClient.setQueryData(
-                    queryKeys.blocks.detail(blockId),
-                    { ...block, content: updatedContent }
-                );
-            }
-
-            return { previousRequirement };
-        },
-        onError: (err, { id }, context) => {
-            // Revert the optimistic update
-            if (context?.previousRequirement) {
-                queryClient.setQueryData(
-                    queryKeys.requirements.detail(id),
-                    context.previousRequirement
-                );
-            }
-        },
         onSuccess: (data) => {
             invalidateRequirementQueries(queryClient, data);
         },
@@ -228,54 +124,6 @@ export function useDeleteRequirement() {
             }
 
             return RequirementSchema.parse(requirement);
-        },
-        onMutate: async ({ id }) => {
-            // Cancel any outgoing refetches
-            await queryClient.cancelQueries({ 
-                queryKey: queryKeys.requirements.detail(id)
-            });
-
-            // Snapshot the previous value
-            const previousRequirement = queryClient.getQueryData<Requirement>(
-                queryKeys.requirements.detail(id)
-            );
-
-            if (!previousRequirement) return { previousRequirement: null };
-
-            // Optimistically update the cache
-            queryClient.setQueryData<Requirement[]>(
-                queryKeys.requirements.list({}),
-                old => old?.filter(req => req.id !== id) || []
-            );
-
-            // Also update in the block's requirements list
-            const blockId = previousRequirement.block_id;
-            const block = queryClient.getQueryData<any>(
-                queryKeys.blocks.detail(blockId)
-            );
-            if (block) {
-                const updatedContent = {
-                    ...block.content,
-                    requirements: block.content.requirements.filter(
-                        (req: Requirement) => req.id !== id
-                    ),
-                };
-                queryClient.setQueryData(
-                    queryKeys.blocks.detail(blockId),
-                    { ...block, content: updatedContent }
-                );
-            }
-
-            return { previousRequirement };
-        },
-        onError: (err, { id }, context) => {
-            // Revert the optimistic update
-            if (context?.previousRequirement) {
-                queryClient.setQueryData(
-                    queryKeys.requirements.detail(id),
-                    context.previousRequirement
-                );
-            }
         },
         onSuccess: (data) => {
             invalidateRequirementQueries(queryClient, data);

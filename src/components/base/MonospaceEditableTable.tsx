@@ -57,6 +57,7 @@ interface MonospaceEditableTableProps<T extends Record<string, any>> {
     emptyMessage?: string;
     showFilter?: boolean;
     filterComponent?: React.ReactNode;
+    isEditMode?: boolean;
 }
 
 export function MonospaceEditableTable<T extends Record<string, any>>({
@@ -68,15 +69,24 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
     emptyMessage = 'No items found.',
     showFilter = true,
     filterComponent,
+    isEditMode = false,
 }: MonospaceEditableTableProps<T>) {
     const [sortKey, setSortKey] = React.useState<keyof T | null>(null);
     const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
     const [hoveredCell, setHoveredCell] = React.useState<{ row: number; col: number } | null>(null);
-    const [isEditMode, setIsEditMode] = React.useState(false);
     const [editingData, setEditingData] = React.useState<Record<string, T>>({});
     const [isAddingNew, setIsAddingNew] = React.useState(false);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = React.useState(false);
     const [itemToDelete, setItemToDelete] = React.useState<T | null>(null);
+    const [editingTimeouts, setEditingTimeouts] = React.useState<Record<string, NodeJS.Timeout>>({});
+    const previousDataRef = React.useRef<T[]>([]);
+
+    // Clear all editing timeouts on unmount
+    React.useEffect(() => {
+        return () => {
+            Object.values(editingTimeouts).forEach(timeout => clearTimeout(timeout));
+        };
+    }, [editingTimeouts]);
 
     const sortedData = React.useMemo(() => {
         return [...data].sort((a, b) => {
@@ -89,21 +99,36 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
         });
     }, [data, sortKey, sortOrder]);
 
-    const handleEditModeToggle = () => {
-        if (isEditMode) {
-            // Exit edit mode
-            setIsEditMode(false);
-            setEditingData({});
-        } else {
+    // Update editing data when data changes or edit mode is toggled
+    React.useEffect(() => {
+        // Skip if data hasn't changed and we're not toggling edit mode
+        if (
+            JSON.stringify(data) === JSON.stringify(previousDataRef.current) &&
+            Object.keys(editingData).length > 0 === isEditMode
+        ) {
+            return;
+        }
+
+        previousDataRef.current = data;
+
+        if (isEditMode && data.length > 0) {
             // Enter edit mode - initialize editing data for all rows
-            const initialEditData = sortedData.reduce((acc, item) => {
-                acc[item.id as string] = { ...item };
+            const initialEditData = data.reduce((acc, item) => {
+                if (item.id) { // Only initialize if item has an id
+                    acc[item.id as string] = { ...item };
+                }
                 return acc;
             }, {} as Record<string, T>);
             setEditingData(initialEditData);
-            setIsEditMode(true);
+        } else if (!isEditMode) {
+            // Only clear editing data when exiting edit mode
+            setEditingData({});
+            setIsAddingNew(false);
+            // Clear all pending timeouts
+            Object.values(editingTimeouts).forEach(timeout => clearTimeout(timeout));
+            setEditingTimeouts({});
         }
-    };
+    }, [isEditMode, data]);
 
     const handleRowSave = async (item: T) => {
         const editedItem = editingData[item.id as string];
@@ -139,6 +164,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
     };
 
     const handleCellChange = (itemId: string, accessor: keyof T, value: any) => {
+        // Update local state immediately
         setEditingData(prev => ({
             ...prev,
             [itemId]: {
@@ -146,17 +172,71 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                 [accessor]: value
             }
         }));
+
+        // Don't auto-save if this is a new row
+        if (itemId === 'new') return;
+
+        // Clear existing timeout for this item if it exists
+        if (editingTimeouts[itemId]) {
+            clearTimeout(editingTimeouts[itemId]);
+        }
+
+        // Set new timeout for debounced save
+        const timeoutId = setTimeout(async () => {
+            try {
+                const editedItem = {
+                    ...editingData[itemId],
+                    [accessor]: value
+                };
+                
+                const savedItem = await onSave?.(editedItem, false);
+                
+                // Update editing data with saved values
+                if (savedItem) {
+                    setEditingData(prev => ({
+                        ...prev,
+                        [itemId]: savedItem
+                    }));
+                }
+                
+                // Clear the timeout from state after successful save
+                setEditingTimeouts(prev => {
+                    const { [itemId]: _, ...rest } = prev;
+                    return rest;
+                });
+            } catch (error) {
+                console.error('Failed to save:', error);
+            }
+        }, 500); // 500ms debounce
+
+        // Store the new timeout
+        setEditingTimeouts(prev => ({
+            ...prev,
+            [itemId]: timeoutId
+        }));
     };
 
     const handleMockRowClick = () => {
         const newItem = columns.reduce((acc, col) => {
-            if (col.type === 'select' && col.options?.length) {
-                acc[col.accessor] = col.options[0];
-            } else {
-                acc[col.accessor] = '';
+            switch (col.type) {
+                case 'select':
+                    acc[col.accessor] = col.options?.[0] ?? '';
+                    break;
+                case 'text':
+                    acc[col.accessor] = '';
+                    break;
+                case 'number':
+                    acc[col.accessor] = '0';
+                    break;
+                case 'date':
+                    acc[col.accessor] = new Date().toISOString().split('T')[0];
+                    break;
+                default:
+                    acc[col.accessor] = '';
             }
             return acc;
         }, {} as any);
+        
         newItem.id = 'new';
         setEditingData(prev => ({
             ...prev,
@@ -170,7 +250,11 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
         if (!newItem) return;
 
         try {
-            await onSave?.(newItem, true);
+            // Remove the temporary id before saving
+            const { id, ...itemWithoutId } = newItem;
+            await onSave?.(itemWithoutId as T, true);
+            
+            // Clear editing state after successful save
             setIsAddingNew(false);
             setEditingData(prev => {
                 const { new: _, ...rest } = prev;
@@ -199,7 +283,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                 case 'select':
                     return (
                         <Select
-                            value={value as string}
+                            value={String(value ?? '')}
                             onValueChange={(value) => handleCellChange(item.id as string, column.accessor, value)}
                         >
                             <SelectTrigger>
@@ -218,7 +302,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                     return (
                         <Input
                             type="number"
-                            value={value as string}
+                            value={String(value ?? '')}
                             onChange={(e) => handleCellChange(item.id as string, column.accessor, e.target.value)}
                             data-editing="true"
                         />
@@ -227,7 +311,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                     return (
                         <Input
                             type="date"
-                            value={value as string}
+                            value={String(value ?? '')}
                             onChange={(e) => handleCellChange(item.id as string, column.accessor, e.target.value)}
                             data-editing="true"
                         />
@@ -235,7 +319,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                 default:
                     return (
                         <Input
-                            value={value as string}
+                            value={String(value ?? '')}
                             onChange={(e) => handleCellChange(item.id as string, column.accessor, e.target.value)}
                             data-editing="true"
                         />
@@ -250,7 +334,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                     isHovered && 'bg-accent/50'
                 )}
             >
-                {value}
+                {value ?? ''}
             </div>
         );
     };
@@ -284,13 +368,13 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                     )}
                     <div className="flex gap-2">
                         <Button
-                            onClick={handleEditModeToggle}
+                            onClick={handleMockRowClick}
                             variant="outline"
                             size="sm"
                             className="inline-flex items-center"
                         >
-                            <Edit2 className="h-4 w-4 mr-2" />
-                            {isEditMode ? 'Exit Edit Mode' : 'Edit All'}
+                            <Plus className="h-4 w-4 mr-2" />
+                            New Row
                         </Button>
                     </div>
                 </div>
@@ -357,13 +441,6 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                                         {isEditMode && (
                                             <TableCell>
                                                 <div className="flex gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        onClick={() => handleRowSave(item)}
-                                                    >
-                                                        <Check className="h-4 w-4" />
-                                                    </Button>
                                                     <Button
                                                         size="sm"
                                                         variant="ghost"

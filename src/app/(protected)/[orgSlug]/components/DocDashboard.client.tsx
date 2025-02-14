@@ -4,7 +4,7 @@ import { BlockCanvas } from '@/components/custom/BlockCanvas';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/constants/queryKeys';
-import { getDocumentBlocksAndRequirements, getDocumentData } from '@/lib/db/client';
+import { getDocumentData } from '@/lib/db/client';
 import { useDocumentStore } from '@/lib/store/document.store';
 import { useEffect, useState } from 'react';
 import { Block } from '@/types/base/documents.types';
@@ -13,16 +13,13 @@ import { Card } from '@/components/ui/card';
 import { Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { Toolbar } from '@/components/custom/BlockCanvas/modern-toolbar';
-import { useDocumentBlocksAndRequirements } from '@/hooks/queries/useDocument';
+import { Toolbar } from '@/components/custom/BlockCanvas/components/FormatToolbar';
 
 export default function DocDashboard() {
   const params = useParams();
   const documentId = params.documentId as string;
-  const { setBlocks } = useDocumentStore();
+  const { blocks } = useDocumentStore();
   const [isFlipped, setIsFlipped] = useState(false);
-
-  const { data: blocks, isLoading, error } = useDocumentBlocksAndRequirements(documentId);
   
   const { data: documentInfo } = useQuery({
     queryKey: queryKeys.documents.detail(documentId),
@@ -31,24 +28,10 @@ export default function DocDashboard() {
 
   const stats = {
     total: blocks?.length || 0,
-    completion: blocks?.length ? Math.round((blocks.filter(b => b.status === 'completed').length / blocks.length) * 100) : 0,
-    highPriority: blocks?.filter(b => b.priority === 'high').length || 0,
-    completed: blocks?.filter(b => b.status === 'active').length || 0
+    completion: blocks?.length ? Math.round((blocks.filter(b => (b.content as any)?.status === 'completed').length / blocks.length) * 100) : 0,
+    highPriority: blocks?.filter(b => (b.content as any)?.priority === 'high').length || 0,
+    completed: blocks?.filter(b => (b.content as any)?.status === 'active').length || 0
   };
-
-  useEffect(() => {
-    if (blocks) {
-      setBlocks(blocks as Block[]);
-    }
-  }, [blocks, setBlocks]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading document: {error.message}</div>;
-  }
 
   if (!blocks) {
     return (
@@ -155,16 +138,9 @@ export default function DocDashboard() {
       <Toolbar />
       <br />
       {/* Canvas */}
-      {blocks && blocks.length === 0 ? (
-        <div>
-          Fresh Canvas, add a block to get started.
-          <BlockCanvas documentId={documentId} />
-        </div>
-      ) : (
-        <div>
-          <BlockCanvas documentId={documentId} />
-        </div>
-      )}
+      <div>
+        <BlockCanvas documentId={documentId} />
+      </div>
     </div>
   );
 }
