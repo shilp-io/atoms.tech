@@ -6,14 +6,11 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getDocumentData } from '@/lib/db/client';
 import { useDocumentStore } from '@/lib/store/document.store';
-import { useEffect, useState } from 'react';
-import { Block } from '@/types/base/documents.types';
+import { useState } from 'react';
 import { CalendarDays, GitBranch, FileText, Activity, BarChart3, ListTodo } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
-import { Toolbar } from '@/components/custom/BlockCanvas/components/FormatToolbar';
 
 export default function DocDashboard() {
   const params = useParams();
@@ -135,7 +132,6 @@ export default function DocDashboard() {
         </motion.div>
       </motion.div>
 
-      <Toolbar />
       <br />
       {/* Canvas */}
       <div>

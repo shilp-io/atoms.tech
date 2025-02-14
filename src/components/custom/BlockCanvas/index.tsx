@@ -102,6 +102,15 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     }
   };
 
+  const toggleEditMode = () => {
+    const newEditMode = !isEditMode;
+    setIsEditMode(newEditMode);
+    // Clear block selection when exiting edit mode
+    if (!newEditMode) {
+      setSelectedBlockId(null);
+    }
+  };
+
   // Don't render blocks until they're loaded
   if (isLoading) {
     return (
@@ -156,7 +165,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
 
       <EditModeToggle
         isEditMode={isEditMode}
-        onToggle={() => setIsEditMode(!isEditMode)}
+        onToggle={toggleEditMode}
       />
     </div>
   );
