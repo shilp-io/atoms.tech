@@ -8,7 +8,7 @@ import { Organization } from '@/types';
 import { useOrgByUser } from '@/hooks/queries/useOrganization';
 import { useRouter } from 'next/navigation';
 import { useContextStore } from '@/lib/store/context.store';
-import RenderCounter from '@/components/RerenderCount';
+import RenderCounter from '@/components/custom/RerenderCount';
 import { useUser } from '@/lib/providers/user.provider';
 import { useOrganization } from '@/lib/providers/organization.provider';
 export default function HomeDashboard() {

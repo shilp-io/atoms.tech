@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { CaretSortIcon } from '@radix-ui/react-icons';
-import { motion, LayoutGroup } from 'framer-motion';
+import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
 import { Filter, Plus, Check, X, Edit2, Trash2 } from 'lucide-react';
 import {
     Table,
@@ -13,7 +13,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -34,6 +33,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { transitionConfig } from '@/lib/utils/animations';
 import { cn } from '@/lib/utils';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export type EditableColumnType = 'text' | 'select' | 'number' | 'date';
 
@@ -60,6 +65,60 @@ interface MonospaceEditableTableProps<T extends Record<string, any>> {
     isEditMode?: boolean;
 }
 
+interface TableSideMenuProps {
+    showFilter?: boolean;
+    filterComponent?: React.ReactNode;
+    onNewRow: () => void;
+}
+
+const TableSideMenu = ({ showFilter, filterComponent, onNewRow }: TableSideMenuProps) => {
+    return (
+        <motion.div
+            initial={{ opacity: 0, x: 0 }}
+            animate={{ opacity: 1, x: -42 }}
+            exit={{ opacity: 0, x: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            className="absolute left-0 top-0 h-full flex items-center"
+        >
+            <TooltipProvider delayDuration={0}>
+                <div className="flex flex-col gap-0.5 bg-background border-y border-l rounded-l-md shadow-lg">
+                    {showFilter && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-8 w-8 p-0 rounded-none hover:bg-accent"
+                                >
+                                    <Filter className="h-3.5 w-3.5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="left" sideOffset={5}>
+                                <p>Filter table</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                onClick={onNewRow}
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-none hover:bg-accent"
+                            >
+                                <Plus className="h-3.5 w-3.5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" sideOffset={5}>
+                            <p>Add new row</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </div>
+            </TooltipProvider>
+        </motion.div>
+    );
+};
+
 export function MonospaceEditableTable<T extends Record<string, any>>({
     data,
     columns,
@@ -80,6 +139,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
     const [itemToDelete, setItemToDelete] = React.useState<T | null>(null);
     const [editingTimeouts, setEditingTimeouts] = React.useState<Record<string, NodeJS.Timeout>>({});
     const previousDataRef = React.useRef<T[]>([]);
+    const [isHoveringTable, setIsHoveringTable] = React.useState(false);
 
     // Clear all editing timeouts on unmount
     React.useEffect(() => {
@@ -330,7 +390,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
         return (
             <div
                 className={cn(
-                    'p-2 rounded transition-colors',
+                    'py-0.5 px-1 rounded transition-colors',
                     isHovered && 'bg-accent/50'
                 )}
             >
@@ -354,168 +414,163 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
 
     return (
         <LayoutGroup>
-            <motion.div className="relative space-y-4" layout transition={transitionConfig}>
-                <div className="flex justify-between items-center">
-                    {showFilter && (
-                        <div className="bg-background rounded-lg">
-                            {filterComponent || (
-                                <Button variant="outline" size="sm" className="inline-flex items-center">
-                                    <Filter className="h-4 w-4 mr-2" />
-                                    Filter
-                                </Button>
+            <motion.div className="relative" layout transition={transitionConfig}>
+                <div className="relative">
+                    <div 
+                        className="relative overflow-visible font-mono group"
+                        onMouseEnter={() => !isEditMode && setIsHoveringTable(true)}
+                        onMouseLeave={() => !isEditMode && setIsHoveringTable(false)}
+                    >
+                        {/* Slide-out Controls */}
+                        <AnimatePresence>
+                            {isHoveringTable && !isEditMode && (
+                                <TableSideMenu
+                                    showFilter={showFilter}
+                                    filterComponent={filterComponent}
+                                    onNewRow={handleMockRowClick}
+                                />
                             )}
-                        </div>
-                    )}
-                    <div className="flex gap-2">
-                        <Button
-                            onClick={handleMockRowClick}
-                            variant="outline"
-                            size="sm"
-                            className="inline-flex items-center"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Row
-                        </Button>
-                    </div>
-                </div>
+                        </AnimatePresence>
 
-                <div className="relative overflow-hidden font-mono border rounded-lg">
-                    {sortedData.length === 0 && !isAddingNew ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                            {emptyMessage}
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    {columns.map((column, index) => (
-                                        <TableHead
-                                            key={column.header}
-                                            style={{
-                                                width: column.width ? `${column.width}px` : undefined,
-                                            }}
-                                        >
-                                            <Button
-                                                variant="ghost"
-                                                onClick={() => {
-                                                    if (column.isSortable) {
-                                                        if (sortKey === column.accessor) {
-                                                            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-                                                        } else {
-                                                            setSortKey(column.accessor);
-                                                            setSortOrder('asc');
-                                                        }
-                                                    }
-                                                }}
-                                                className={cn(
-                                                    'h-8 text-left font-medium',
-                                                    column.isSortable && 'hover:bg-accent hover:text-accent-foreground cursor-pointer'
-                                                )}
-                                                disabled={!column.isSortable}
-                                            >
-                                                {column.header}
-                                                {column.isSortable && (
-                                                    <CaretSortIcon className="ml-2 h-4 w-4" />
-                                                )}
-                                            </Button>
-                                        </TableHead>
-                                    ))}
-                                    {isEditMode && <TableHead style={{ width: '100px' }}>Actions</TableHead>}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {sortedData.map((item, rowIndex) => (
-                                    <TableRow
-                                        key={item.id}
-                                        className="font-mono"
-                                    >
-                                        {columns.map((column, colIndex) => (
-                                            <TableCell
-                                                key={`${String(item.id)}-${String(column.accessor)}`}
-                                                onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
-                                                onMouseLeave={() => setHoveredCell(null)}
-                                            >
-                                                {renderCell(item, column, rowIndex, colIndex)}
-                                            </TableCell>
-                                        ))}
-                                        {isEditMode && (
-                                            <TableCell>
-                                                <div className="flex gap-2">
+                        {sortedData.length === 0 && !isAddingNew ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                                {emptyMessage}
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <Table className="[&_tr:last-child_td]:border-b-2 [&_tr]:border-b [&_td]:py-1 [&_th]:py-1 [&_td]:border-r [&_td:last-child]:border-r-0 [&_th]:border-r [&_th:last-child]:border-r-0">
+                                    <TableHeader>
+                                        <TableRow>
+                                            {columns.map((column, index) => (
+                                                <TableHead
+                                                    key={column.header}
+                                                    style={{
+                                                        width: column.width ? `${column.width}px` : undefined,
+                                                    }}
+                                                >
                                                     <Button
-                                                        size="sm"
                                                         variant="ghost"
-                                                        onClick={() => handleDeleteClick(item)}
+                                                        onClick={() => {
+                                                            if (column.isSortable) {
+                                                                if (sortKey === column.accessor) {
+                                                                    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                                                                } else {
+                                                                    setSortKey(column.accessor);
+                                                                    setSortOrder('asc');
+                                                                }
+                                                            }
+                                                        }}
+                                                        className={cn(
+                                                            'h-8 text-left font-medium',
+                                                            column.isSortable && 'hover:bg-accent hover:text-accent-foreground cursor-pointer'
+                                                        )}
+                                                        disabled={!column.isSortable}
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
+                                                        {column.header}
+                                                        {column.isSortable && (
+                                                            <CaretSortIcon className="ml-2 h-4 w-4" />
+                                                        )}
                                                     </Button>
-                                                </div>
-                                            </TableCell>
-                                        )}
-                                    </TableRow>
-                                ))}
-                                {/* New row being added */}
-                                {isAddingNew && (
-                                    <TableRow className="font-mono">
-                                        {columns.map((column, colIndex) => (
-                                            <TableCell
-                                                key={`new-${String(column.accessor)}`}
+                                                </TableHead>
+                                            ))}
+                                            {isEditMode && <TableHead style={{ width: '100px' }}>Actions</TableHead>}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {sortedData.map((item, rowIndex) => (
+                                            <TableRow
+                                                key={item.id}
+                                                className="font-mono hover:bg-accent/5"
                                             >
-                                                {renderCell({ id: 'new', ...editingData['new'] } as T, column, -1, colIndex)}
-                                            </TableCell>
-                                        ))}
-                                        <TableCell>
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={handleSaveNewRow}
-                                                >
-                                                    <Check className="h-4 w-4" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={handleCancelNewRow}
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                                {/* Mock row for adding new items */}
-                                {!isAddingNew && (
-                                    <TableRow 
-                                        className={cn(
-                                            "font-mono cursor-pointer group/mock-row",
-                                            "hover:bg-accent/5 transition-colors"
-                                        )}
-                                        onClick={handleMockRowClick}
-                                    >
-                                        {columns.map((column, colIndex) => (
-                                            <TableCell
-                                                key={`mock-${String(column.accessor)}`}
-                                                className={cn(
-                                                    "text-muted-foreground/50 group-hover/mock-row:text-muted-foreground",
-                                                    colIndex === 0 && "font-medium"
+                                                {columns.map((column, colIndex) => (
+                                                    <TableCell
+                                                        key={`${String(item.id)}-${String(column.accessor)}`}
+                                                        onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
+                                                        onMouseLeave={() => setHoveredCell(null)}
+                                                    >
+                                                        {renderCell(item, column, rowIndex, colIndex)}
+                                                    </TableCell>
+                                                ))}
+                                                {isEditMode && (
+                                                    <TableCell>
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() => handleDeleteClick(item)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
                                                 )}
-                                            >
-                                                {colIndex === 0 ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <Plus className="h-4 w-4" />
-                                                        New Row
+                                            </TableRow>
+                                        ))}
+                                        {/* New row being added */}
+                                        {isAddingNew && (
+                                            <TableRow className="font-mono">
+                                                {columns.map((column, colIndex) => (
+                                                    <TableCell
+                                                        key={`new-${String(column.accessor)}`}
+                                                    >
+                                                        {renderCell({ id: 'new', ...editingData['new'] } as T, column, -1, colIndex)}
+                                                    </TableCell>
+                                                ))}
+                                                <TableCell>
+                                                    <div className="flex gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={handleSaveNewRow}
+                                                        >
+                                                            <Check className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={handleCancelNewRow}
+                                                        >
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
                                                     </div>
-                                                ) : (
-                                                    "..."
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                        {/* Mock row for adding new items */}
+                                        {!isAddingNew && (
+                                            <TableRow 
+                                                className={cn(
+                                                    "font-mono cursor-pointer group/mock-row",
+                                                    "hover:bg-accent/5"
                                                 )}
-                                            </TableCell>
-                                        ))}
-                                        {isEditMode && <TableCell />}
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    )}
+                                                onClick={handleMockRowClick}
+                                            >
+                                                {columns.map((column, colIndex) => (
+                                                    <TableCell
+                                                        key={`mock-${String(column.accessor)}`}
+                                                        className={cn(
+                                                            "text-muted-foreground/50 group-hover/mock-row:text-muted-foreground",
+                                                            colIndex === 0 && "font-medium"
+                                                        )}
+                                                    >
+                                                        {colIndex === 0 ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <Plus className="h-4 w-4" />
+                                                                New Row
+                                                            </div>
+                                                        ) : (
+                                                            "..."
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                                {isEditMode && <TableCell />}
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </motion.div>
 

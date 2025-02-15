@@ -6,7 +6,7 @@ import { Requirement } from '@/types/base/requirements.types';
 import { RequirementFormat, RequirementLevel, RequirementPriority, RequirementStatus } from '@/types/base/enums.types';
 import { useCreateRequirement, useUpdateRequirement } from '@/hooks/mutations/useRequirementMutations';
 import { useAuth } from '@/hooks/useAuth';
-import { MonospaceEditableTable, type EditableColumn } from '@/components/base/MonospaceEditableTable';
+import { MonospaceEditableTable, type EditableColumn } from '@/components/custom/BlockCanvas/components/EditableTable';
 import { SidePanel } from '@/components/base/panels/SidePanel';
 import { v4 as uuidv4 } from 'uuid';
 
