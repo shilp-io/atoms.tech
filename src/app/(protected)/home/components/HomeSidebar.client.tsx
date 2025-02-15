@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import {
-    Sidebar,
+    SidebarContainer as Sidebar,
     SidebarContent,
     SidebarFooter,
     SidebarGroup,

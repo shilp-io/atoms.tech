@@ -1,6 +1,6 @@
 // [orgSlug]/layout.tsx
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { DashboardSidebar } from './components/DashboardSidebar.client';
+import { DashboardSidebar } from '../components/DashboardSidebar.client';
 import VerticalToolbar from '@/components/custom/VerticalToolbar';
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { QueryClient } from '@tanstack/react-query';
@@ -10,29 +10,18 @@ import { notFound } from 'next/navigation';
 
 interface OrgLayoutProps {
     children: React.ReactNode;
-    params: Promise<{ orgSlug: string }>;
+    params: Promise<{ orgId: string }>;
 }
 
 export default async function OrgLayout({ children, params }: OrgLayoutProps) {
-    const { orgSlug } = await params;
+    const { orgId } = await params;
 
-    if (!orgSlug) {
+    if (!orgId) {
         notFound();
     }
 
     const queryClient = new QueryClient();
     const user = await getAuthUserServer();
-
-    let orgId: string;
-    try {
-        orgId = await getOrganizationIdBySlugServer(orgSlug);
-        if (!orgId) {
-            notFound();
-        }
-    } catch (error) {
-        console.error('Error fetching organization:', error);
-        notFound();
-    }
 
     try {
         await queryClient.prefetchQuery({

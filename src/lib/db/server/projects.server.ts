@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase/supabaseServer';
 import { ProjectSchema } from '@/types/validation/projects.validation';
 
-export const getProjectBySlugServer = async (slug: string) => {
+export const getProjectByIdServer = async (id: string) => {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('slug', slug)
+        .eq('id', id)
         .single();
 
     if (error) throw error;

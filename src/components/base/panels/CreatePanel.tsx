@@ -26,6 +26,7 @@ export function CreatePanel({
     isOpen,
     onClose,
     initialTab = 'project',
+    projectId,
     showTabs = 'show',
 }: CreatePanelProps) {
     const [activeTab, setActiveTab] = React.useState(initialTab);

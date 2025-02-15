@@ -3,12 +3,7 @@
 import { Home, Plus, Settings, User, LucideIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-// import { useAuth } from "@/hooks/useAuth";
-// import History from "./History";
 import { useEffect, useState } from 'react';
-// import { CreatePanel } from "@/components/private";
-import { User as SupabaseUser } from '@supabase/supabase-js';
-import { Profile } from '@/types';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -19,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import {
-    Sidebar,
+    SidebarContainer as Sidebar,
     SidebarContent,
     SidebarFooter,
     SidebarGroup,

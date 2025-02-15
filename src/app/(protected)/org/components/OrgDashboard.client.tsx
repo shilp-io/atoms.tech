@@ -1,20 +1,18 @@
-import DashboardView, { Column } from '@/components/base/DashboardView';
-import { useUser } from '@/lib/providers/user.provider';
-<<<<<<< HEAD:src/app/(protected)/[orgSlug]/components/OrgDashboard.client.tsx
-import { getUserProjects } from '@/lib/db/client';
-import { useUserProjects } from '@/hooks/queries/useProject';
-=======
-import { useContextStore } from '@/lib/store/context.store';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
+'use client';
+
+import DashboardView, {
+    Column,
+} from '@/components/base/DashboardView';
 import { Project } from '@/types';
-import { ProjectSchema } from '@/types/validation/projects.validation';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
->>>>>>> 68a9679 (Restructure URLs, refactor layouts and sidebars):src/app/(protected)/org/components/OrgDashboard.client.tsx
+import { useRouter, useParams } from 'next/navigation';
+import { useContextStore } from '@/lib/store/context.store';
+import { useUser } from '@/lib/providers/user.provider';
+import { useUserProjects } from '@/hooks/queries/useProject';
 
 export default function OrgDashboard() {
     // Navigation hooks
     const router = useRouter();
+    const params = useParams<{ orgId: string }>();
 
     // User context hooks
     const { profile } = useUser();
@@ -24,17 +22,17 @@ export default function OrgDashboard() {
     const columns: Column<Project>[] = [
         {
             header: 'Name',
-            accessor: (item: Project) => (item as Project).name,
+            accessor: (item: Project) => item.name,
         },
         {
             header: 'Status',
-            accessor: (item: Project) => (item as Project).status || 'N/A',
+            accessor: (item: Project) => item.status || 'N/A',
         },
     ];
 
     const handleRowClick = (item: Project) => {
         setCurrentProjectId(item.id);
-        router.push(`/project/${item.slug}`);
+        router.push(`/org/${params.orgId}/${item.id}`);
     };
 
     return (

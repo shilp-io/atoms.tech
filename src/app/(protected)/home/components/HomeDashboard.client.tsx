@@ -39,7 +39,7 @@ export default function HomeDashboard() {
     const handleRowClick = (item: Organization) => {
         setCurrentUserId(user?.id || '');
         setOrganization(item);
-        router.push(`/org/${item.slug}`);
+        router.push(`/org/${item.id}`);
     };
 
     return (

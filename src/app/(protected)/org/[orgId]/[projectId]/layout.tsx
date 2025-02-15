@@ -1,7 +1,7 @@
 // [orgSlug]/[projectSlug]/layout.tsx
 import { queryKeys } from "@/lib/constants/queryKeys";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
-import { getProjectBySlugServer, getProjectDocumentsServer } from "@/lib/db/server";
+import { getProjectByIdServer, getProjectDocumentsServer } from "@/lib/db/server";
 import { ProjectProvider } from "@/lib/providers/project.provider";
 import { notFound } from 'next/navigation';
 import { Project } from "@/types";
@@ -9,8 +9,8 @@ import { Project } from "@/types";
 interface ProjectLayoutProps {
     children: React.ReactNode;
     params: Promise<{
-        orgSlug: string;
-        projectSlug: string;
+        orgId: string;
+        projectId: string;
     }>;
 }
 
@@ -18,9 +18,9 @@ export default async function ProjectLayout({
     children,
     params,
 }: ProjectLayoutProps) {
-    const { projectSlug } = await params;
+    const { projectId } = await params;
 
-    if (!projectSlug) {
+    if (!projectId) {
         notFound();
     }
 
@@ -28,7 +28,7 @@ export default async function ProjectLayout({
     let project: Project | null = null;
     
     try {
-        project = await getProjectBySlugServer(projectSlug);
+        project = await getProjectByIdServer(projectId);
         if (!project) {
             notFound();
         }

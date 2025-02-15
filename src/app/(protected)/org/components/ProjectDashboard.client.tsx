@@ -4,9 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import DashboardView, {
     Column,
-    SupportedDataTypes,
 } from '@/components/base/DashboardView';
 import { Badge } from '@/components/ui/badge';
+import { Requirement } from '@/types/base/requirements.types';
 import { useRouter, useParams } from 'next/navigation';
 import { RequirementSchema } from '@/types/validation';
 import { queryKeys } from '@/lib/constants/queryKeys';
@@ -14,10 +14,12 @@ import { useProjectDocuments } from '@/hooks/queries/useDocument';
 import { useProject } from '@/lib/providers/project.provider';
 import { useState } from 'react';
 import { CreatePanel } from '@/components/base/panels/CreatePanel';
+import { Document } from '@/types/base/documents.types';
+
 
 export default function ProjectPage() {
     const router = useRouter();
-    const params = useParams<{ orgSlug: string; projectSlug: string }>();
+    const params = useParams<{ orgId: string; projectId: string }>();
     const { project } = useProject();
     const [showCreateDocumentPanel, setShowCreateDocumentPanel] = useState(false);
     const { data: documents, isLoading: documentsLoading } = useProjectDocuments(project?.id || '');
@@ -64,15 +66,15 @@ export default function ProjectPage() {
         },
     });
 
-    const columns: Column[] = [
+    const columns: Column<Requirement>[] = [
         {
             header: 'Name',
-            accessor: (item: any) => item.name,
+            accessor: (item: Requirement) => item.name,
         },
         {
             header: 'Priority',
-            accessor: (item: any) => item.priority,
-            renderCell: (item: any) => (
+            accessor: (item: Requirement) => item.priority,
+            renderCell: (item: Requirement) => (
                 <Badge
                     variant="outline"
                     className={
@@ -89,8 +91,8 @@ export default function ProjectPage() {
         },
         {
             header: 'Status',
-            accessor: (item: any) => item.status,
-            renderCell: (item: any) => (
+            accessor: (item: Requirement) => item.status,
+            renderCell: (item: Requirement) => (
                 <Badge
                     variant="outline"
                     className={
@@ -107,13 +109,19 @@ export default function ProjectPage() {
         },
         {
             header: 'Format',
-            accessor: (item: any) => item.format,
+            accessor: (item: Requirement) => item.format,
         },
     ];
 
-    const handleRowClick = (item: SupportedDataTypes) => {
+    const handleRowClick = (item: Requirement) => {
         router.push(
-            `/${params.orgSlug}/${params.projectSlug}/requirements/${item.id}`,
+            `/${params.orgId}/${params.projectId}/requirements/${item.id}`,
+        );
+    };
+
+    const handleDocumentClick = (doc: Document) => {
+        router.push(
+            `/org/${params.orgId}/${params.projectId}/documents/${doc.id}`,
         );
     };
 
@@ -162,11 +170,7 @@ export default function ProjectPage() {
                         <div
                             key={doc.id}
                             className="p-4 border rounded-lg hover:border-primary cursor-pointer transition-colors"
-                            onClick={() =>
-                                router.push(
-                                    `/${params.orgSlug}/${params.projectSlug}/documents/${doc.id}`,
-                                )
-                            }
+                            onClick={() => handleDocumentClick(doc)}
                         >
                             <h3 className="font-medium truncate">{doc.name}</h3>
                             {doc.description && (

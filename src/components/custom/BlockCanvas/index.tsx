@@ -2,19 +2,12 @@
 
 import React, { useState, useCallback } from 'react';
 import { useDocumentStore } from '@/lib/store/document.store';
-import { cn } from '@/lib/utils';
-import { Json } from '@/types/base/database.types';
-import { Block } from '@/types/base/documents.types';
 import { Button } from '@/components/ui/button';
 import { Table, Type } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useDocumentRealtime } from '@/hooks/queries/useDocumentRealtime';
 import { BlockCanvasProps, BlockWithRequirements } from './types';
 import { useBlockActions } from './hooks/useBlockActions';
-import { TextBlock } from './components/TextBlock';
-import { TableBlock } from './components/TableBlock';
-import { BlockActions } from './components/BlockActions';
 import {
   DndContext,
   closestCenter,
