@@ -1,9 +1,11 @@
 'use client';
 
 import ProjectForm from '@/components/base/forms/ProjectForm';
+import ProjectForm from '@/components/base/forms/ProjectForm';
 import {
     Sheet,
     SheetContent,
+    SheetDescription,
     SheetDescription,
     SheetHeader,
     SheetTitle,
@@ -26,7 +28,6 @@ export function CreatePanel({
     isOpen,
     onClose,
     initialTab = 'project',
-    projectId,
     showTabs = 'show',
 }: CreatePanelProps) {
     const [activeTab, setActiveTab] = React.useState(initialTab);

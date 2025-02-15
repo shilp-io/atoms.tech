@@ -1,13 +1,14 @@
 'use client';
 
 import DashboardView, { Column } from '@/components/base/DashboardView';
-import { Organization } from '@/types';
 import { useOrgByUser } from '@/hooks/queries/useOrganization';
-import { useContextStore } from '@/lib/store/context.store';
 import RenderCounter from '@/components/custom/RerenderCount';
 import { useUser } from '@/lib/providers/user.provider';
 import { useOrganization } from '@/lib/providers/organization.provider';
+import { useContextStore } from '@/lib/store/context.store';
+import { Organization } from '@/types';
 import { useRouter } from 'next/navigation';
+
 
 export default function HomeDashboard() {
     const { user } = useUser();
