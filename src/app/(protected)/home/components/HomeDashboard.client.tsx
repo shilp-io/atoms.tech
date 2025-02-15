@@ -1,12 +1,21 @@
 'use client';
 
 import DashboardView, { Column } from '@/components/base/DashboardView';
+<<<<<<< HEAD
 import { Organization } from '@/types';
 import { useOrgByUser } from '@/hooks/queries/useOrganization';
 import { useContextStore } from '@/lib/store/context.store';
 import RenderCounter from '@/components/custom/RerenderCount';
 import { useUser } from '@/lib/providers/user.provider';
 import { useOrganization } from '@/lib/providers/organization.provider';
+=======
+import RenderCounter from '@/components/RerenderCount';
+import { useOrganizationsByMembership } from '@/hooks/queries/useOrganization';
+import { useOrganization } from '@/lib/providers/organization.provider';
+import { useUser } from '@/lib/providers/user.provider';
+import { useContextStore } from '@/lib/store/context.store';
+import { Organization } from '@/types';
+>>>>>>> origin/main
 import { useRouter } from 'next/navigation';
 
 export default function HomeDashboard() {
@@ -39,7 +48,11 @@ export default function HomeDashboard() {
     const handleRowClick = (item: Organization) => {
         setCurrentUserId(user?.id || '');
         setOrganization(item);
+<<<<<<< HEAD
         router.push(`/org/${item.id}`);
+=======
+        router.push(`/org/${item.slug}`);
+>>>>>>> origin/main
     };
 
     return (
