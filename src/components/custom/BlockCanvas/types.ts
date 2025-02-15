@@ -23,11 +23,11 @@ export interface BlockWithRequirements extends Block {
 export interface BlockProps {
   block: BlockWithRequirements;
   onUpdate: (content: Json) => void;
-  isSelected: boolean;
-  onSelect: () => void;
-  isEditMode: boolean;
-  onDelete: () => void;
-  onDoubleClick: () => void;
+  isSelected?: boolean;
+  onSelect?: () => void;
+  isEditMode?: boolean;
+  onDelete?: () => void;
+  onDoubleClick?: () => void;
 }
 
 export interface BlockActionsProps {

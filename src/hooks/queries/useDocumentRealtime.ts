@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types/base/documents.types';
 import { Requirement } from '@/types/base/requirements.types';
@@ -58,20 +57,19 @@ const fetchInitialData = async (documentId: string) => {
 };
 
 export function useDocumentRealtime(documentId: string) {
-  const queryClient = useQueryClient();
   const { addBlock, updateBlock, deleteBlock, setBlocks } = useDocumentStore();
   const [blocks, setLocalBlocks] = useState<BlockWithRequirements[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Helper function to update both states
-  const updateBothStates = (updateFn: (prev: BlockWithRequirements[]) => BlockWithRequirements[]) => {
+  // Helper function to update both states - moved outside useEffect and memoized
+  const updateBothStates = useCallback((updateFn: (prev: BlockWithRequirements[]) => BlockWithRequirements[]) => {
     setLocalBlocks(prev => {
       const updated = updateFn(prev);
       // Update document store with the same data
       setBlocks(updated as unknown as Block[]);
       return updated;
     });
-  };
+  }, [setBlocks]);
 
   // Helper function to delete all requirements of a block
   const deleteBlockRequirements = async (blockId: string) => {
@@ -294,7 +292,7 @@ export function useDocumentRealtime(documentId: string) {
         requirementChannel.unsubscribe();
       }
     };
-  }, [documentId, addBlock, updateBlock, deleteBlock, setBlocks]);
+  }, [documentId, addBlock, updateBlock, deleteBlock, setBlocks, updateBothStates]);
 
   return { blocks, isLoading, setLocalBlocks };
 } 

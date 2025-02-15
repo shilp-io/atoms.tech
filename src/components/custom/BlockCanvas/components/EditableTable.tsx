@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { CaretSortIcon } from '@radix-ui/react-icons';
 import { motion, LayoutGroup, AnimatePresence } from 'framer-motion';
-import { Filter, Plus, Check, X, Edit2, Trash2 } from 'lucide-react';
+import { Filter, Plus, Check, X, Trash2 } from 'lucide-react';
 import {
     Table,
     TableBody,
@@ -42,6 +42,27 @@ import {
 
 export type EditableColumnType = 'text' | 'select' | 'number' | 'date';
 
+export interface ValidationRule {
+    validate: (value: string | number | Date | null) => boolean;
+    message: string;
+}
+
+export interface ColumnValidation {
+    rules?: ValidationRule[];
+    required?: boolean;
+    requiredMessage?: string;
+    pattern?: RegExp;
+    patternMessage?: string;
+    min?: number;
+    max?: number;
+    minMessage?: string;
+    maxMessage?: string;
+    custom?: (value: string | number | Date | null) => string | undefined;
+}
+
+// Type for the possible values in a cell
+export type CellValue = string | number | Date | null;
+
 export interface EditableColumn<T> {
     header: string;
     width?: number;
@@ -49,11 +70,18 @@ export interface EditableColumn<T> {
     type: EditableColumnType;
     options?: string[]; // For select type columns
     required?: boolean;
-    validation?: (value: any) => boolean;
+    validation?: ColumnValidation;
     isSortable?: boolean;
+    // Add type-specific validation functions
+    typeValidation?: {
+        text?: (value: string) => boolean;
+        number?: (value: number) => boolean;
+        date?: (value: Date) => boolean;
+        select?: (value: string) => boolean;
+    };
 }
 
-interface MonospaceEditableTableProps<T extends Record<string, any>> {
+export interface EditableTableProps<T extends Record<string, CellValue> & { id: string }> {
     data: T[];
     columns: EditableColumn<T>[];
     onSave?: (item: T, isNew: boolean) => Promise<void>;
@@ -83,20 +111,27 @@ const TableSideMenu = ({ showFilter, filterComponent, onNewRow }: TableSideMenuP
             <TooltipProvider delayDuration={0}>
                 <div className="flex flex-col gap-0.5 bg-background border-y border-l rounded-l-md shadow-lg">
                     {showFilter && (
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-8 w-8 p-0 rounded-none hover:bg-accent"
-                                >
-                                    <Filter className="h-3.5 w-3.5" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="left" sideOffset={5}>
-                                <p>Filter table</p>
-                            </TooltipContent>
-                        </Tooltip>
+                        <>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="h-8 w-8 p-0 rounded-none hover:bg-accent"
+                                    >
+                                        <Filter className="h-3.5 w-3.5" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left" sideOffset={5}>
+                                    <p>Filter table</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            {filterComponent && (
+                                <div className="p-2">
+                                    {filterComponent}
+                                </div>
+                            )}
+                        </>
                     )}
                     <Tooltip>
                         <TooltipTrigger asChild>
@@ -119,7 +154,7 @@ const TableSideMenu = ({ showFilter, filterComponent, onNewRow }: TableSideMenuP
     );
 };
 
-export function MonospaceEditableTable<T extends Record<string, any>>({
+export function EditableTable<T extends Record<string, CellValue> & { id: string }>({
     data,
     columns,
     onSave,
@@ -129,7 +164,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
     showFilter = true,
     filterComponent,
     isEditMode = false,
-}: MonospaceEditableTableProps<T>) {
+}: EditableTableProps<T>) {
     const [sortKey, setSortKey] = React.useState<keyof T | null>(null);
     const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
     const [hoveredCell, setHoveredCell] = React.useState<{ row: number; col: number } | null>(null);
@@ -153,9 +188,23 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
             if (!sortKey) return 0;
             const aValue = a[sortKey];
             const bValue = b[sortKey];
-            if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-            if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-            return 0;
+            
+            // Handle null/undefined values
+            if (aValue == null && bValue == null) return 0;
+            if (aValue == null) return sortOrder === 'asc' ? -1 : 1;
+            if (bValue == null) return sortOrder === 'asc' ? 1 : -1;
+
+            // Handle Date objects
+            if (aValue instanceof Date && bValue instanceof Date) {
+                return sortOrder === 'asc' 
+                    ? aValue.getTime() - bValue.getTime()
+                    : bValue.getTime() - aValue.getTime();
+            }
+
+            // Handle regular values
+            return sortOrder === 'asc'
+                ? String(aValue).localeCompare(String(bValue))
+                : String(bValue).localeCompare(String(aValue));
         });
     }, [data, sortKey, sortOrder]);
 
@@ -172,39 +221,20 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
         previousDataRef.current = data;
 
         if (isEditMode && data.length > 0) {
-            // Enter edit mode - initialize editing data for all rows
             const initialEditData = data.reduce((acc, item) => {
-                if (item.id) { // Only initialize if item has an id
+                if (item.id) {
                     acc[item.id as string] = { ...item };
                 }
                 return acc;
             }, {} as Record<string, T>);
             setEditingData(initialEditData);
         } else if (!isEditMode) {
-            // Only clear editing data when exiting edit mode
             setEditingData({});
             setIsAddingNew(false);
-            // Clear all pending timeouts
             Object.values(editingTimeouts).forEach(timeout => clearTimeout(timeout));
             setEditingTimeouts({});
         }
-    }, [isEditMode, data]);
-
-    const handleRowSave = async (item: T) => {
-        const editedItem = editingData[item.id as string];
-        if (!editedItem) return;
-
-        try {
-            await onSave?.(editedItem, false);
-            // Keep edit mode on but update the editing data with saved values
-            setEditingData(prev => ({
-                ...prev,
-                [item.id as string]: editedItem
-            }));
-        } catch (error) {
-            console.error('Failed to save:', error);
-        }
-    };
+    }, [isEditMode, data, editingData, editingTimeouts]);
 
     const handleDeleteClick = (item: T) => {
         setItemToDelete(item);
@@ -223,7 +253,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
         }
     };
 
-    const handleCellChange = (itemId: string, accessor: keyof T, value: any) => {
+    const handleCellChange = (itemId: string, accessor: keyof T, value: CellValue) => {
         // Update local state immediately
         setEditingData(prev => ({
             ...prev,
@@ -261,7 +291,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                 
                 // Clear the timeout from state after successful save
                 setEditingTimeouts(prev => {
-                    const { [itemId]: _, ...rest } = prev;
+                    const { [itemId]: _removedTimeout, ...rest } = prev;
                     return rest;
                 });
             } catch (error) {
@@ -280,22 +310,22 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
         const newItem = columns.reduce((acc, col) => {
             switch (col.type) {
                 case 'select':
-                    acc[col.accessor] = col.options?.[0] ?? '';
+                    acc[col.accessor as keyof T] = (col.options?.[0] ?? '') as T[keyof T];
                     break;
                 case 'text':
-                    acc[col.accessor] = '';
+                    acc[col.accessor as keyof T] = '' as T[keyof T];
                     break;
                 case 'number':
-                    acc[col.accessor] = '0';
+                    acc[col.accessor as keyof T] = '0' as T[keyof T];
                     break;
                 case 'date':
-                    acc[col.accessor] = new Date().toISOString().split('T')[0];
+                    acc[col.accessor as keyof T] = new Date().toISOString().split('T')[0] as T[keyof T];
                     break;
                 default:
-                    acc[col.accessor] = '';
+                    acc[col.accessor as keyof T] = '' as T[keyof T];
             }
             return acc;
-        }, {} as any);
+        }, {} as T);
         
         newItem.id = 'new';
         setEditingData(prev => ({
@@ -311,13 +341,13 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
 
         try {
             // Remove the temporary id before saving
-            const { id, ...itemWithoutId } = newItem;
+            const { id: _tempId, ...itemWithoutId } = newItem;
             await onSave?.(itemWithoutId as T, true);
             
             // Clear editing state after successful save
             setIsAddingNew(false);
             setEditingData(prev => {
-                const { new: _, ...rest } = prev;
+                const { new: _newItem, ...rest } = prev;
                 return rest;
             });
         } catch (error) {
@@ -328,7 +358,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
     const handleCancelNewRow = () => {
         setIsAddingNew(false);
         setEditingData(prev => {
-            const { new: _, ...rest } = prev;
+            const { new: _newItem, ...rest } = prev;
             return rest;
         });
     };
@@ -344,7 +374,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                     return (
                         <Select
                             value={String(value ?? '')}
-                            onValueChange={(value) => handleCellChange(item.id as string, column.accessor, value)}
+                            onValueChange={(newValue) => handleCellChange(item.id as string, column.accessor, newValue)}
                         >
                             <SelectTrigger>
                                 <SelectValue />
@@ -363,7 +393,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                         <Input
                             type="number"
                             value={String(value ?? '')}
-                            onChange={(e) => handleCellChange(item.id as string, column.accessor, e.target.value)}
+                            onChange={(e) => handleCellChange(item.id as string, column.accessor, parseFloat(e.target.value))}
                             data-editing="true"
                         />
                     );
@@ -372,7 +402,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                         <Input
                             type="date"
                             value={String(value ?? '')}
-                            onChange={(e) => handleCellChange(item.id as string, column.accessor, e.target.value)}
+                            onChange={(e) => handleCellChange(item.id as string, column.accessor, new Date(e.target.value))}
                             data-editing="true"
                         />
                     );
@@ -394,7 +424,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                     isHovered && 'bg-accent/50'
                 )}
             >
-                {value ?? ''}
+                {value instanceof Date ? value.toLocaleDateString() : String(value ?? '')}
             </div>
         );
     };
@@ -441,7 +471,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                                 <Table className="[&_tr:last-child_td]:border-b-2 [&_tr]:border-b [&_td]:py-1 [&_th]:py-1 [&_td]:border-r [&_td:last-child]:border-r-0 [&_th]:border-r [&_th:last-child]:border-r-0">
                                     <TableHeader>
                                         <TableRow>
-                                            {columns.map((column, index) => (
+                                            {columns.map((column) => (
                                                 <TableHead
                                                     key={column.header}
                                                     style={{
@@ -513,7 +543,7 @@ export function MonospaceEditableTable<T extends Record<string, any>>({
                                                     <TableCell
                                                         key={`new-${String(column.accessor)}`}
                                                     >
-                                                        {renderCell({ id: 'new', ...editingData['new'] } as T, column, -1, colIndex)}
+                                                        {renderCell({ ...editingData['new'] } as T, column, -1, colIndex)}
                                                     </TableCell>
                                                 ))}
                                                 <TableCell>

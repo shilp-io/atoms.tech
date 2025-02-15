@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Requirement } from '@/types/base/requirements.types';
 import { useRouter, useParams } from 'next/navigation';
 import { RequirementSchema } from '@/types/validation';
-import { queryKeys } from '@/lib/constants/queryKeys';
 import { useProjectDocuments } from '@/hooks/queries/useDocument';
 import { useProject } from '@/lib/providers/project.provider';
 import { useState } from 'react';

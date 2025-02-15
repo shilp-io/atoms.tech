@@ -4,12 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/custom/toggles/ThemeToggle';
 import { ViewModeToggle } from '@/components/custom/toggles/ViewModeToggle';
-import { useRouter } from 'next/navigation';
 import Breadcrumb from '@/components/custom/Breadcrumb';
 import { cn } from '@/lib/utils';
 
 const VerticalToolbar = () => {
-    const router = useRouter();
     const { state } = useSidebar();
     const [isMobile, setIsMobile] = useState(false);
     const [isTablet, setIsTablet] = useState(false);
@@ -40,13 +38,13 @@ const VerticalToolbar = () => {
         };
     }, []);
 
-    if (isMobile) {
-        // Mobile layout - horizontal toolbar at the top
+    if (isMobile || isTablet) {
+        // Mobile and tablet layout - horizontal toolbar at the top
         return (
             <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2 bg-background/80 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
-                    <SidebarTrigger className="h-5 w-5" />
-                    <Breadcrumb className="ml-0" />
+                    <SidebarTrigger className={cn("h-5 w-5", isTablet && "ml-2")} />
+                    <Breadcrumb className={cn("ml-0", isTablet && "ml-2")} />
                 </div>
                 <div className="flex items-center gap-2">
                     <ThemeToggle />
@@ -56,7 +54,7 @@ const VerticalToolbar = () => {
         );
     }
 
-    // Desktop and tablet layout - vertical toolbar with horizontal breadcrumb
+    // Desktop layout - vertical toolbar with horizontal breadcrumb
     return (
         <>
             {/* Floating toolbar buttons */}

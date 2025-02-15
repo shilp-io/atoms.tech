@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Project } from '@/types/base/projects.types';
 import { ProjectSchema } from '@/types/validation/projects.validation';
 import { getUserProjects } from '@/lib/db/client';
+import { QueryFilters } from '@/types/base/filters.types';
 import { useQuery } from '@tanstack/react-query';
 
 export function useProject(projectId: string) {
@@ -22,7 +23,7 @@ export function useProject(projectId: string) {
     });
 }
 
-export function useProjects(filters?: Record<string, any>) {
+export function useProjects(filters?: QueryFilters) {
     return useQuery({
         queryKey: queryKeys.projects.list(filters || {}),
         queryFn: async () => {

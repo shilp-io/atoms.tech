@@ -11,6 +11,12 @@ import { CalendarDays, GitBranch, FileText, Activity, BarChart3, ListTodo } from
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
+import { RequirementPriority, RequirementStatus } from '@/types';
+
+type BlockContent = {
+  status: RequirementStatus;
+  priority: RequirementPriority;
+}
 
 export default function DocDashboard() {
   const params = useParams();
@@ -25,9 +31,9 @@ export default function DocDashboard() {
 
   const stats = {
     total: blocks?.length || 0,
-    completion: blocks?.length ? Math.round((blocks.filter(b => (b.content as any)?.status === 'completed').length / blocks.length) * 100) : 0,
-    highPriority: blocks?.filter(b => (b.content as any)?.priority === 'high').length || 0,
-    completed: blocks?.filter(b => (b.content as any)?.status === 'active').length || 0
+    completion: blocks?.length ? Math.round((blocks.filter(b => (b.content as BlockContent)?.status === 'approved').length / blocks.length) * 100) : 0,
+    highPriority: blocks?.filter(b => (b.content as BlockContent)?.priority === 'high').length || 0,
+    completed: blocks?.filter(b => (b.content as BlockContent)?.status === 'in_progress').length || 0
   };
 
   if (!blocks) {

@@ -168,7 +168,7 @@ export const TextBlock: React.FC<BlockProps> = ({ block, onUpdate, isSelected, o
   // Update editor's editable state when isEditMode changes
   React.useEffect(() => {
     if (editor) {
-      editor.setEditable(isEditMode);
+      editor.setEditable(isEditMode || false);
       if (!isEditMode) {
         // Clear any text selection when exiting edit mode
         window.getSelection()?.removeAllRanges();

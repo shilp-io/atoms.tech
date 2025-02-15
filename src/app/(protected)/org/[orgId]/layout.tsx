@@ -5,7 +5,7 @@ import VerticalToolbar from '@/components/custom/VerticalToolbar';
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/constants/queryKeys';
-import { getUserProjectsServer, getAuthUserServer, getOrganizationIdBySlugServer } from '@/lib/db/server';
+import { getUserProjectsServer, getAuthUserServer } from '@/lib/db/server';
 import { notFound } from 'next/navigation';
 
 interface OrgLayoutProps {

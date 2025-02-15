@@ -1,5 +1,4 @@
 import { useCreateBlock, useUpdateBlock, useDeleteBlock } from '@/hooks/mutations/useBlockMutations';
-import { Block } from '@/types/base/documents.types';
 import { Json } from '@/types/base/database.types';
 import { UseBlockActionsProps, BlockWithRequirements } from '../types';
 import { useDocumentStore } from '@/lib/store/document.store';

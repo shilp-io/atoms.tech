@@ -16,6 +16,9 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+  defaultDropAnimation,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -26,11 +29,17 @@ import {
 import { EditModeToggle } from './components/EditModeToggle';
 import { SortableBlock } from './components/SortableBlock';
 
+const dropAnimationConfig = {
+  ...defaultDropAnimation,
+  dragSourceOpacity: 0.5,
+};
+
 export function BlockCanvas({ documentId }: BlockCanvasProps) {
   const { blocks, isLoading, setLocalBlocks } = useDocumentRealtime(documentId);
   const { reorderBlocks } = useDocumentStore();
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const { userProfile } = useAuth();
   const { handleAddBlock, handleUpdateBlock, handleDeleteBlock, handleReorder } = useBlockActions({
     documentId,
@@ -70,7 +79,12 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     );
   }, [selectedBlockId, isEditMode, handleUpdateBlock, handleDeleteBlock]);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
+    setActiveId(null);
     const { active, over } = event;
     
     if (!over || active.id === over.id || !blocks) {
@@ -118,11 +132,14 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     );
   }
 
+  const activeBlock = blocks?.find(block => block.id === activeId);
+
   return (
     <div className="relative min-h-[500px] space-y-4">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
         <SortableContext
@@ -133,6 +150,21 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             {blocks?.map(block => renderBlock(block))}
           </div>
         </SortableContext>
+
+        <DragOverlay dropAnimation={dropAnimationConfig}>
+          {activeId && activeBlock ? (
+            <div className="opacity-100 w-full pointer-events-none">
+              <SortableBlock
+                block={activeBlock}
+                isSelected={false}
+                isEditMode={isEditMode}
+                onSelect={() => {}}
+                onUpdate={() => {}}
+                onDelete={() => {}}
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
       
       {!isEditMode && (

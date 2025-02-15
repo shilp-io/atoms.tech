@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Bold, 
   Italic, 
@@ -55,36 +55,23 @@ const ListIcon = ({ type }: { type: ListType }) => {
 
 export function Toolbar({ className, editor }: ToolbarProps) {
   const iconSize = 16;
-  const [currentHeadingLevel, setCurrentHeadingLevel] = React.useState<HeadingLevel>(1);
-  const [currentListType, setCurrentListType] = React.useState<ListType>('bullet');
+  const [currentHeadingLevel, setCurrentHeadingLevel] = useState<HeadingLevel>(1);
+  const [currentListType, setCurrentListType] = useState<ListType>('bullet');
 
-  if (!editor) {
-    return null;
-  }
-
-  // Update current heading level based on editor state
+  // Combined effect for updating both heading level and list type
   useEffect(() => {
-    const updateHeadingLevel = () => {
+    if (!editor) return;
+
+    const updateState = () => {
+      // Update heading level
       for (let level = 1; level <= 5; level++) {
         if (editor.isActive('heading', { level })) {
           setCurrentHeadingLevel(level as HeadingLevel);
           break;
         }
       }
-    };
 
-    editor.on('selectionUpdate', updateHeadingLevel);
-    editor.on('update', updateHeadingLevel);
-
-    return () => {
-      editor.off('selectionUpdate', updateHeadingLevel);
-      editor.off('update', updateHeadingLevel);
-    };
-  }, [editor]);
-
-  // Update current list type based on editor state
-  useEffect(() => {
-    const updateListType = () => {
+      // Update list type
       if (editor.isActive('bulletList')) {
         if (editor.isActive('bulletList', { class: 'arrow-list' })) {
           setCurrentListType('arrow');
@@ -96,14 +83,18 @@ export function Toolbar({ className, editor }: ToolbarProps) {
       }
     };
 
-    editor.on('selectionUpdate', updateListType);
-    editor.on('update', updateListType);
+    editor.on('selectionUpdate', updateState);
+    editor.on('update', updateState);
 
     return () => {
-      editor.off('selectionUpdate', updateListType);
-      editor.off('update', updateListType);
+      editor.off('selectionUpdate', updateState);
+      editor.off('update', updateState);
     };
   }, [editor]);
+
+  if (!editor) {
+    return null;
+  }
 
   const toggleHeading = () => {
     const nextLevel = (currentHeadingLevel % 5 + 1) as HeadingLevel;

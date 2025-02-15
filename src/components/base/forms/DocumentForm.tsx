@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { Document } from '@/types';
 import { useCreateDocument } from '@/hooks/mutations/useDocumentMutations';
 // Document form schema based on the Document type and validation
 const documentFormSchema = z.object({
@@ -42,7 +41,6 @@ interface DocumentFormProps {
 export default function DocumentForm({ projectId, onSuccess }: DocumentFormProps) {
     const { userProfile } = useAuth();
     const { toast } = useToast();
-    const [isPending, setIsPending] = React.useState(false);
     const { mutateAsync: createDocument, isPending: isCreatingDocument } = useCreateDocument();
 
     const form = useForm<DocumentFormValues>({
@@ -60,9 +58,8 @@ export default function DocumentForm({ projectId, onSuccess }: DocumentFormProps
             return;
         }
 
-        setIsPending(true);
         try {
-            const document = await createDocument({
+            await createDocument({
                 name: data.name,
                 description: data.description || null,
                 project_id: projectId,
@@ -88,8 +85,6 @@ export default function DocumentForm({ projectId, onSuccess }: DocumentFormProps
                         ? error.message
                         : 'Failed to create document',
             });
-        } finally {
-            setIsPending(false);
         }
     }
 
@@ -134,8 +129,8 @@ export default function DocumentForm({ projectId, onSuccess }: DocumentFormProps
                 {/* Tags input could be added here with a custom component or multi-select */}
 
                 <div className="flex justify-end">
-                    <Button type="submit" disabled={isPending}>
-                        {isPending ? 'Creating...' : 'Create Document'}
+                    <Button type="submit" disabled={isCreatingDocument}>
+                        {isCreatingDocument ? 'Creating...' : 'Create Document'}
                     </Button>
                 </div>
             </form>

@@ -6,14 +6,36 @@ import { Requirement } from '@/types/base/requirements.types';
 import { RequirementFormat, RequirementLevel, RequirementPriority, RequirementStatus } from '@/types/base/enums.types';
 import { useCreateRequirement, useUpdateRequirement } from '@/hooks/mutations/useRequirementMutations';
 import { useAuth } from '@/hooks/useAuth';
-import { MonospaceEditableTable, type EditableColumn } from '@/components/custom/BlockCanvas/components/EditableTable';
+import { EditableTable, type EditableColumn } from '@/components/custom/BlockCanvas/components/EditableTable';
 import { SidePanel } from '@/components/base/panels/SidePanel';
 import { v4 as uuidv4 } from 'uuid';
 
+// Type for the simplified requirement data that will be displayed in the table
+type DisplayRequirement = {
+  id: string;
+  name: string;
+  description: string | null;
+  priority: RequirementPriority;
+  status: RequirementStatus;
+};
+
+// Function to convert from full Requirement to DisplayRequirement
+const toDisplayRequirement = (req: Requirement): DisplayRequirement => ({
+  id: req.id,
+  name: req.name,
+  description: req.description,
+  priority: req.priority,
+  status: req.status,
+});
+
+// Function to merge DisplayRequirement changes back into full Requirement
+const mergeRequirementChanges = (original: Requirement, changes: Partial<DisplayRequirement>): Requirement => ({
+  ...original,
+  ...changes,
+});
+
 export const TableBlock: React.FC<BlockProps> = ({
   block,
-  isSelected,
-  onSelect,
   isEditMode,
 }) => {
   const createRequirementMutation = useCreateRequirement();
@@ -27,15 +49,15 @@ export const TableBlock: React.FC<BlockProps> = ({
     setLocalRequirements(block.requirements || []);
   }, [block.requirements]);
 
-  const handleSaveRequirement = async (requirement: Requirement, isNew: boolean) => {
+  const handleSaveRequirement = async (displayReq: DisplayRequirement, isNew: boolean) => {
     if (!userProfile?.id) return;
 
     try {
       if (isNew) {
         // Generate a UUID for new requirements
-        const tempId = uuidv4();
-        const newRequirement = {
-          ...requirement,
+        const tempId = displayReq.id || uuidv4();
+        const newRequirement: Requirement = {
+          ...displayReq,
           id: tempId,
           format: RequirementFormat.incose,
           level: RequirementLevel.system,
@@ -48,6 +70,12 @@ export const TableBlock: React.FC<BlockProps> = ({
           external_id: null,
           original_requirement: null,
           tags: [],
+          created_at: null,
+          updated_at: null,
+          deleted_at: null,
+          deleted_by: null,
+          is_deleted: null,
+          version: 1,
         };
 
         // Update local state optimistically
@@ -61,36 +89,45 @@ export const TableBlock: React.FC<BlockProps> = ({
           prev.map(req => req.id === tempId ? savedRequirement : req)
         );
       } else {
+        // Find the original requirement
+        const originalReq = localRequirements.find(req => req.id === displayReq.id);
+        if (!originalReq) return;
+
+        // Merge changes with the original requirement
+        const updatedRequirement = mergeRequirementChanges(originalReq, displayReq);
+        updatedRequirement.updated_by = userProfile.id;
+
         // Update local state optimistically
         setLocalRequirements(prev =>
-          prev.map(req => req.id === requirement.id ? requirement : req)
+          prev.map(req => req.id === displayReq.id ? updatedRequirement : req)
         );
 
         // Make API call
-        await updateRequirementMutation.mutateAsync({
-          ...requirement,
-          updated_by: userProfile.id,
-        });
+        await updateRequirementMutation.mutateAsync(updatedRequirement);
       }
     } catch (error) {
       console.error('Failed to save requirement:', error);
       // Revert local state on error
       if (isNew) {
-        setLocalRequirements(prev => prev.filter(req => req.id !== requirement.id));
+        setLocalRequirements(prev => prev.filter(req => req.id !== displayReq.id));
       } else {
         setLocalRequirements(block.requirements || []);
       }
     }
   };
 
-  const handleDeleteRequirement = async (requirement: Requirement) => {
+  const handleDeleteRequirement = async (displayReq: DisplayRequirement) => {
     try {
+      // Find the original requirement
+      const originalReq = localRequirements.find(req => req.id === displayReq.id);
+      if (!originalReq) return;
+
       // Update local state optimistically
-      setLocalRequirements(prev => prev.filter(req => req.id !== requirement.id));
+      setLocalRequirements(prev => prev.filter(req => req.id !== displayReq.id));
 
       // Make API call
       await updateRequirementMutation.mutateAsync({
-        ...requirement,
+        ...originalReq,
         is_deleted: true,
         updated_by: userProfile?.id,
       });
@@ -101,7 +138,7 @@ export const TableBlock: React.FC<BlockProps> = ({
     }
   };
 
-  const columns: EditableColumn<Requirement>[] = [
+  const columns: EditableColumn<DisplayRequirement>[] = [
     {
       header: 'Name',
       accessor: 'name',
@@ -136,10 +173,13 @@ export const TableBlock: React.FC<BlockProps> = ({
     }
   ];
 
+  // Convert requirements to display format
+  const displayRequirements = localRequirements.map(toDisplayRequirement);
+
   return (
     <div className="space-y-4">
-      <MonospaceEditableTable
-        data={localRequirements}
+      <EditableTable
+        data={displayRequirements}
         columns={columns}
         onSave={handleSaveRequirement}
         onDelete={handleDeleteRequirement}
@@ -159,7 +199,7 @@ export const TableBlock: React.FC<BlockProps> = ({
         }}
         onOptionSelect={(option) => {
           if (option === 'delete' && selectedRequirement) {
-            handleDeleteRequirement(selectedRequirement);
+            handleDeleteRequirement(toDisplayRequirement(selectedRequirement));
             setSelectedRequirement(null);
           }
         }}

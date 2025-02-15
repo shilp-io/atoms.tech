@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
 import { BlockSchema } from '@/types/validation/blocks.validation';
@@ -23,7 +22,6 @@ const fetchBlocks = async (documentId: string) => {
 };
 
 export function useBlockSubscription(documentId: string) {
-    const queryClient = useQueryClient();
     const { addBlock, updateBlock, deleteBlock, setBlocks } = useDocumentStore();
     const [blocks, setLocalBlocks] = useState<Block[]>([]);
     const [isLoading, setIsLoading] = useState(true);
