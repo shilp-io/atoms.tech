@@ -52,21 +52,21 @@
         "tailwind-merge": "^2.6.0",
         "tailwindcss-animate": "^1.0.7",
         "uuid": "^11.0.5",
-        "zod": "^3.24.1",
+        "zod": "^3.24.2",
         "zustand": "^5.0.3"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.2.0",
         "@tailwindcss/typography": "^0.5.16",
-        "@types/node": "^20.17.17",
+        "@types/node": "^20.17.19",
         "@types/react": "^19.0.8",
         "@types/react-dom": "^19.0.3",
-        "babel-plugin-react-compiler": "^19.0.0-beta-714736e-20250131",
-        "eslint": "^9.20.0",
+        "babel-plugin-react-compiler": "^19.0.0-beta-e552027-20250112",
+        "eslint": "^9.20.1",
         "eslint-config-next": "15.1.4",
-        "postcss": "^8.5.1",
-        "prettier": "^3.5.0",
-        "supabase": "^2.9.6",
+        "postcss": "^8.5.2",
+        "prettier": "^3.5.1",
+        "supabase": "^2.12.1",
         "tailwindcss": "^3.4.17",
         "typescript": "^5.7.3"
     }
