@@ -4,6 +4,7 @@ import { useUser } from '@/lib/providers/user.provider';
 import Image from 'next/image';
 import { Pencil, User } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import SettingsSection from './SettingsSection';
 
 export default function AccountPage() {
     const { user, profile } = useUser();
@@ -41,19 +42,18 @@ export default function AccountPage() {
                 <div className="w-3/5 mx-auto">
                     <h2 className="text-xl font-small pl-2 mb-2">Account Settings</h2>
                     <Card className="p-5">
-                        <div className="flex items-start gap-4">
-                            <div>
-                                <h3 className="pb-1 text-primary text-sm">
-                                    Manage your account settings and set preferences
-                                </h3>
-                                <h3 className="font-semibold mb-2">Settings 1</h3>
-                                <div className="mt-2 space-y-1 text-sm">
-                                    {/* Placeholder for settings options */}
-                                    <div>Option 1</div>
-                                    <div>Option 2</div>
-                                </div>
-                            </div>
-                        </div>
+                        <SettingsSection title="Security Settings" description="Manage your security settings">
+                            <div>Security Option 1</div>
+                            <div>Security Option 2</div>
+                        </SettingsSection>
+                        <SettingsSection title="Email Settings" description="Manage your email settings">
+                            <div>Email Option 1</div>
+                            <div>Email Option 2</div>
+                        </SettingsSection>
+                        <SettingsSection title="Advanced Settings" description="Manage your advanced settings">
+                            <div>Advanced Option 1</div>
+                            <div>Advanced Option 2</div>
+                        </SettingsSection>
                     </Card>
                 </div>
             </div>
