@@ -12,31 +12,31 @@ import { Footer } from '@/components/custom/LandingPage/footer';
 import { GridBackground } from '@/components/custom/LandingPage/grid-background';
 
 export default function Home() {
-  return (
-    <div className="min-h-screen bg-[#0f0f0f] text-[#B5B5B5] relative">
-      <div className="relative z-10">
-        <Navbar />
-        <main className="space-y-64">
-          <Hero />
-          <div className="section-divider">
-            <Features />
-          </div>
-          <HowItWorks />
-          <TimeSavingEdge />
-          <div className="section-divider">
-            <Industries />
-          </div>
-          <Testimonials />
-          <div className="section-divider">
-            <CTA />
-          </div>
-          <div className="section-divider">
-            <Contact />
-          </div>
-        </main>
-        <Footer />
-      </div>
-      <GridBackground />
-    </div>
-  );
+    return (
+        <div className="min-h-screen bg-[#0f0f0f] text-[#B5B5B5] relative">
+            <div className="relative z-10">
+                <Navbar />
+                <main className="space-y-64">
+                    <Hero />
+                    <div className="section-divider">
+                        <Features />
+                    </div>
+                    <HowItWorks />
+                    <TimeSavingEdge />
+                    <div className="section-divider">
+                        <Industries />
+                    </div>
+                    <Testimonials />
+                    <div className="section-divider">
+                        <CTA />
+                    </div>
+                    <div className="section-divider">
+                        <Contact />
+                    </div>
+                </main>
+                <Footer />
+            </div>
+            <GridBackground />
+        </div>
+    );
 }
