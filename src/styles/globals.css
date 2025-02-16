@@ -74,8 +74,8 @@
         --destructive-foreground: 210 40% 98%;
 
         /* Dark mode neutral colors */
-        --border: 270 19% 27%;
-        --input: 270 19% 27%;
+        --border: 270 0% 27%;
+        --input: 270 0% 27%;
         --ring: 270 91% 60%; /* Electric blue ring */
 
         /* Dark mode chart colors */
