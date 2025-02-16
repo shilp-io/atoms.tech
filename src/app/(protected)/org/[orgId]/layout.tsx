@@ -1,6 +1,6 @@
 // [orgSlug]/layout.tsx
+import Sidebar from '@/components/base/Sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { DashboardSidebar } from '../components/DashboardSidebar.client';
 import VerticalToolbar from '@/components/custom/VerticalToolbar';
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { QueryClient } from '@tanstack/react-query';
@@ -37,7 +37,7 @@ export default async function OrgLayout({ children, params }: OrgLayoutProps) {
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
             <SidebarProvider>
-                <DashboardSidebar />
+                <Sidebar />
                 <div className="relative flex-1 p-16">
                     {children}
                     <VerticalToolbar />
