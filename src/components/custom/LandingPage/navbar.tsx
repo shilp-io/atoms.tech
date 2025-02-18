@@ -8,14 +8,6 @@ import { GridBackground } from './grid-background';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
-const breakpoints = {
-    sm: '640px',
-    md: '780px',
-    lg: '1024px',
-    xl: '1280px',
-    '2xl': '1536px'
-};
-
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -84,8 +76,10 @@ export function Navbar() {
 
                 {/* Mobile Navigation */}
                 {isMenuOpen && (
-                    <div className="absolute top-full left-0 right-0 bg-black border-t border-white md:hidden
-                        animate-in slide-in-from-right duration-300 ease-in-out">
+                    <div
+                        className="absolute top-full left-0 right-0 bg-black border-t border-white md:hidden
+                        animate-in slide-in-from-right duration-300 ease-in-out"
+                    >
                         <nav className="flex flex-col space-y-4 p-4">
                             {navLinks.map((link) => (
                                 <NavLink key={link.href} {...link} />
