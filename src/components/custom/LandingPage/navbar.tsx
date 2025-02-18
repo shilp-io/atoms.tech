@@ -8,6 +8,14 @@ import { GridBackground } from './grid-background';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
+const breakpoints = {
+    sm: '640px',
+    md: '780px',
+    lg: '1024px',
+    xl: '1280px',
+    '2xl': '1536px'
+};
+
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -39,15 +47,17 @@ export function Navbar() {
                             alt="Atoms logo"
                             width={24}
                             height={24}
-                            className="object-contain invert mx-2 w-auto h-auto"
+                            className="object-contain invert mx-2 w-auto h-auto
+                                sm:w-[28px] sm:h-[28px]
+                                md:w-[32px] md:h-[32px]"
                         />
-                        <span className="font-semibold text-lg">
+                        <span className="font-semibold text-base sm:text-lg md:text-xl">
                             ATOMS.TECH
                         </span>
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex space-x-8 lg:space-x-16">
+                    <nav className="hidden md:flex space-x-4 lg:space-x-8 xl:space-x-16">
                         {navLinks.map((link) => (
                             <NavLink key={link.href} {...link} />
                         ))}
@@ -63,8 +73,9 @@ export function Navbar() {
                             SIGN IN
                         </Button>
                         <button
-                            className="md:hidden text-white"
+                            className="md:hidden text-white p-2 touch-manipulation"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
+                            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
                         >
                             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
@@ -73,7 +84,8 @@ export function Navbar() {
 
                 {/* Mobile Navigation */}
                 {isMenuOpen && (
-                    <div className="absolute top-full left-0 right-0 bg-black border-t border-white md:hidden">
+                    <div className="absolute top-full left-0 right-0 bg-black border-t border-white md:hidden
+                        animate-in slide-in-from-right duration-300 ease-in-out">
                         <nav className="flex flex-col space-y-4 p-4">
                             {navLinks.map((link) => (
                                 <NavLink key={link.href} {...link} />
