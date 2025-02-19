@@ -10,7 +10,7 @@ interface SettingsSectionProps {
 }
 
 export default function SettingsSection({ title, description, children }: SettingsSectionProps) {
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(false); // Set initial state to false
 
     return (
         <div className="flex flex-col gap-0">
