@@ -59,8 +59,6 @@ export default function RequirementPage() {
 
     // set the uploadedFiles when the pipeline run is completed
     useEffect(() => {
-        if (!isUploading) return;
-
         if (convertResponse?.state === 'DONE') {
             // check that the response has the expected outputs
             const convertedFileNames =
