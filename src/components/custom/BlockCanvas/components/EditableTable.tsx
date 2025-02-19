@@ -102,7 +102,12 @@ interface TableSideMenuProps {
     onEnterEditMode: () => void;
 }
 
-const TableSideMenu = ({ showFilter, filterComponent, onNewRow }: TableSideMenuProps) => {
+const TableSideMenu = ({
+    showFilter,
+    filterComponent,
+    onNewRow,
+    onEnterEditMode,
+}: TableSideMenuProps) => {
     return (
         <motion.div
             initial={{ opacity: 0, x: 0 }}
@@ -238,13 +243,16 @@ export function EditableTable<
 
         previousDataRef.current = data;
 
-        if (isEditMode && data.length > 0) {
-            const initialEditData = data.reduce((acc, item) => {
-                if (item.id) {
-                    acc[item.id as string] = { ...item };
-                }
-                return acc;
-            }, {} as Record<string, T>);
+        if (localIsEditMode && data.length > 0) {
+            const initialEditData = data.reduce(
+                (acc, item) => {
+                    if (item.id) {
+                        acc[item.id as string] = { ...item };
+                    }
+                    return acc;
+                },
+                {} as Record<string, T>,
+            );
             setEditingData(initialEditData);
         } else if (!localIsEditMode) {
             setEditingData({});
@@ -390,10 +398,18 @@ export function EditableTable<
         });
     };
 
-    const renderCell = (item: T, column: EditableColumn<T>, rowIndex: number, colIndex: number) => {
-        const isEditing = isEditMode || item.id === 'new';
-        const value = isEditing ? editingData[item.id as string]?.[column.accessor] : item[column.accessor];
-        const isHovered = hoveredCell?.row === rowIndex && hoveredCell?.col === colIndex;
+    const renderCell = (
+        item: T,
+        column: EditableColumn<T>,
+        rowIndex: number,
+        colIndex: number,
+    ) => {
+        const isEditing = localIsEditMode || item.id === 'new';
+        const value = isEditing
+            ? editingData[item.id as string]?.[column.accessor]
+            : item[column.accessor];
+        const isHovered =
+            hoveredCell?.row === rowIndex && hoveredCell?.col === colIndex;
 
         if (isEditing) {
             switch (column.type) {
@@ -505,8 +521,12 @@ export function EditableTable<
                 <div className="relative">
                     <div
                         className="relative overflow-visible font-mono group"
-                        onMouseEnter={() => !isEditMode && setIsHoveringTable(true)}
-                        onMouseLeave={() => !isEditMode && setIsHoveringTable(false)}
+                        onMouseEnter={() =>
+                            !localIsEditMode && setIsHoveringTable(true)
+                        }
+                        onMouseLeave={() =>
+                            !localIsEditMode && setIsHoveringTable(false)
+                        }
                     >
                         {/* Slide-out Controls */}
                         <AnimatePresence>
@@ -582,7 +602,13 @@ export function EditableTable<
                                                     </Button>
                                                 </TableHead>
                                             ))}
-                                            {isEditMode && <TableHead style={{ width: '100px' }}>Actions</TableHead>}
+                                            {localIsEditMode && (
+                                                <TableHead
+                                                    style={{ width: '100px' }}
+                                                >
+                                                    Actions
+                                                </TableHead>
+                                            )}
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -591,16 +617,32 @@ export function EditableTable<
                                                 key={item.id}
                                                 className="font-mono hover:bg-accent/5"
                                             >
-                                                {columns.map((column, colIndex) => (
-                                                    <TableCell
-                                                        key={`${String(item.id)}-${String(column.accessor)}`}
-                                                        onMouseEnter={() => setHoveredCell({ row: rowIndex, col: colIndex })}
-                                                        onMouseLeave={() => setHoveredCell(null)}
-                                                    >
-                                                        {renderCell(item, column, rowIndex, colIndex)}
-                                                    </TableCell>
-                                                ))}
-                                                {isEditMode && (
+                                                {columns.map(
+                                                    (column, colIndex) => (
+                                                        <TableCell
+                                                            key={`${String(item.id)}-${String(column.accessor)}`}
+                                                            onMouseEnter={() =>
+                                                                setHoveredCell({
+                                                                    row: rowIndex,
+                                                                    col: colIndex,
+                                                                })
+                                                            }
+                                                            onMouseLeave={() =>
+                                                                setHoveredCell(
+                                                                    null,
+                                                                )
+                                                            }
+                                                        >
+                                                            {renderCell(
+                                                                item,
+                                                                column,
+                                                                rowIndex,
+                                                                colIndex,
+                                                            )}
+                                                        </TableCell>
+                                                    ),
+                                                )}
+                                                {localIsEditMode && (
                                                     <TableCell>
                                                         <div className="flex gap-2">
                                                             <Button
@@ -673,25 +715,31 @@ export function EditableTable<
                                                 )}
                                                 onClick={handleMockRowClick}
                                             >
-                                                {columns.map((column, colIndex) => (
-                                                    <TableCell
-                                                        key={`mock-${String(column.accessor)}`}
-                                                        className={cn(
-                                                            "text-muted-foreground/50 group-hover/mock-row:text-muted-foreground",
-                                                            colIndex === 0 && "font-medium"
-                                                        )}
-                                                    >
-                                                        {colIndex === 0 ? (
-                                                            <div className="flex items-center gap-2">
-                                                                <Plus className="h-4 w-4" />
-                                                                New Row
-                                                            </div>
-                                                        ) : (
-                                                            "..."
-                                                        )}
-                                                    </TableCell>
-                                                ))}
-                                                {isEditMode && <TableCell />}
+                                                {columns.map(
+                                                    (column, colIndex) => (
+                                                        <TableCell
+                                                            key={`mock-${String(column.accessor)}`}
+                                                            className={cn(
+                                                                'text-muted-foreground/50 group-hover/mock-row:text-muted-foreground',
+                                                                colIndex ===
+                                                                    0 &&
+                                                                    'font-medium',
+                                                            )}
+                                                        >
+                                                            {colIndex === 0 ? (
+                                                                <div className="flex items-center gap-2">
+                                                                    <Plus className="h-4 w-4" />
+                                                                    New Row
+                                                                </div>
+                                                            ) : (
+                                                                '...'
+                                                            )}
+                                                        </TableCell>
+                                                    ),
+                                                )}
+                                                {localIsEditMode && (
+                                                    <TableCell />
+                                                )}
                                             </TableRow>
                                         )}
                                     </TableBody>
