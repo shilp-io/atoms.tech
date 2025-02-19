@@ -33,8 +33,7 @@ export default function RequirementPage() {
 
     const { startPipeline, getPipelineRun, uploadFiles } = useGumloop();
     const [convertPipelineRunId, setConvertPipelineRunId] = useState<string>();
-    const { data: convertResponse } =
-        getPipelineRun(convertPipelineRunId);
+    const { data: convertResponse } = getPipelineRun(convertPipelineRunId);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length) return;
