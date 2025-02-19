@@ -1,8 +1,6 @@
 'use client';
 
-import DashboardView, { Column } from '@/components/base/DashboardView';
 import { useOrgsByUser } from '@/hooks/queries/useOrganization';
-import RenderCounter from '@/components/custom/RerenderCount';
 import { useUser } from '@/lib/providers/user.provider';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useContextStore } from '@/lib/store/context.store';
@@ -20,7 +18,7 @@ export default function HomeDashboard() {
     const router = useRouter();
     const { setCurrentUserId } = useContextStore();
     const { setOrganization } = useOrganization();
-    const { data: organizations, isLoading } = useOrgsByUser(user?.id || '');
+    const { data: organizations } = useOrgsByUser(user?.id || '');
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
