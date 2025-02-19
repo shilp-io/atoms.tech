@@ -15,10 +15,11 @@ import { Separator } from '@/components/ui/separator';
 import { AlertCircle, Github, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { login } from '../auth/actions';
 
-export default function LoginPage() {
+// Create a separate client component for the login form
+function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [email, setEmail] = useState('');
@@ -34,8 +35,9 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
-            <Card className="w-full max-w-md bg-white dark:bg-gray-800 shadow-sm dark:shadow-lg border-gray-200 dark:border-gray-700">
+        <div className="min-h-screen flex items-center justify-center bg-[url('/../../../nodesbackground.jpg')] bg-cover bg-center bg-black px-4 py-12 relative">
+            <div className="pointer-events-none absolute inset-0 bg-black opacity-80" />
+            <Card className="w-full max-w-md bg-background shadow-sm dark:shadow-lg relative z-10">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold text-center text-gray-900 dark:text-gray-100">
                         Welcome back
@@ -62,6 +64,7 @@ export default function LoginPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
+                                    className=""
                                 />
                             </div>
                             <div className="space-y-2">
@@ -88,7 +91,7 @@ export default function LoginPage() {
                             <Separator className="w-full bg-gray-200 dark:bg-gray-700" />
                         </div>
                         <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                            <span className="px-2 bg-background text-gray-500 dark:text-gray-400">
                                 Or continue with
                             </span>
                         </div>
@@ -116,7 +119,7 @@ export default function LoginPage() {
                         Don&apos;t have an account?{' '}
                         <Link
                             href="/signup"
-                            className="font-medium text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400"
+                            className="font-medium text-primary hover:text-primary/80"
                         >
                             Sign up
                         </Link>
@@ -124,5 +127,14 @@ export default function LoginPage() {
                 </CardFooter>
             </Card>
         </div>
+    );
+}
+
+// Main page component with Suspense boundary
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <LoginForm />
+        </Suspense>
     );
 }

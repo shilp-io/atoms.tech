@@ -4,6 +4,7 @@ import { useSettingsStore } from "@/lib/store/settings.store";
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
+
 interface LayoutViewProps {
     children: ReactNode;
 }
@@ -35,3 +36,4 @@ function LayoutView({ children }: LayoutViewProps) {
 }
 
 export default LayoutView;
+

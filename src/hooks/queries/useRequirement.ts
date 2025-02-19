@@ -1,6 +1,9 @@
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { buildQuery } from '@/lib/utils/queryFactory';
+import {
+    buildQuery,
+    QueryFilters as GenericQueryFilters,
+} from '@/lib/utils/queryFactory';
 import { QueryFilters } from '@/types/base/filters.types';
 import { Requirement } from '@/types/base/requirements.types';
 import { useQuery } from '@tanstack/react-query';
@@ -22,9 +25,13 @@ export function useRequirement(requirementId: string) {
     });
 }
 
-export function useRequirements(queryFilters?: QueryFilters) {
+export function useRequirements(
+    queryFilters?: GenericQueryFilters<'requirements'>,
+) {
     return useQuery({
-        queryKey: queryKeys.requirements.list(queryFilters || {}),
+        queryKey: queryKeys.requirements.list(
+            (queryFilters as QueryFilters) || {},
+        ),
         queryFn: async () => {
             const { data } = await buildQuery('requirements', queryFilters);
             return data;
@@ -34,7 +41,7 @@ export function useRequirements(queryFilters?: QueryFilters) {
 
 export function useDocumentRequirements(
     documentId: string,
-    queryFilters?: Omit<QueryFilters, 'filters'>,
+    queryFilters?: Omit<GenericQueryFilters<'requirements'>, 'filters'>,
 ) {
     return useQuery({
         queryKey: queryKeys.requirements.byDocument(documentId),
@@ -56,7 +63,7 @@ export function useDocumentRequirements(
 
 export function useBlockRequirements(
     blockId: string,
-    queryFilters?: Omit<QueryFilters, 'filters'>,
+    queryFilters?: Omit<GenericQueryFilters<'requirements'>, 'filters'>,
 ) {
     return useQuery({
         queryKey: queryKeys.requirements.byBlock(blockId),

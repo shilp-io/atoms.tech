@@ -13,11 +13,12 @@ import { Input } from '@/components/ui/input';
 import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { signup } from '../auth/actions';
 import ConfirmEmailMessage from './message';
 
-export default function RegisterPage() {
+// Create a separate client component for the signup form
+function SignupForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const message = searchParams.get('message');
@@ -75,8 +76,11 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
-            <Card className="w-full max-w-md bg-white dark:bg-gray-800 shadow-sm dark:shadow-lg border-gray-200 dark:border-gray-700">
+        <div className="min-h-screen flex items-center justify-center bg-[url('/../../../nodesbackground.jpg')] bg-cover bg-center bg-black px-4 py-12 relative">
+            {/* Background overlay */}
+            <div className="pointer-events-none absolute inset-0 bg-black opacity-80" />
+            {/* Card container */}
+            <Card className="w-full max-w-md bg-background shadow-sm dark:shadow-lg relative z-10">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold text-center text-gray-900 dark:text-gray-100">
                         Create your account
@@ -103,9 +107,6 @@ export default function RegisterPage() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
-                                    className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 
-                    focus:border-red-500 dark:focus:border-red-500 focus:ring-red-500 dark:focus:ring-red-500
-                    text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -116,9 +117,6 @@ export default function RegisterPage() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 
-                    focus:border-red-500 dark:focus:border-red-500 focus:ring-red-500 dark:focus:ring-red-500
-                    text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -131,9 +129,6 @@ export default function RegisterPage() {
                                         setPassword(e.target.value)
                                     }
                                     required
-                                    className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 
-                    focus:border-red-500 dark:focus:border-red-500 focus:ring-red-500 dark:focus:ring-red-500
-                    text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -146,18 +141,13 @@ export default function RegisterPage() {
                                         setConfirmPassword(e.target.value)
                                     }
                                     required
-                                    className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 
-                    focus:border-red-500 dark:focus:border-red-500 focus:ring-red-500 dark:focus:ring-red-500
-                    text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
                                 />
                             </div>
                         </div>
 
                         <Button
                             type="submit"
-                            className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600
-                text-white font-medium py-2 rounded-lg transition-colors
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-red-500"
+                            className="w-full font-medium py-2 rounded-lg"
                         >
                             {isLoading ? 'Signing up...' : 'Sign up'}
                         </Button>
@@ -168,8 +158,7 @@ export default function RegisterPage() {
                         Already have an account?{' '}
                         <Link
                             href="/login"
-                            className="font-medium text-red-600 hover:text-red-500 dark:text-red-500 dark:hover:text-red-400
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-red-500"
+                            className="text-primary hover:text-primary/80 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 "
                         >
                             Sign in
                         </Link>
@@ -177,5 +166,14 @@ export default function RegisterPage() {
                 </CardFooter>
             </Card>
         </div>
+    );
+}
+
+// Main page component with Suspense boundary
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <SignupForm />
+        </Suspense>
     );
 }
