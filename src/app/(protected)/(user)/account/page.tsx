@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useUser } from '@/lib/providers/user.provider';
 import Image from 'next/image';
@@ -33,24 +33,39 @@ export default function AccountPage() {
                         )}
                     </div>
                     <div className="flex items-center mt-4">
-                        <h2 className="text-2xl font-semibold">{profile?.full_name || 'Full Name'}</h2>
+                        <h2 className="text-2xl font-semibold">
+                            {profile?.full_name || 'Full Name'}
+                        </h2>
                         <Pencil className="ml-2 h-4 w-4 text-gray-600 cursor-pointer" />
                     </div>
-                    <p className="text-1xl p-3 text-gray-600">{user?.email || 'Email'}</p>
+                    <p className="text-1xl p-3 text-gray-600">
+                        {user?.email || 'Email'}
+                    </p>
                 </div>
 
                 <div className="w-3/5 mx-auto">
-                    <h2 className="text-xl font-small pl-2 mb-2">Account Settings</h2>
+                    <h2 className="text-xl font-small pl-2 mb-2">
+                        Account Settings
+                    </h2>
                     <Card className="p-5">
-                        <SettingsSection title="Security Settings" description="Manage your security settings">
+                        <SettingsSection
+                            title="Security Settings"
+                            description="Manage your security settings"
+                        >
                             <div>Security Option 1</div>
                             <div>Security Option 2</div>
                         </SettingsSection>
-                        <SettingsSection title="Email Settings" description="Manage your email settings">
+                        <SettingsSection
+                            title="Email Settings"
+                            description="Manage your email settings"
+                        >
                             <div>Email Option 1</div>
                             <div>Email Option 2</div>
                         </SettingsSection>
-                        <SettingsSection title="Advanced Settings" description="Manage your advanced settings">
+                        <SettingsSection
+                            title="Advanced Settings"
+                            description="Manage your advanced settings"
+                        >
                             <div>Advanced Option 1</div>
                             <div>Advanced Option 2</div>
                         </SettingsSection>
