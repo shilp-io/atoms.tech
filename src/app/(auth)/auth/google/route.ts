@@ -2,19 +2,19 @@ import { createClient } from '@/lib/supabase/supabaseServer';
 import { redirect } from 'next/navigation';
 
 export async function GET(request: Request) {
-  const requestUrl = new URL(request.url);
-  const supabase = await createClient();
+    const requestUrl = new URL(request.url);
+    const supabase = await createClient();
 
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: `${requestUrl.origin}/auth/callback`,
-    },
-  });
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: `${requestUrl.origin}/auth/callback`,
+        },
+    });
 
-  if (error) {
-    return redirect('/login?error=Could not authenticate with Google');
-  }
+    if (error) {
+        return redirect('/login?error=Could not authenticate with Google');
+    }
 
-  return redirect(data.url);
-} 
+    return redirect(data.url);
+}
