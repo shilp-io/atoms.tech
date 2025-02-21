@@ -5,7 +5,15 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useGumloop } from '@/hooks/useGumloop';
-import { Check, Scale, Target, Upload, Wand, Brain } from 'lucide-react';
+import {
+    Check,
+    Scale,
+    Target,
+    Upload,
+    Wand,
+    Brain,
+    CircleAlert,
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -19,10 +27,22 @@ export default function RequirementPage() {
 
     // Set requirement description when loaded
     useEffect(() => {
-        if (!isReqLoading && requirement) {
+        if (requirement) {
             setReqText(requirement?.description || '');
         }
-    }, [requirement, isReqLoading, setReqText]);
+    }, [requirement]);
+
+    const [errors, setErrors] = useState<{
+        missingRequirement: string;
+        missingFiles: string;
+    }>({ missingRequirement: '', missingFiles: '' });
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setReqText(e.target.value);
+        if (errors.missingRequirement) {
+            setErrors((prev) => ({ ...prev, missingRequirement: '' }));
+        }
+    };
 
     const [currentFile, setCurrentFile] = useState<string>('');
     // uploaded files maps processed file name to original file name
@@ -31,7 +51,6 @@ export default function RequirementPage() {
     }>({});
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
-    const [showReasoning, setShowReasoning] = useState(false);
 
     const { startPipeline, getPipelineRun, uploadFiles } = useGumloop();
     const [convertPipelineRunId, setConvertPipelineRunId] =
@@ -42,9 +61,14 @@ export default function RequirementPage() {
         if (!e.target.files?.length) return;
 
         try {
-            setIsUploading(true);
             const files = Array.from(e.target.files);
             setCurrentFile(files[0].name);
+            setIsUploading(true);
+
+            if (errors.missingFiles) {
+                setErrors((prev) => ({ ...prev, missingFiles: '' }));
+            }
+
             const uploadedFileNames = await uploadFiles(files);
             console.log('Files uploaded successfully:', uploadedFileNames);
 
@@ -115,6 +139,53 @@ export default function RequirementPage() {
         }
     }, [isUploading, convertPipelineRunId]);
 
+    const [isReasoning, setIsReasoning] = useState(false);
+    const [analysisPipelineRunId, setAnalysisPipelineRunId] =
+        useState<string>('');
+    const { data: analysisResponse, isLoading: isAnalysisLoading } =
+        getPipelineRun(analysisPipelineRunId);
+
+    const handleAnalyze = async () => {
+        // check if the requirement is empty
+        if (!reqText) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                missingRequirement: 'Requirement text is required',
+            }));
+            return;
+        }
+        // or if no files are uploaded
+        if (Object.keys(uploadedFiles).length === 0) {
+            setErrors((prevErrors) => ({
+                ...prevErrors,
+                missingFiles: 'At least one file is required',
+            }));
+            return;
+        }
+        console.log('Starting analysis pipeline...');
+        setErrors({ missingRequirement: '', missingFiles: '' });
+        return;
+        try {
+            const { run_id } = await startPipeline({
+                pipelineType: isReasoning
+                    ? 'reasoning-requirement-analysis'
+                    : 'requirement-analysis',
+                requirement: reqText,
+                systemName: 'Backup Camera',
+                fileNames: Object.keys(uploadedFiles),
+            });
+            setAnalysisPipelineRunId(run_id);
+        } catch (error) {
+            console.error('Failed to start analysis pipeline:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (analysisResponse?.state === 'DONE') {
+            console.log('Analysis pipeline completed:', analysisResponse);
+        }
+    }, [analysisResponse]);
+
     if (isReqLoading) {
         return (
             <div className="container mx-auto p-6">
@@ -142,26 +213,40 @@ export default function RequirementPage() {
                         <textarea
                             className="w-full h-32 p-2 border rounded-md text-muted-foreground"
                             value={reqText}
-                            onChange={(e) => setReqText(e.target.value)}
+                            onChange={handleInputChange}
                         />
                         <div className="mt-4 space-y-2">
                             <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 sm:gap-0">
                                 <div className="flex items-center gap-2">
                                     <Brain className="h-5 w-5" />
                                     <Checkbox
-                                        checked={showReasoning}
+                                        checked={isReasoning}
                                         onChange={() =>
-                                            setShowReasoning(!showReasoning)
+                                            setIsReasoning(!isReasoning)
                                         }
                                         label="Reasoning"
                                         labelClassName="hidden md:block"
                                     />
                                 </div>
-                                <Button className="gap-2">
+                                <Button
+                                    className="gap-2"
+                                    onClick={handleAnalyze}
+                                    disabled={isAnalysisLoading}
+                                >
                                     <Wand className="h-4 w-4" />
                                     Analyze with AI
                                 </Button>
                             </div>
+                            {(errors.missingRequirement ||
+                                errors.missingFiles) && (
+                                <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded">
+                                    <CircleAlert className="h-4 w-4" />
+                                    <span>
+                                        {errors.missingRequirement ||
+                                            errors.missingFiles}
+                                    </span>
+                                </div>
+                            )}
                             <input
                                 type="file"
                                 ref={fileInputRef}
