@@ -13,26 +13,27 @@ export async function GET(request: Request) {
     try {
         const supabase = await createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        
+
         if (error) {
             console.error('Auth error:', error);
             return NextResponse.redirect(`${origin}/auth/auth-code-error`);
         }
 
         const forwardedHost = request.headers.get('x-forwarded-host');
-        const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+        const forwardedProto =
+            request.headers.get('x-forwarded-proto') || 'https';
         const isLocalEnv = process.env.NODE_ENV === 'development';
 
         // For local development, use origin directly
         if (isLocalEnv) {
             return NextResponse.redirect(`${origin}${next}`);
         }
-        
+
         // For production, prefer x-forwarded-host when available
-        const baseUrl = forwardedHost 
+        const baseUrl = forwardedHost
             ? `${forwardedProto}://${forwardedHost}`
             : origin;
-        
+
         return NextResponse.redirect(`${baseUrl}${next}`);
     } catch (error) {
         console.error('Unexpected error:', error);
