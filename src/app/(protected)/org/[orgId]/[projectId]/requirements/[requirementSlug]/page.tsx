@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card } from '@/components/ui/card';
 import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useGumloop } from '@/hooks/useGumloop';
@@ -114,11 +115,6 @@ export default function RequirementPage() {
         }
     }, [isUploading, convertPipelineRunId]);
 
-    // const [analysisPipelineRunId, setAnalysisPipelineRunId] =
-    //     useState<string>();
-    // const { data: analysisResponse, isSuccess: isAnalysisSuccess } =
-    //     getPipelineRun(analysisPipelineRunId);
-
     if (isReqLoading) {
         return (
             <div className="container mx-auto p-6">
@@ -152,21 +148,14 @@ export default function RequirementPage() {
                             <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 sm:gap-0">
                                 <div className="flex items-center gap-2">
                                     <Brain className="h-5 w-5" />
-                                    <label className="inline-flex items-center cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            value=""
-                                            className="sr-only peer"
-                                            checked={showReasoning}
-                                            onChange={() =>
-                                                setShowReasoning(!showReasoning)
-                                            }
-                                        />
-                                        <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-blue-600"></div>
-                                        <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300 hidden md:block">
-                                            Reasoning
-                                        </span>
-                                    </label>
+                                    <Checkbox
+                                        checked={showReasoning}
+                                        onChange={() =>
+                                            setShowReasoning(!showReasoning)
+                                        }
+                                        label="Reasoning"
+                                        labelClassName="hidden md:block"
+                                    />
                                 </div>
                                 <Button className="gap-2">
                                     <Wand className="h-4 w-4" />
