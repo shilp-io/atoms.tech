@@ -105,11 +105,13 @@ export default function RequirementPage() {
 
     useEffect(() => {
         if (isUploading) {
-            setUploadButtonText('Uploading...');
+            if (convertPipelineRunId) {
+                setUploadButtonText('Converting...');
+            } else setUploadButtonText('Uploading...');
         } else {
             setUploadButtonText('Upload Files');
         }
-    }, [isUploading, convertResponse?.state]);
+    }, [isUploading, convertPipelineRunId]);
 
     // const [analysisPipelineRunId, setAnalysisPipelineRunId] =
     //     useState<string>();
