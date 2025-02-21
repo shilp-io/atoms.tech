@@ -4,30 +4,45 @@ const GUMLOOP_API_URL =
 const USER_ID = process.env.NEXT_PUBLIC_GUMLOOP_USER_ID;
 const GUMLOOP_FILE_CONVERT_FLOW_ID =
     process.env.NEXT_PUBLIC_GUMLOOP_FILE_CONVERT_FLOW_ID;
+const GUMLOOP_REQ_ANALYSIS_FLOW_ID =
+    process.env.NEXT_PUBLIC_GUMLOOP_REQ_ANALYSIS_FLOW_ID;
 
-// Validate required environment variables
-if (!GUMLOOP_API_KEY) {
-    throw new Error(
-        'Missing required environment variable: NEXT_PUBLIC_GUMLOOP_API_KEY',
-    );
+for (const [key, value] of Object.entries({
+    GUMLOOP_API_KEY,
+    GUMLOOP_API_URL,
+    USER_ID,
+    GUMLOOP_FILE_CONVERT_FLOW_ID,
+    GUMLOOP_REQ_ANALYSIS_FLOW_ID,
+})) {
+    if (!value) {
+        console.error(
+            `Missing required environment variable: NEXT_PUBLIC_${key}`,
+        );
+    }
 }
 
-if (!USER_ID) {
-    throw new Error(
-        'Missing required environment variable: NEXT_PUBLIC_GUMLOOP_USER_ID',
-    );
-}
-
-if (!GUMLOOP_FILE_CONVERT_FLOW_ID) {
-    throw new Error(
-        'Missing required environment variable: NEXT_PUBLIC_GUMLOOP_FILE_CONVERT_FLOW_ID',
-    );
-}
+type PipelineType =
+    | 'file-processing'
+    | 'requirement-analysis'
+    | 'reasoning-requirement-analysis';
 
 interface PipelineInput {
     input_name: string;
     value: string;
 }
+
+export type StartPipelineParams = {
+    pipelineType: PipelineType;
+    requirement?: string;
+    fileNames?: string[] | string;
+    systemName?: string;
+    objective?: string;
+    customPipelineInputs?: PipelineInput[];
+};
+
+export type GetPipelineRunParams = {
+    runId: string;
+};
 
 interface PipelineResponse {
     run_id: string;
@@ -133,21 +148,21 @@ export class GumloopService {
         }
     }
 
-    async startPipeline(
-        pipelineType: string,
-        requirement: string,
-        filenames?: string[] | string,
-        systemName?: string,
-        objective?: string,
-        customPipelineInputs?: PipelineInput[],
-    ): Promise<PipelineResponse> {
+    async startPipeline({
+        pipelineType,
+        requirement,
+        fileNames,
+        systemName,
+        objective,
+        customPipelineInputs,
+    }: StartPipelineParams): Promise<PipelineResponse> {
         const pipeline_id =
             pipelineType === 'file-processing'
                 ? GUMLOOP_FILE_CONVERT_FLOW_ID
                 : '';
 
         console.log('Starting pipeline with params:', {
-            filenames,
+            fileNames,
             systemName,
             objective,
             requirement,
@@ -159,9 +174,9 @@ export class GumloopService {
         if (!customPipelineInputs) {
             // Convert filenames to array if it's a string
             const filenamesArray =
-                typeof filenames === 'string'
-                    ? filenames.split(',').map((f) => f.trim())
-                    : filenames;
+                typeof fileNames === 'string'
+                    ? fileNames.split(',').map((f) => f.trim())
+                    : fileNames;
 
             console.log('Processed filenames:', filenamesArray);
 
@@ -242,7 +257,9 @@ export class GumloopService {
         }
     }
 
-    async getPipelineRun(runId: string): Promise<PipelineRunResponse> {
+    async getPipelineRun({
+        runId,
+    }: GetPipelineRunParams): Promise<PipelineRunResponse> {
         console.log('Getting pipeline run status:', {
             runId,
             userId: USER_ID,

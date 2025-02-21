@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { gumloopService } from '@/lib/services/gumloop';
+import {
+    gumloopService,
+    StartPipelineParams,
+    GetPipelineRunParams,
+} from '@/lib/services/gumloop';
 // import { rateLimit } from '@/lib/middleware/rateLimit';
 
 type ActionType = 'startPipeline' | 'getPipelineStatus';
@@ -8,19 +12,12 @@ interface BaseRequest {
     action: ActionType;
 }
 
-interface StartPipelineRequest extends BaseRequest {
+interface StartPipelineRequest extends BaseRequest, StartPipelineParams {
     action: 'startPipeline';
-    requirement: string;
-    fileNames?: string[] | string;
-    systemName?: string;
-    objective?: string;
-    pipelineType: 'file-processing' | 'requirement-analysis';
-    pipelineInputs?: Array<{ input_name: string; value: string }>;
 }
 
-interface GetPipelineStatusRequest extends BaseRequest {
+interface GetPipelineStatusRequest extends BaseRequest, GetPipelineRunParams {
     action: 'getPipelineStatus';
-    runId: string;
 }
 
 type ApiRequest = StartPipelineRequest | GetPipelineStatusRequest;
@@ -39,19 +36,13 @@ export async function POST(request: NextRequest) {
 
         switch (body.action) {
             case 'startPipeline': {
-                const pipelineResponse = await gumloopService.startPipeline(
-                    body.pipelineType,
-                    body.requirement,
-                    body.fileNames,
-                    body.systemName,
-                    body.objective,
-                    body.pipelineInputs,
-                );
+                const pipelineResponse =
+                    await gumloopService.startPipeline(body);
                 return NextResponse.json(pipelineResponse);
             }
 
             case 'getPipelineStatus': {
-                const status = await gumloopService.getPipelineRun(body.runId);
+                const status = await gumloopService.getPipelineRun(body);
                 return NextResponse.json(status);
             }
 
@@ -86,7 +77,7 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        const status = await gumloopService.getPipelineRun(runId);
+        const status = await gumloopService.getPipelineRun({ runId });
         return NextResponse.json(status);
     } catch (error) {
         console.error('API error:', error);

@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { StartPipelineParams } from '@/lib/services/gumloop';
 
 interface PipelineResponse {
     run_id: string;
@@ -14,15 +15,6 @@ interface PipelineRunResponse {
 
 interface GumloopOptions {
     skipCache?: boolean;
-}
-
-interface StartPipelineParams {
-    pipelineType: 'file-processing' | 'requirement-analysis';
-    requirement?: string;
-    fileNames?: string[] | string;
-    systemName?: string;
-    objective?: string;
-    pipelineInputs?: Array<{ input_name: string; value: string }>;
 }
 
 export function useGumloop(options: GumloopOptions = {}) {
@@ -63,20 +55,10 @@ export function useGumloop(options: GumloopOptions = {}) {
     });
 
     const startPipelineMutation = useMutation({
-        mutationFn: async ({
-            requirement,
-            fileNames,
-            systemName,
-            objective,
-            pipelineType,
-            pipelineInputs,
-        }: StartPipelineParams): Promise<PipelineResponse> => {
-            console.log('Starting pipeline:', {
-                requirement,
-                fileNames,
-                systemName,
-                objective,
-            });
+        mutationFn: async (
+            startPipelineParams: StartPipelineParams,
+        ): Promise<PipelineResponse> => {
+            console.log('Starting pipeline:', startPipelineParams);
             const response = await fetch('/api/ai', {
                 method: 'POST',
                 headers: {
@@ -84,12 +66,7 @@ export function useGumloop(options: GumloopOptions = {}) {
                 },
                 body: JSON.stringify({
                     action: 'startPipeline',
-                    requirement,
-                    fileNames,
-                    systemName,
-                    objective,
-                    pipelineType,
-                    pipelineInputs,
+                    ...startPipelineParams,
                 }),
             });
 
