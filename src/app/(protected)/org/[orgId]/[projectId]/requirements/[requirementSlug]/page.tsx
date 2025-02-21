@@ -32,7 +32,8 @@ export default function RequirementPage() {
     const [isUploading, setIsUploading] = useState(false);
 
     const { startPipeline, getPipelineRun, uploadFiles } = useGumloop();
-    const [convertPipelineRunId, setConvertPipelineRunId] = useState<string>();
+    const [convertPipelineRunId, setConvertPipelineRunId] =
+        useState<string>('');
     const { data: convertResponse } = getPipelineRun(convertPipelineRunId);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,44 +60,46 @@ export default function RequirementPage() {
 
     // set the uploadedFiles when the pipeline run is completed
     useEffect(() => {
-        if (convertResponse?.state === 'DONE') {
-            // check that the response has the expected outputs
-            const convertedFileNames =
-                convertResponse.outputs?.convertedFileNames;
+        switch (convertResponse?.state) {
+            case 'DONE': {
+                // check that the response has the expected outputs
+                const convertedFileNames =
+                    convertResponse.outputs?.convertedFileNames;
 
-            console.log('Converted file names:', convertedFileNames);
+                console.log('Converted file names:', convertedFileNames);
 
-            // append the converted file name to the uploaded files
-            if (!convertedFileNames) {
-                console.error('No converted file names found in response');
-                setIsUploading(false);
-                setCurrentFile('');
+                // append the converted file name to the uploaded files
+                if (!convertedFileNames) {
+                    console.error('No converted file names found in response');
+                    break;
+                }
+
+                // assert that it is an array
+                if (!Array.isArray(convertedFileNames)) {
+                    console.error('Converted file names is not an array');
+                    break;
+                }
+
+                for (const fileName of convertedFileNames) {
+                    setUploadedFiles((prevFiles) => ({
+                        ...prevFiles,
+                        [fileName]: currentFile,
+                    }));
+                }
+
+                break;
+            }
+            case 'FAILED': {
+                console.error('File processing pipeline failed');
+                break;
+            }
+            default:
                 return;
-            }
-
-            // assert that it is an array
-            if (!Array.isArray(convertedFileNames)) {
-                console.error('Converted file names is not an array');
-                setIsUploading(false);
-                setCurrentFile('');
-                return;
-            }
-
-            for (const fileName of convertedFileNames) {
-                setUploadedFiles((prevFiles) => ({
-                    ...prevFiles,
-                    [fileName]: currentFile,
-                }));
-            }
-
-            setIsUploading(false);
-            setCurrentFile('');
-        } else if (convertResponse?.state === 'FAILED') {
-            setIsUploading(false);
-            setCurrentFile('');
-            console.error('File processing pipeline failed');
         }
-    }, [convertResponse]);
+        setIsUploading(false);
+        setConvertPipelineRunId('');
+        setCurrentFile('');
+    }, [convertResponse, currentFile]);
 
     const [uploadButtonText, setUploadButtonText] = useState('Upload Files');
 
