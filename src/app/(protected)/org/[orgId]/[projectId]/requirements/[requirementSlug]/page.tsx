@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useGumloop } from '@/hooks/useGumloop';
-import { Check, Scale, Target, Upload, Wand } from 'lucide-react';
+import { Check, Scale, Target, Upload, Wand, Brain } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -30,6 +30,7 @@ export default function RequirementPage() {
     }>({});
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [showReasoning, setShowReasoning] = useState(false);
 
     const { startPipeline, getPipelineRun, uploadFiles } = useGumloop();
     const [convertPipelineRunId, setConvertPipelineRunId] =
@@ -135,7 +136,7 @@ export default function RequirementPage() {
 
     return (
         <div className="container mx-auto p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <div className="space-y-4">
                     <h2 className="text-2xl font-bold mb-4">Requirement</h2>
                     <Card className="p-6">
@@ -148,6 +149,30 @@ export default function RequirementPage() {
                             onChange={(e) => setReqText(e.target.value)}
                         />
                         <div className="mt-4 space-y-2">
+                            <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 sm:gap-0">
+                                <div className="flex items-center gap-2">
+                                    <Brain className="h-5 w-5" />
+                                    <label className="inline-flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            value=""
+                                            className="sr-only peer"
+                                            checked={showReasoning}
+                                            onChange={() =>
+                                                setShowReasoning(!showReasoning)
+                                            }
+                                        />
+                                        <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary dark:peer-checked:bg-blue-600"></div>
+                                        <span className="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300 hidden md:block">
+                                            Reasoning
+                                        </span>
+                                    </label>
+                                </div>
+                                <Button className="gap-2">
+                                    <Wand className="h-4 w-4" />
+                                    Analyze with AI
+                                </Button>
+                            </div>
                             <input
                                 type="file"
                                 ref={fileInputRef}
@@ -167,10 +192,6 @@ export default function RequirementPage() {
                                     <Upload className="h-4 w-4" />
                                 )}
                                 {uploadButtonText}
-                            </Button>
-                            <Button className="gap-2 w-full">
-                                <Wand className="h-4 w-4" />
-                                Analyze with AI
                             </Button>
                             {Object.keys(uploadedFiles).length > 0 && (
                                 <div className="mt-4">
