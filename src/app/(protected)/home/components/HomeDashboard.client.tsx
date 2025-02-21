@@ -13,6 +13,7 @@ import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { Organization } from '@/types';
+import { useTheme } from 'next-themes';
 
 export default function HomeDashboard() {
     const { user, profile } = useUser();
@@ -21,12 +22,7 @@ export default function HomeDashboard() {
     const { setOrganization } = useOrganization();
     const { data: organizations } = useOrgsByUser(user?.id || '');
     const [searchTerm, setSearchTerm] = useState('');
-
-    useEffect(() => {
-        if (organizations) {
-            console.log('Organizations:', organizations);
-        }
-    }, [organizations]);
+    const { theme } = useTheme();
 
     const handleRowClick = (item: Organization) => {
         setCurrentUserId(user?.id || '');
@@ -39,7 +35,7 @@ export default function HomeDashboard() {
     );
 
     return (
-        <div className="container mx-auto p-6">
+        <div className="container p-6">
             <div className="mb-4">
                 <h2 className="text-xl font-medium">
                     Welcome back, {profile?.full_name}
@@ -61,20 +57,16 @@ export default function HomeDashboard() {
                 {filteredOrganizations?.map((org) => (
                     <Card
                         key={org.id}
-                        className="p-5 hover:bg-gray-200 border border-gray-300"
+                        className={`p-5 border border-gray-300 ${
+                            theme === 'dark' ? 'hover:bg-accent' : 'hover:bg-gray-200'
+                        }`}
                         onClick={() => handleRowClick(org)}
                     >
                         <h3 className="text-sm font-semibold">{org.name}</h3>
                         <p className="pb-3 text-xs text-gray-400">{org.slug}</p>
                         <Badge
-                            variant="outline"
-                            className={
-                                org.status === 'active'
-                                    ? 'border-green-500 text-green-500'
-                                    : org.status === 'inactive'
-                                      ? 'border-gray-500 text-gray-500'
-                                      : 'border-yellow-500 text-yellow-500'
-                            }
+                            variant="secondary"
+                            className="rounded"
                         >
                             {org.status}
                         </Badge>

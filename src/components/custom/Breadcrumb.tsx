@@ -17,13 +17,19 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ className }) => {
     const pathname = usePathname();
     const pathSegments = pathname.split('/').filter(Boolean);
 
-    // Get entity names from React Query cache
-    const { orgName, projectName, documentName } =
-        useBreadcrumbData(pathSegments);
+    // Always call useBreadcrumbData
+    const { orgName, projectName, documentName } = useBreadcrumbData(pathSegments);
 
     const getBreadcrumbs = () => {
         if (pathSegments.length >= 3) {
             const section = pathSegments[3];
+
+            if (pathSegments[2] === 'externalDocs') {
+                return [
+                    orgName || 'Organization',
+                    'External Docs',
+                ];
+            }
 
             if (pathSegments.length >= 4) {
                 if (section === 'documents' && documentName) {

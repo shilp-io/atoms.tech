@@ -19,6 +19,7 @@ import { Card } from '@/components/ui/card';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getDocumentData } from '@/lib/db/client';
 import { useDocumentStore } from '@/lib/store/document.store';
+import LayoutView from '@/components/views/LayoutView';
 import { RequirementPriority, RequirementStatus } from '@/types';
 
 type BlockContent = {
@@ -67,6 +68,7 @@ export default function DocDashboard() {
     }
 
     return (
+        <LayoutView>
         <div className="container mx-auto py-6">
             {/* Document Header */}
             <motion.div
@@ -198,5 +200,6 @@ export default function DocDashboard() {
                 <BlockCanvas documentId={documentId} />
             </div>
         </div>
+        </LayoutView>
     );
 }

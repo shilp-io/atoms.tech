@@ -7,6 +7,7 @@ import { useUserProjects } from '@/hooks/queries/useProject';
 import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { Project } from '@/types';
+import { Button } from '@/components/ui/button';
 
 export default function OrgDashboard() {
     // Navigation hooks
@@ -34,16 +35,35 @@ export default function OrgDashboard() {
 
     const handleRowClick = (item: Project) => {
         setCurrentProjectId(item.id);
-        router.push(`/org/${params.orgId}/${item.id}`);
+        router.push(`/org/${params?.orgId}/${item.id}`);
+    };
+
+    const handleExternalDocsClick = () => {
+        router.push(`/org/${params?.orgId}/externalDocs`);
     };
 
     return (
-        <DashboardView
-            data={data || []}
-            columns={columns}
-            isLoading={projectsLoading}
-            emptyMessage="No projects found."
-            onRowClick={handleRowClick}
-        />
+        <div className="container p-6">
+            <h1 className="text-xl font-medium">Projects</h1>
+            <DashboardView
+                data={data || []}
+                columns={columns}
+                isLoading={projectsLoading}
+                emptyMessage="No projects found."
+                onRowClick={handleRowClick}
+            />
+            <div className="project-documents mt-8">
+                <h2 className="text-xl font-medium mb-4">Document Collection</h2>
+                <div className="recent-documents mb-4">
+                    {/* Placeholder for recently added documents */}
+                    <p>No recent documents available.</p>
+                </div>
+                <Button variant="secondary"
+                    onClick={handleExternalDocsClick}
+                >
+                    Go to External Docs
+                </Button>
+            </div>
+        </div>
     );
 }
