@@ -7,11 +7,9 @@ import Image from 'next/image';
 import { GridBackground } from './grid-background';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
 
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const { isAuthenticated, signOut } = useAuth();
 
     const navLinks = [
         { href: '/#features', label: 'Features' },
@@ -29,24 +27,6 @@ export function Navbar() {
             {label}
             <div className="absolute w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
         </Link>
-    );
-
-    const handleSignOut = async () => {
-        await signOut();
-    };
-
-    const handleSignIn = () => {
-        redirect('/login');
-    };
-
-    const AuthButton = () => (
-        <Button
-            variant="outline"
-            className="btn-secondary bg-black hover:bg-white hover:text-black"
-            onClick={isAuthenticated ? handleSignOut : handleSignIn}
-        >
-            {isAuthenticated ? 'SIGN OUT' : 'SIGN IN'}
-        </Button>
     );
 
     return (
@@ -77,7 +57,13 @@ export function Navbar() {
 
                     {/* Mobile Menu Button */}
                     <div className="flex items-center gap-4">
-                        <AuthButton />
+                        <Button
+                            variant="outline"
+                            className="btn-secondary bg-black hover:bg-white hover:text-black hidden md:flex"
+                            onClick={() => redirect('/login')}
+                        >
+                            SIGN IN
+                        </Button>
                         <button
                             className="md:hidden text-white p-2 touch-manipulation"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -98,7 +84,13 @@ export function Navbar() {
                             {navLinks.map((link) => (
                                 <NavLink key={link.href} {...link} />
                             ))}
-                            <AuthButton />
+                            <Button
+                                variant="outline"
+                                className="btn-secondary bg-black hover:bg-white hover:text-black w-full"
+                                onClick={() => redirect('/login')}
+                            >
+                                SIGN IN
+                            </Button>
                         </nav>
                     </div>
                 )}
