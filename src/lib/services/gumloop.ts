@@ -9,13 +9,12 @@ const GUMLOOP_REQ_ANALYSIS_FLOW_ID =
 
 for (const [key, value] of Object.entries({
     GUMLOOP_API_KEY,
-    GUMLOOP_API_URL,
     USER_ID,
     GUMLOOP_FILE_CONVERT_FLOW_ID,
     GUMLOOP_REQ_ANALYSIS_FLOW_ID,
 })) {
     if (!value) {
-        console.error(
+        throw new Error(
             `Missing required environment variable: NEXT_PUBLIC_${key}`,
         );
     }
@@ -156,10 +155,17 @@ export class GumloopService {
         objective,
         customPipelineInputs,
     }: StartPipelineParams): Promise<PipelineResponse> {
-        const pipeline_id =
-            pipelineType === 'file-processing'
-                ? GUMLOOP_FILE_CONVERT_FLOW_ID
-                : '';
+        let pipeline_id;
+        switch (pipelineType) {
+            case 'file-processing':
+                pipeline_id = GUMLOOP_FILE_CONVERT_FLOW_ID;
+                break;
+            case 'requirement-analysis':
+                pipeline_id = GUMLOOP_REQ_ANALYSIS_FLOW_ID;
+                break;
+            default:
+                throw new Error(`Unsupported pipeline type: ${pipelineType}`);
+        }
 
         console.log('Starting pipeline with params:', {
             fileNames,
