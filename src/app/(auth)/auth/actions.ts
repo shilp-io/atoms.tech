@@ -1,16 +1,9 @@
-// app/(auth)/actions.ts
 'use server';
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/supabaseServer';
-
-// app/(auth)/actions.ts
-
-// app/(auth)/actions.ts
-
-// app/(auth)/actions.ts
 
 export async function login(formData: FormData) {
     const supabase = await createClient();

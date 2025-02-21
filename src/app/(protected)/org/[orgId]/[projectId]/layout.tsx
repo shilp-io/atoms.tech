@@ -1,4 +1,3 @@
-// [orgSlug]/[projectSlug]/layout.tsx
 import {
     HydrationBoundary,
     QueryClient,

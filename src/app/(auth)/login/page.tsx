@@ -1,4 +1,3 @@
-// app/(auth)/login/page.tsx
 'use client';
 
 import { AlertCircle, Github, Mail } from 'lucide-react';

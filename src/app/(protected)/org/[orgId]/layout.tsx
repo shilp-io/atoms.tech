@@ -1,4 +1,3 @@
-// [orgSlug]/layout.tsx
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { QueryClient } from '@tanstack/react-query';
 import { notFound } from 'next/navigation';

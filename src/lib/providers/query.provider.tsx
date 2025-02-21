@@ -1,4 +1,3 @@
-// contexts/query.provider.client.tsx
 'use client';
 
 import { AuthError } from '@supabase/supabase-js';
