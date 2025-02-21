@@ -13,6 +13,7 @@ import {
     Wand,
     Brain,
     CircleAlert,
+    FileSpreadsheet,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
@@ -32,15 +33,13 @@ export default function RequirementPage() {
         }
     }, [requirement]);
 
-    const [errors, setErrors] = useState<{
-        missingRequirement: string;
-        missingFiles: string;
-    }>({ missingRequirement: '', missingFiles: '' });
+    const [missingReqError, setMissingReqError] = useState<string>('');
+    const [missingFilesError, setMissingFilesError] = useState<string>('');
 
     const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setReqText(e.target.value);
-        if (errors.missingRequirement) {
-            setErrors((prev) => ({ ...prev, missingRequirement: '' }));
+        if (missingReqError) {
+            setMissingReqError('');
         }
     };
 
@@ -65,8 +64,8 @@ export default function RequirementPage() {
             setCurrentFile(files[0].name);
             setIsUploading(true);
 
-            if (errors.missingFiles) {
-                setErrors((prev) => ({ ...prev, missingFiles: '' }));
+            if (missingFilesError) {
+                setMissingFilesError('');
             }
 
             const uploadedFileNames = await uploadFiles(files);
@@ -144,27 +143,24 @@ export default function RequirementPage() {
         useState<string>('');
     const { data: analysisResponse, isLoading: isAnalysisLoading } =
         getPipelineRun(analysisPipelineRunId);
+    const [analysisResultLink, setAnalysisResultLink] = useState<string>('');
 
     const handleAnalyze = async () => {
+        setAnalysisResultLink('');
+
         // check if the requirement is empty
         if (!reqText) {
-            setErrors((prevErrors) => ({
-                ...prevErrors,
-                missingRequirement: 'Requirement text is required',
-            }));
+            setMissingReqError('Requirement text is required');
             return;
         }
         // or if no files are uploaded
         if (Object.keys(uploadedFiles).length === 0) {
-            setErrors((prevErrors) => ({
-                ...prevErrors,
-                missingFiles: 'At least one file is required',
-            }));
+            setMissingFilesError('At least one file is required');
             return;
         }
         console.log('Starting analysis pipeline...');
-        setErrors({ missingRequirement: '', missingFiles: '' });
-        return;
+        setMissingReqError('');
+        setMissingFilesError('');
         try {
             const { run_id } = await startPipeline({
                 pipelineType: isReasoning
@@ -181,9 +177,35 @@ export default function RequirementPage() {
     };
 
     useEffect(() => {
-        if (analysisResponse?.state === 'DONE') {
-            console.log('Analysis pipeline completed:', analysisResponse);
+        switch (analysisResponse?.state) {
+            case 'DONE': {
+                console.log('Analysis response:', analysisResponse);
+                const analysisResultLink =
+                    analysisResponse.outputs?.googleSheetLink;
+
+                if (!analysisResultLink) {
+                    console.error('No analysis result link found in response');
+                    break;
+                }
+
+                if (Array.isArray(analysisResultLink)) {
+                    console.error(
+                        'Multiple analysis result links found in response',
+                    );
+                    break;
+                }
+
+                setAnalysisResultLink(analysisResultLink);
+                break;
+            }
+            case 'FAILED': {
+                console.error('Analysis pipeline failed');
+                break;
+            }
+            default:
+                return;
         }
+        setAnalysisPipelineRunId('');
     }, [analysisResponse]);
 
     if (isReqLoading) {
@@ -237,14 +259,24 @@ export default function RequirementPage() {
                                     Analyze with AI
                                 </Button>
                             </div>
-                            {(errors.missingRequirement ||
-                                errors.missingFiles) && (
+                            {(missingReqError || missingFilesError) && (
                                 <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded">
                                     <CircleAlert className="h-4 w-4" />
                                     <span>
-                                        {errors.missingRequirement ||
-                                            errors.missingFiles}
+                                        {missingReqError || missingFilesError}
                                     </span>
+                                </div>
+                            )}
+                            {analysisResultLink && (
+                                <div className="flex items-center gap-2 text-green-500 bg-green-50 p-2 rounded">
+                                    <FileSpreadsheet className="h-4 w-4" />
+                                    <a
+                                        href={analysisResultLink}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        View Analysis Results
+                                    </a>
                                 </div>
                             )}
                             <input
