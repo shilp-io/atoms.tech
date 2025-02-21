@@ -189,22 +189,21 @@ export class GumloopService {
 
             if (systemName) {
                 pipelineInputs.push({
-                    input_name:
-                        'System Name [Product/Feature/System/Subsystem/Component]',
+                    input_name: 'System Name',
                     value: systemName,
                 });
             }
 
             if (objective) {
                 pipelineInputs.push({
-                    input_name: 'Objective:',
+                    input_name: 'Objective',
                     value: objective,
                 });
             }
 
             if (requirement) {
                 pipelineInputs.push({
-                    input_name: 'Requirement: ',
+                    input_name: 'Original Requirement',
                     value: requirement,
                 });
             }
