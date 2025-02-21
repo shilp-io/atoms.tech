@@ -10,6 +10,7 @@ import { CTA } from '@/components/custom/LandingPage/cta';
 import { Contact } from '@/components/custom/LandingPage/contact';
 import { Footer } from '@/components/custom/LandingPage/footer';
 import { GridBackground } from '@/components/custom/LandingPage/grid-background';
+import { ExcalidrawSection } from '@/components/custom/LandingPage/excalidraw-section';
 
 export default function Home() {
     return (
@@ -23,6 +24,9 @@ export default function Home() {
                     </div>
                     <HowItWorks />
                     <TimeSavingEdge />
+                    <div className="section-divider">
+                        <ExcalidrawSection />
+                    </div>
                     <div className="section-divider">
                         <Industries />
                     </div>
