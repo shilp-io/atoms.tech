@@ -3,6 +3,8 @@
 import {
     Brain,
     Check,
+    ChevronDown,
+    ChevronUp,
     CircleAlert,
     FileSpreadsheet,
     Scale,
@@ -18,6 +20,14 @@ import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useGumloop } from '@/hooks/useGumloop';
+
+interface AnalysisData {
+    earsReq: string;
+    incoseReq: string;
+    incoseFeedback: string;
+    generalFeedback: string;
+    relevantRegulations: string;
+}
 
 export default function RequirementPage() {
     const { requirementSlug } = useParams<{
@@ -145,9 +155,14 @@ export default function RequirementPage() {
         useState<string>('');
     const { data: analysisResponse } = getPipelineRun(analysisPipelineRunId);
     const [analysisResultLink, setAnalysisResultLink] = useState<string>('');
+    const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+    const [showEars, setShowEars] = useState(false);
+    const [showIncose, setShowIncose] = useState(false);
+    const [showRegulations, setShowRegulations] = useState(false);
 
     const handleAnalyze = async () => {
         setAnalysisResultLink('');
+        setAnalysisData(null);
 
         // check if the requirement is empty
         if (!reqText) {
@@ -198,6 +213,30 @@ export default function RequirementPage() {
                 }
 
                 setAnalysisResultLink(analysisResultLink);
+
+                let analysisJSON = analysisResponse.outputs?.analysisJson;
+
+                if (!analysisJSON) {
+                    console.error('No analysis JSON found in response');
+                    break;
+                }
+
+                if (Array.isArray(analysisJSON)) {
+                    if (analysisJSON.length > 1) {
+                        console.error(
+                            'Multiple analysis JSONs found in response',
+                        );
+                        break;
+                    }
+                    analysisJSON = analysisJSON[0];
+                }
+
+                try {
+                    const parsedData = JSON.parse(analysisJSON);
+                    setAnalysisData(parsedData);
+                } catch (error) {
+                    console.error('Failed to parse analysis JSON:', error);
+                }
                 break;
             }
             case 'FAILED': {
@@ -334,72 +373,127 @@ export default function RequirementPage() {
                 <div className="space-y-4">
                     <h2 className="text-2xl font-bold mb-4">AI Analysis</h2>
 
-                    {/* Quality Score */}
+                    {/* General Feedback */}
                     <Card className="p-6">
                         <div className="flex items-start gap-4">
+                            <div className="rounded-full bg-primary/10 p-3">
+                                <Brain className="h-6 w-6 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold mb-1">
+                                    General Feedback
+                                </h3>
+                                {analysisData ? (
+                                    <p className="text-muted-foreground text-sm">
+                                        {analysisData.generalFeedback}
+                                    </p>
+                                ) : (
+                                    <p className="text-muted-foreground text-sm">
+                                        Upload files and analyze the requirement
+                                        to get AI feedback
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </Card>
+
+                    {/* EARS Analysis */}
+                    <Card className="p-6">
+                        <button
+                            className="flex items-center gap-4 w-full"
+                            onClick={() => setShowEars(!showEars)}
+                            disabled={!analysisData}
+                        >
                             <div className="rounded-full bg-primary/10 p-3">
                                 <Target className="h-6 w-6 text-primary" />
                             </div>
-                            <div>
-                                <h3 className="font-semibold mb-1">
-                                    Quality Score
-                                </h3>
-                                <p className="text-muted-foreground text-sm">
-                                    Analysis of requirement clarity,
-                                    completeness, and testability.
-                                </p>
-                                <div className="mt-2 font-mono">
-                                    Score: 85/100
+                            <div className="flex-grow text-left">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-semibold mb-1">
+                                        EARS Analysis
+                                    </h3>
+                                    {showEars ? (
+                                        <ChevronUp className="h-4 w-4" />
+                                    ) : (
+                                        <ChevronDown className="h-4 w-4" />
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                        </button>
+                        {showEars && analysisData && (
+                            <div className="mt-4 ml-16">
+                                <p className="text-muted-foreground text-sm">
+                                    {analysisData.earsReq}
+                                </p>
+                            </div>
+                        )}
                     </Card>
 
-                    {/* Improvements */}
+                    {/* INCOSE Analysis */}
                     <Card className="p-6">
-                        <div className="flex items-start gap-4">
+                        <button
+                            className="flex items-center gap-4 w-full"
+                            onClick={() => setShowIncose(!showIncose)}
+                            disabled={!analysisData}
+                        >
                             <div className="rounded-full bg-primary/10 p-3">
                                 <Check className="h-6 w-6 text-primary" />
                             </div>
-                            <div>
-                                <h3 className="font-semibold mb-1">
-                                    Suggested Improvements
-                                </h3>
-                                <p className="text-muted-foreground text-sm">
-                                    Recommendations to enhance requirement
-                                    quality.
-                                </p>
-                                <ul className="mt-2 space-y-2 text-sm">
-                                    <li>
-                                        • Add measurable acceptance criteria
-                                    </li>
-                                    <li>• Clarify performance expectations</li>
-                                    <li>• Remove ambiguous terms</li>
-                                </ul>
+                            <div className="flex-grow text-left">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-semibold mb-1">
+                                        INCOSE Analysis
+                                    </h3>
+                                    {showIncose ? (
+                                        <ChevronUp className="h-4 w-4" />
+                                    ) : (
+                                        <ChevronDown className="h-4 w-4" />
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        </button>
+                        {showIncose && analysisData && (
+                            <div className="mt-4 ml-16">
+                                <p className="text-muted-foreground text-sm">
+                                    {analysisData.incoseReq}
+                                </p>
+                                <p className="text-muted-foreground text-sm mt-2">
+                                    {analysisData.incoseFeedback}
+                                </p>
+                            </div>
+                        )}
                     </Card>
 
-                    {/* Compliance */}
+                    {/* Regulations */}
                     <Card className="p-6">
-                        <div className="flex items-start gap-4">
+                        <button
+                            className="flex items-center gap-4 w-full"
+                            onClick={() => setShowRegulations(!showRegulations)}
+                            disabled={!analysisData}
+                        >
                             <div className="rounded-full bg-primary/10 p-3">
                                 <Scale className="h-6 w-6 text-primary" />
                             </div>
-                            <div>
-                                <h3 className="font-semibold mb-1">
-                                    Standard Compliance
-                                </h3>
-                                <p className="text-muted-foreground text-sm">
-                                    Alignment with industry standards and best
-                                    practices.
-                                </p>
-                                <div className="mt-2 space-y-1 text-sm">
-                                    <div>ISO/IEC 29148: Partial</div>
-                                    <div>INCOSE Guide: Compliant</div>
+                            <div className="flex-grow text-left">
+                                <div className="flex justify-between items-center">
+                                    <h3 className="font-semibold mb-1">
+                                        Relevant Regulations
+                                    </h3>
+                                    {showRegulations ? (
+                                        <ChevronUp className="h-4 w-4" />
+                                    ) : (
+                                        <ChevronDown className="h-4 w-4" />
+                                    )}
                                 </div>
                             </div>
-                        </div>
+                        </button>
+                        {showRegulations && analysisData && (
+                            <div className="mt-4 ml-16">
+                                <p className="text-muted-foreground text-sm">
+                                    {analysisData.relevantRegulations}
+                                </p>
+                            </div>
+                        )}
                     </Card>
                 </div>
             </div>
