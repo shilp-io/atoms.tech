@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -380,9 +381,11 @@ export default function RequirementPage() {
                                     General Feedback
                                 </h3>
                                 {analysisData ? (
-                                    <p className="text-muted-foreground text-sm">
-                                        {analysisData.generalFeedback}
-                                    </p>
+                                    <div className="text-muted-foreground text-sm">
+                                        <ReactMarkdown>
+                                            {analysisData.generalFeedback}
+                                        </ReactMarkdown>
+                                    </div>
                                 ) : (
                                     <p className="text-muted-foreground text-sm">
                                         Upload files and analyze the requirement
@@ -395,38 +398,46 @@ export default function RequirementPage() {
 
                     {/* EARS Analysis */}
                     <FoldingCard
-                      icon={<Target />}
+                        icon={<Target />}
                         title="EARS Analysis"
                         disabled={!analysisData}
                     >
-                        <p className="text-muted-foreground text-sm">
-                            {analysisData?.earsReq}
-                        </p>
+                        <div className="text-muted-foreground text-sm">
+                            <ReactMarkdown>
+                                {analysisData?.earsReq}
+                            </ReactMarkdown>
+                        </div>
                     </FoldingCard>
 
                     {/* INCOSE Analysis */}
                     <FoldingCard
-                      icon={<Check />}
+                        icon={<Check />}
                         title="INCOSE Analysis"
                         disabled={!analysisData}
                     >
-                        <p className="text-muted-foreground text-sm">
-                            {analysisData?.incoseReq}
-                        </p>
-                        <p className="text-muted-foreground text-sm mt-2">
-                            {analysisData?.incoseFeedback}
-                        </p>
+                        <div className="text-muted-foreground text-sm">
+                            <ReactMarkdown>
+                                {analysisData?.incoseReq}
+                            </ReactMarkdown>
+                        </div>
+                        <div className="text-muted-foreground text-sm mt-2">
+                            <ReactMarkdown>
+                                {analysisData?.incoseFeedback}
+                            </ReactMarkdown>
+                        </div>
                     </FoldingCard>
 
                     {/* Regulations */}
                     <FoldingCard
-                      icon={<Scale />}
+                        icon={<Scale />}
                         title="Relevant Regulations"
                         disabled={!analysisData}
                     >
-                        <p className="text-muted-foreground text-sm">
-                            {analysisData?.relevantRegulations}
-                        </p>
+                        <div className="text-muted-foreground text-sm">
+                            <ReactMarkdown>
+                                {analysisData?.relevantRegulations}
+                            </ReactMarkdown>
+                        </div>
                     </FoldingCard>
                 </div>
             </div>
