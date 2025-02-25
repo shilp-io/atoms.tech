@@ -3,8 +3,6 @@
 import {
     Brain,
     Check,
-    ChevronDown,
-    ChevronUp,
     CircleAlert,
     FileSpreadsheet,
     Scale,
@@ -18,6 +16,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { FoldingCard } from '@/components/ui/folding-card';
 import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useGumloop } from '@/hooks/useGumloop';
 
@@ -156,9 +155,6 @@ export default function RequirementPage() {
     const { data: analysisResponse } = getPipelineRun(analysisPipelineRunId);
     const [analysisResultLink, setAnalysisResultLink] = useState<string>('');
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-    const [showEars, setShowEars] = useState(false);
-    const [showIncose, setShowIncose] = useState(false);
-    const [showRegulations, setShowRegulations] = useState(false);
 
     const handleAnalyze = async () => {
         setAnalysisResultLink('');
@@ -398,103 +394,40 @@ export default function RequirementPage() {
                     </Card>
 
                     {/* EARS Analysis */}
-                    <Card className="p-6">
-                        <button
-                            className="flex items-center gap-4 w-full"
-                            onClick={() => setShowEars(!showEars)}
-                            disabled={!analysisData}
-                        >
-                            <div className="rounded-full bg-primary/10 p-3">
-                                <Target className="h-6 w-6 text-primary" />
-                            </div>
-                            <div className="flex-grow text-left">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold mb-1">
-                                        EARS Analysis
-                                    </h3>
-                                    {showEars ? (
-                                        <ChevronUp className="h-4 w-4" />
-                                    ) : (
-                                        <ChevronDown className="h-4 w-4" />
-                                    )}
-                                </div>
-                            </div>
-                        </button>
-                        {showEars && analysisData && (
-                            <div className="mt-4 ml-16">
-                                <p className="text-muted-foreground text-sm">
-                                    {analysisData.earsReq}
-                                </p>
-                            </div>
-                        )}
-                    </Card>
+                    <FoldingCard
+                      icon={<Target />}
+                        title="EARS Analysis"
+                        disabled={!analysisData}
+                    >
+                        <p className="text-muted-foreground text-sm">
+                            {analysisData?.earsReq}
+                        </p>
+                    </FoldingCard>
 
                     {/* INCOSE Analysis */}
-                    <Card className="p-6">
-                        <button
-                            className="flex items-center gap-4 w-full"
-                            onClick={() => setShowIncose(!showIncose)}
-                            disabled={!analysisData}
-                        >
-                            <div className="rounded-full bg-primary/10 p-3">
-                                <Check className="h-6 w-6 text-primary" />
-                            </div>
-                            <div className="flex-grow text-left">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold mb-1">
-                                        INCOSE Analysis
-                                    </h3>
-                                    {showIncose ? (
-                                        <ChevronUp className="h-4 w-4" />
-                                    ) : (
-                                        <ChevronDown className="h-4 w-4" />
-                                    )}
-                                </div>
-                            </div>
-                        </button>
-                        {showIncose && analysisData && (
-                            <div className="mt-4 ml-16">
-                                <p className="text-muted-foreground text-sm">
-                                    {analysisData.incoseReq}
-                                </p>
-                                <p className="text-muted-foreground text-sm mt-2">
-                                    {analysisData.incoseFeedback}
-                                </p>
-                            </div>
-                        )}
-                    </Card>
+                    <FoldingCard
+                      icon={<Check />}
+                        title="INCOSE Analysis"
+                        disabled={!analysisData}
+                    >
+                        <p className="text-muted-foreground text-sm">
+                            {analysisData?.incoseReq}
+                        </p>
+                        <p className="text-muted-foreground text-sm mt-2">
+                            {analysisData?.incoseFeedback}
+                        </p>
+                    </FoldingCard>
 
                     {/* Regulations */}
-                    <Card className="p-6">
-                        <button
-                            className="flex items-center gap-4 w-full"
-                            onClick={() => setShowRegulations(!showRegulations)}
-                            disabled={!analysisData}
-                        >
-                            <div className="rounded-full bg-primary/10 p-3">
-                                <Scale className="h-6 w-6 text-primary" />
-                            </div>
-                            <div className="flex-grow text-left">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="font-semibold mb-1">
-                                        Relevant Regulations
-                                    </h3>
-                                    {showRegulations ? (
-                                        <ChevronUp className="h-4 w-4" />
-                                    ) : (
-                                        <ChevronDown className="h-4 w-4" />
-                                    )}
-                                </div>
-                            </div>
-                        </button>
-                        {showRegulations && analysisData && (
-                            <div className="mt-4 ml-16">
-                                <p className="text-muted-foreground text-sm">
-                                    {analysisData.relevantRegulations}
-                                </p>
-                            </div>
-                        )}
-                    </Card>
+                    <FoldingCard
+                      icon={<Scale />}
+                        title="Relevant Regulations"
+                        disabled={!analysisData}
+                    >
+                        <p className="text-muted-foreground text-sm">
+                            {analysisData?.relevantRegulations}
+                        </p>
+                    </FoldingCard>
                 </div>
             </div>
         </div>
