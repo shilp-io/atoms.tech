@@ -29,6 +29,7 @@ export type Requirement = {
     updated_at: string | null;
     updated_by: string | null;
     version: number;
+    data?: Record<string, any> | null;
 };
 
 export type RequirementPropertyKV = {

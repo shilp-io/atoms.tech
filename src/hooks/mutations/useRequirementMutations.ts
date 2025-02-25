@@ -46,6 +46,7 @@ export function useCreateRequirement() {
                         tags: input.tags,
                         created_by: input.created_by,
                         updated_by: input.updated_by,
+                        data: input.data || {},
                         version: 1,
                     })
                     .select()
@@ -144,6 +145,29 @@ export function useDeleteRequirement() {
         },
         onSuccess: (data) => {
             invalidateRequirementQueries(queryClient, data);
+        },
+    });
+}
+
+// Helper function to update requirement data
+export function useSyncRequirementData() {
+    const updateRequirementMutation = useUpdateRequirement();
+    
+    return useMutation({
+        mutationFn: async ({
+            requirementId,
+            data,
+            userId,
+        }: {
+            requirementId: string;
+            data: Record<string, any>;
+            userId: string;
+        }) => {
+            return await updateRequirementMutation.mutateAsync({
+                id: requirementId,
+                data,
+                updated_by: userId,
+            });
         },
     });
 }

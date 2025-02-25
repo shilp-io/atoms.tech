@@ -39,9 +39,8 @@ const dropAnimationConfig = {
 export function BlockCanvas({ documentId }: BlockCanvasProps) {
     const { blocks, isLoading, setLocalBlocks } =
         useDocumentRealtime(documentId);
-    const { reorderBlocks } = useDocumentStore();
+    const { reorderBlocks, isEditMode, setIsEditMode } = useDocumentStore();
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-    const [isEditMode, setIsEditMode] = useState(false);
     const [activeId, setActiveId] = useState<string | null>(null);
     const { userProfile } = useAuth();
     const {
@@ -209,8 +208,6 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                     </Button>
                 </div>
             )}
-
-            <EditModeToggle isEditMode={isEditMode} onToggle={toggleEditMode} />
         </div>
     );
 }
