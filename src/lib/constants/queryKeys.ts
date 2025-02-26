@@ -91,6 +91,10 @@ export const queryKeys = {
             [...queryKeys.organizations.details(), id] as const,
         byUser: (userId: string) =>
             [...queryKeys.organizations.all, 'byUser', userId] as const,
+        byMembership: (userId: string) =>
+            [...queryKeys.organizations.all, 'byMembership', userId] as const,
+        createdBy: (userId: string) =>
+            [...queryKeys.organizations.all, 'createdBy', userId] as const,
     },
     traceLinks: {
         all: ['traceLinks'] as const,

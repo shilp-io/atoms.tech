@@ -6,14 +6,10 @@ import {
     dehydrate,
 } from '@tanstack/react-query';
 
-import Sidebar from '@/components/base/Sidebar';
-import VerticalToolbar from '@/components/custom/VerticalToolbar';
-import { SidebarProvider } from '@/components/ui/sidebar';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getAuthUserServer, getUserOrganizationsServer } from '@/lib/db/server';
-import { OrganizationType } from '@/types/base/enums.types';
 
-export default async function HomeLayout({
+export default async function UserDashboardLayout({
     children,
 }: {
     children: React.ReactNode;
@@ -32,18 +28,12 @@ export default async function HomeLayout({
         },
     });
 
-    // Add organizations to Next.js data for client components
+    // Make organizations available to client components
     (queryClient as any).organizations = organizations;
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
-            <SidebarProvider>
-                <Sidebar />
-                <div className="relative flex-1 p-16">
-                    {children}
-                </div>
-                <VerticalToolbar />
-            </SidebarProvider>
+            {children}
         </HydrationBoundary>
     );
-}
+} 
