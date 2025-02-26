@@ -32,7 +32,7 @@ export const TableBlockLoadingState: React.FC<TableBlockLoadingStateProps> = ({
             <div className="p-4 text-center">
                 <p>No property schemas found for this table.</p>
                 <button 
-                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
                     onClick={onCreateDefaultSchemas}
                 >
                     Create Default Schemas

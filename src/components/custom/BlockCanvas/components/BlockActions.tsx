@@ -32,7 +32,7 @@ export const BlockActions: React.FC<BlockActionsProps> = ({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 cursor-grab active:cursor-grabbing hover:bg-accent"
+                    className="h-6 w-6 cursor-grab active:cursor-grabbing"
                     {...dragActivators}
                 >
                     <GripVertical className="h-4 w-4" />
@@ -40,7 +40,7 @@ export const BlockActions: React.FC<BlockActionsProps> = ({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                    className="h-6 w-6 cursor-pointer"
                     onClick={(e) => {
                         e.stopPropagation();
                         setShowDeleteDialog(true);
@@ -70,7 +70,7 @@ export const BlockActions: React.FC<BlockActionsProps> = ({
                                 onDelete();
                                 setShowDeleteDialog(false);
                             }}
-                            className="bg-destructive hover:bg-destructive/90"
+                            className="bg-destructive"
                         >
                             Delete
                         </AlertDialogAction>
