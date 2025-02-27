@@ -1,8 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { GetStartedButton } from './get-started-button';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function PricingPage() {
+    const { isAuthenticated, isLoading, userProfile } = useAuth();
+
     const pricingPlans = [
         {
             name: 'Basic',
@@ -35,7 +39,9 @@ export default function PricingPage() {
     ];
 
     return (
-        <div className="py-16 px-4 max-w-7xl mx-auto">
+        <div className="min-h-screen bg-[url('/../../../nodesbackground.jpg')] bg-cover bg-center relative">
+        <div className="pointer-events-none absolute inset-0 bg-black opacity-80" />
+        <div className="py-16 px-4 max-w-7xl mx-auto relative z-10">
             <div className="text-center mb-12">
                 <h1 className="text-4xl font-bold mb-4">
                     Simple, Transparent Pricing
@@ -46,10 +52,12 @@ export default function PricingPage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
-                {pricingPlans.map((plan) => (
+                {pricingPlans.map((plan, index) => (
                     <div
                         key={plan.name}
-                        className="border rounded-lg p-8 shadow-sm hover:shadow-md transition-shadow"
+                        className={`border rounded-lg p-8 shadow-sm hover:shadow-md transition-shadow ${
+                            index === 1 ? 'bg-gray-800' : 'bg-black'
+                        }`}
                     >
                         <h2 className="text-2xl font-bold mb-4">{plan.name}</h2>
                         <div className="mb-6">
@@ -78,10 +86,11 @@ export default function PricingPage() {
                                 </li>
                             ))}
                         </ul>
-                        <Button className="w-full">Get Started</Button>
+                        <GetStartedButton userId={isAuthenticated ? userProfile?.id || '' : ''} />
                     </div>
                 ))}
             </div>
+        </div>
         </div>
     );
 }
