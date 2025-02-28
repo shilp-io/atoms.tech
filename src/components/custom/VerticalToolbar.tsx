@@ -7,6 +7,7 @@ import { ThemeToggle } from '@/components/custom/toggles/ThemeToggle';
 import { ViewModeToggle } from '@/components/custom/toggles/ViewModeToggle';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
+
 import { LayoutViewToggle } from './toggles/LayoutViewToggle';
 
 const VerticalToolbar = () => {

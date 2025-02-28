@@ -1,6 +1,7 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function useUploadExternalDocument() {
     const queryClient = useQueryClient();
@@ -14,7 +15,7 @@ export function useUploadExternalDocument() {
                     name: file.name,
                     type: file.type,
                     organization_id: orgId,
-                    size: file.size
+                    size: file.size,
                 })
                 .select('id')
                 .single();
@@ -22,8 +23,7 @@ export function useUploadExternalDocument() {
             if (documentError) throw documentError;
 
             const filePath = `${orgId}/${document.id}`;
-            const { error } = await supabase
-                .storage
+            const { error } = await supabase.storage
                 .from('external_documents')
                 .upload(filePath, file, {
                     cacheControl: '3600', // Add cache control for better performance
@@ -36,7 +36,7 @@ export function useUploadExternalDocument() {
                     .from('external_documents')
                     .delete()
                     .eq('id', document.id);
-                    
+
                 throw error;
             }
 
@@ -58,22 +58,27 @@ export function useDeleteExternalDocument() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ documentId, orgId }: { documentId: string; orgId: string }) => {
+        mutationFn: async ({
+            documentId,
+            orgId,
+        }: {
+            documentId: string;
+            orgId: string;
+        }) => {
             // First get the document to ensure it exists
             const { data: document, error: fetchError } = await supabase
                 .from('external_documents')
                 .select('id, organization_id')
                 .eq('id', documentId)
                 .single();
-                
+
             if (fetchError) throw fetchError;
-            
+
             // Construct the correct file path for storage
             const filePath = `${document.organization_id}/${document.id}`;
-            
+
             // Delete from storage first
-            const { error: storageError } = await supabase
-                .storage
+            const { error: storageError } = await supabase.storage
                 .from('external_documents')
                 .remove([filePath]);
 
@@ -95,7 +100,9 @@ export function useDeleteExternalDocument() {
             });
             if (variables.orgId) {
                 queryClient.invalidateQueries({
-                    queryKey: queryKeys.externalDocuments.byOrg(variables.orgId),
+                    queryKey: queryKeys.externalDocuments.byOrg(
+                        variables.orgId,
+                    ),
                 });
             }
         },

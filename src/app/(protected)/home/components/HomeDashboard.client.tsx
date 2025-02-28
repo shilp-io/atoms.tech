@@ -1,6 +1,7 @@
 'use client';
 
 import { Filter } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -13,7 +14,6 @@ import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { Organization } from '@/types';
-import { useTheme } from 'next-themes';
 
 export default function HomeDashboard() {
     const { user, profile } = useUser();
@@ -58,16 +58,15 @@ export default function HomeDashboard() {
                     <Card
                         key={org.id}
                         className={`p-5 border border-gray-300 ${
-                            theme === 'dark' ? 'hover:bg-accent' : 'hover:bg-gray-200'
+                            theme === 'dark'
+                                ? 'hover:bg-accent'
+                                : 'hover:bg-gray-200'
                         }`}
                         onClick={() => handleRowClick(org)}
                     >
                         <h3 className="text-sm font-semibold">{org.name}</h3>
                         <p className="pb-3 text-xs text-gray-400">{org.slug}</p>
-                        <Badge
-                            variant="secondary"
-                            className="rounded"
-                        >
+                        <Badge variant="secondary" className="rounded">
                             {org.status}
                         </Badge>
                     </Card>

@@ -1,18 +1,18 @@
 'use client';
 
+import { File } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { useParams, useRouter } from 'next/navigation';
 
 import DashboardView, { Column } from '@/components/base/DashboardView';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
 import { useUserProjects } from '@/hooks/queries/useProject';
 import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
-import { Project } from '@/types';
-import { Button } from '@/components/ui/button';
-import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
-import { Card } from '@/components/ui/card';
-import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { File } from 'lucide-react';
+import { Project } from '@/types';
 
 export default function OrgDashboard() {
     // Navigation hooks
@@ -27,7 +27,8 @@ export default function OrgDashboard() {
         profile?.current_organization_id || '',
     );
 
-    const { data: documents, isLoading: documentsLoading } = useExternalDocumentsByOrg(params?.orgId || '');
+    const { data: documents, isLoading: documentsLoading } =
+        useExternalDocumentsByOrg(params?.orgId || '');
     const { theme } = useTheme();
 
     const columns: Column<Project>[] = [
@@ -82,27 +83,39 @@ export default function OrgDashboard() {
                 onRowClick={handleRowClick}
             />
             <div className="project-documents mt-8">
-                <h2 className="text-xl font-medium mb-4">Document Collection</h2>
+                <h2 className="text-xl font-medium mb-4">
+                    Document Collection
+                </h2>
                 <div className="recent-documents mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 justify-start">
                     {documentsLoading ? (
                         <p>Loading recent documents...</p>
                     ) : documents?.length ? (
                         documents
-                            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                            .sort(
+                                (a, b) =>
+                                    new Date(b.created_at).getTime() -
+                                    new Date(a.created_at).getTime(),
+                            )
                             .slice(0, 3)
                             .map((doc) => (
                                 <Card
                                     key={doc.id}
                                     className={`border border-gray-300 ${
-                                        theme === 'dark' ? 'hover:bg-accent' : 'hover:bg-gray-200'
+                                        theme === 'dark'
+                                            ? 'hover:bg-accent'
+                                            : 'hover:bg-gray-200'
                                     } cursor-pointer`}
                                     onClick={() => openFile(doc.id)}
                                 >
                                     <div className="p-4 flex items-center">
                                         <File className="w-4 h-4 mr-4" />
                                         <div>
-                                            <h3 className="text-sm font-semibold">{doc.name}</h3>
-                                            <p className="text-xs text-gray-400">{doc.type}</p>
+                                            <h3 className="text-sm font-semibold">
+                                                {doc.name}
+                                            </h3>
+                                            <p className="text-xs text-gray-400">
+                                                {doc.type}
+                                            </p>
                                         </div>
                                     </div>
                                 </Card>

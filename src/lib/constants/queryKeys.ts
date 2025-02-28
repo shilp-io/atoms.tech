@@ -8,9 +8,14 @@ export const queryKeys = {
         list: (filters: QueryFilters) =>
             [...queryKeys.externalDocuments.lists(), { filters }] as const,
         details: () => [...queryKeys.externalDocuments.all, 'detail'] as const,
-        detail: (id: string) => [...queryKeys.externalDocuments.details(), id] as const,
+        detail: (id: string) =>
+            [...queryKeys.externalDocuments.details(), id] as const,
         byOrg: (orgId: string) =>
-            [...queryKeys.externalDocuments.all, 'organization_id', orgId] as const,
+            [
+                ...queryKeys.externalDocuments.all,
+                'organization_id',
+                orgId,
+            ] as const,
     },
 
     documents: {

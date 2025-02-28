@@ -18,17 +18,15 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({ className }) => {
     const pathSegments = pathname.split('/').filter(Boolean);
 
     // Always call useBreadcrumbData
-    const { orgName, projectName, documentName } = useBreadcrumbData(pathSegments);
+    const { orgName, projectName, documentName } =
+        useBreadcrumbData(pathSegments);
 
     const getBreadcrumbs = () => {
         if (pathSegments.length >= 3) {
             const section = pathSegments[3];
 
             if (pathSegments[2] === 'externalDocs') {
-                return [
-                    orgName || 'Organization',
-                    'External Docs',
-                ];
+                return [orgName || 'Organization', 'External Docs'];
             }
 
             if (pathSegments.length >= 4) {
