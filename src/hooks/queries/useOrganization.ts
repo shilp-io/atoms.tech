@@ -136,3 +136,24 @@ export function usePersonalOrg(userId: string) {
         enabled: !!userId && userId !== 'user',
     });
 }
+
+// export function useOrgsByUser(userId: string) {
+//     return useQuery({
+//         queryKey: queryKeys.organizations.byUser(userId),
+//         queryFn: async () => {
+//             const { data: organizations, error } = await supabase
+//                 .from('organizations')
+//                 .select('*')
+//                 .eq('created_by', userId)
+//                 .eq('is_deleted', false);
+
+//             if (error) {
+//                 console.error('Error fetching organizations:', error);
+//                 throw error;
+//             }
+
+//             return organizations.map((org) => OrganizationSchema.parse(org));
+//         },
+//         enabled: !!userId,
+//     });
+// }

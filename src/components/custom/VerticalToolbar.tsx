@@ -9,6 +9,8 @@ import { ThemeToggle } from '@/components/custom/toggles/ThemeToggle';
 import { ViewModeToggle } from '@/components/custom/toggles/ViewModeToggle';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
+
+import { LayoutViewToggle } from './toggles/LayoutViewToggle';
 import { useDocumentStore } from '@/lib/store/document.store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -131,6 +133,9 @@ const VerticalToolbar = () => {
                         </Tooltip>
                     </TooltipProvider>
                 )}
+                <div className="w-10 h-10 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-md hover:bg-background/90 transition-colors">
+                    <LayoutViewToggle />
+                </div>
             </div>
 
             {/* Horizontal breadcrumb bar */}
