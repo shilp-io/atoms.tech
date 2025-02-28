@@ -57,9 +57,12 @@ export async function POST(request: NextRequest) {
                 const billingRecord = BillingCacheSchema.parse(data[0]);
 
                 // @ts-expect-error The property exists
-                billingRecord.current_period_usage.api_calls += 1
+                billingRecord.current_period_usage.api_calls += 1;
                 // @ts-expect-error The property exists
-                console.log('billingRecord', billingRecord.current_period_usage.api_calls);
+                console.log(
+                    'billingRecord',
+                    billingRecord.current_period_usage.api_calls,
+                );
 
                 if (!billingRecord.current_period_usage) {
                     throw new Error('No billing record found');
@@ -72,7 +75,7 @@ export async function POST(request: NextRequest) {
                         current_period_usage: {
                             // @ts-expect-error The property exists
                             ...billingRecord.current_period_usage,
-                        }
+                        },
                     })
                     .eq('organization_id', body.organizationId)
                     .select();

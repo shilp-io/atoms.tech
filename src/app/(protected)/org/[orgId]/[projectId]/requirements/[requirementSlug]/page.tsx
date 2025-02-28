@@ -86,7 +86,7 @@ export default function RequirementPage() {
             const { run_id } = await startPipeline({
                 fileNames: uploadedFileNames,
                 pipelineType: 'file-processing',
-                organizationId
+                organizationId,
             });
             setConvertPipelineRunId(run_id);
         } catch (error) {
@@ -185,7 +185,7 @@ export default function RequirementPage() {
                 requirement: reqText,
                 systemName: 'Backup Camera',
                 fileNames: Object.keys(uploadedFiles),
-                organizationId
+                organizationId,
             });
             setAnalysisPipelineRunId(run_id);
         } catch (error) {
