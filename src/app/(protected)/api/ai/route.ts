@@ -58,12 +58,6 @@ export async function POST(request: NextRequest) {
 
                 // @ts-expect-error The property exists
                 billingRecord.current_period_usage.api_calls += 1;
-                // @ts-expect-error The property exists
-                console.log(
-                    'billingRecord',
-                    billingRecord.current_period_usage.api_calls,
-                );
-
                 if (!billingRecord.current_period_usage) {
                     throw new Error('No billing record found');
                 }
