@@ -2,8 +2,6 @@ import { useDocument } from '@/hooks/queries/useDocument';
 import { useOrganization } from '@/hooks/queries/useOrganization';
 import { useProject } from '@/hooks/queries/useProject';
 
-import { useProfile } from './queries/useProfile';
-
 export function useBreadcrumbData(segments: string[]) {
     // Extract IDs from segments
     const orgId = segments[1];

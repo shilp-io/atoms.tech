@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { File, Filter, Grid, List, Trash, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

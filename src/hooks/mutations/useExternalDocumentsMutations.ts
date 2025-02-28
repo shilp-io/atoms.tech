@@ -60,7 +60,6 @@ export function useDeleteExternalDocument() {
     return useMutation({
         mutationFn: async ({
             documentId,
-            orgId,
         }: {
             documentId: string;
             orgId: string;
