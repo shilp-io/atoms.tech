@@ -1,6 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
 
 import {
+    BlockPropertySchema,
+    BlockWithRequirements,
+    UseBlockActionsProps,
+} from '@/components/custom/BlockCanvas/types';
+import {
     useCreateBlock,
     useDeleteBlock,
     useUpdateBlock,
@@ -11,7 +16,6 @@ import { queryKeys } from '@/lib/constants/queryKeys';
 import { useDocumentStore } from '@/lib/store/document.store';
 import { Json } from '@/types/base/database.types';
 
-import { BlockPropertySchema, BlockWithRequirements, UseBlockActionsProps } from '../types';
 
 export const useBlockActions = ({
     documentId,
