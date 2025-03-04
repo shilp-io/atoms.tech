@@ -5,16 +5,21 @@ import { Button } from '@/components/ui/button'
 import { subscribeAction } from '@/actions/stripe'
 import { useRouter } from 'next/navigation'
 
+import { loadStripe } from '@stripe/stripe-js'
+import { supabase } from '@/lib/supabase/supabaseBrowser'
+
+
+
 type Props = {
     userId: string
 }
 
-export function GetStartedButton({userId}: Props) {
+export function GetStartedButton() {
     const router = useRouter();
     const [ isPending, startTransition ] = useTransition()
     const handleClickGetStarted = async () => {
         startTransition(async () => {
-            const url = await subscribeAction({userId});
+            const url = await subscribeAction();
             if (url) {
                 router.push(url);
             }else {
@@ -24,6 +29,7 @@ export function GetStartedButton({userId}: Props) {
         });
     }
     return (
+        <div>
         <Button 
         className="w-full" 
         onClick={() => handleClickGetStarted()}
@@ -31,5 +37,6 @@ export function GetStartedButton({userId}: Props) {
         >
             {isPending ? "Loading..." : "Get Started"}
         </Button>
+        </div>
     );
 }

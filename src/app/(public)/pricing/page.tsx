@@ -2,10 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { GetStartedButton } from './get-started-button';
-import { useAuth } from '@/hooks/useAuth';
-
+import CheckoutButton from './CheckoutButton';
 export default function PricingPage() {
-    const { isAuthenticated, isLoading, userProfile } = useAuth();
 
     const pricingPlans = [
         {
@@ -86,7 +84,7 @@ export default function PricingPage() {
                                 </li>
                             ))}
                         </ul>
-                        <GetStartedButton userId={isAuthenticated ? userProfile?.id || '' : ''} />
+                        <CheckoutButton />
                     </div>
                 ))}
             </div>
