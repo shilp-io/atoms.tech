@@ -9,7 +9,7 @@ export default function OrgLoading() {
                     Loading organization...
                 </h2>
                 <p className="text-muted-foreground">
-                    We're preparing your organization dashboard
+                    We&apos;re preparing your organization workspace
                 </p>
             </div>
         </div>

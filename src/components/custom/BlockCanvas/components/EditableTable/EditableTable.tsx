@@ -46,7 +46,7 @@ export function EditableTable<
 }: EditableTableProps<T>) {
     const [sortKey, setSortKey] = React.useState<keyof T | null>(null);
     const [sortOrder, setSortOrder] = React.useState<'asc' | 'desc'>('asc');
-    const [hoveredCell, setHoveredCell] = React.useState<{
+    const [_hoveredCell, setHoveredCell] = React.useState<{
         row: number;
         col: number;
     } | null>(null);
@@ -269,8 +269,8 @@ export function EditableTable<
     const renderCell = (
         item: T,
         column: EditableColumn<T>,
-        rowIndex: number,
-        colIndex: number,
+        _rowIndex: number,
+        _colIndex: number,
     ) => {
         const isEditing = localIsEditMode || item.id === 'new';
         const value = isEditing

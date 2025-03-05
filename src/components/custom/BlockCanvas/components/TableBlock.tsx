@@ -10,17 +10,17 @@ import { Requirement } from '@/types/base/requirements.types';
 import {
     DynamicRequirement,
     useRequirementActions,
-} from '../hooks/useRequirementActions';
-import { useTableBlockActions } from '../hooks/useTableBlockActions';
-import { useTableColumns } from '../hooks/useTableColumns';
-import { BlockProps } from '../types';
+} from '@/components/custom/BlockCanvas/hooks/useRequirementActions';
+import { useTableBlockActions } from '@/components/custom/BlockCanvas/hooks/useTableBlockActions';
+import { useTableColumns } from '@/components/custom/BlockCanvas/hooks/useTableColumns';
+import { BlockProps } from '@/components/custom/BlockCanvas/types';
 import { TableBlockContent } from './TableBlockContent';
 import { TableBlockLoadingState } from './TableBlockLoadingState';
 import { TableBlockSchemaInitializer } from './TableBlockSchemaInitializer';
 
-export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
+export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode: _isEditMode }) => {
     const { userProfile } = useAuth();
-    const [selectedRequirement, setSelectedRequirement] =
+    const [_selectedRequirement, _setSelectedRequirement] =
         useState<Requirement | null>(null);
     const [localRequirements, setLocalRequirements] = useState<Requirement[]>(
         block.requirements || [],
@@ -73,6 +73,7 @@ export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
             await saveRequirement(dynamicReq, isNew, userProfile.id);
         } catch (error) {
             // Handle error (could add toast notification here)
+            console.error(error);
         }
     };
 
@@ -84,6 +85,7 @@ export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
             await deleteRequirement(dynamicReq, userProfile.id);
         } catch (error) {
             // Handle error (could add toast notification here)
+            console.error(error);
         }
     };
 
@@ -93,7 +95,7 @@ export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
 
         try {
             // Create a new block property schema
-            const schema = await createCustomBlockPropertySchema(
+            await createCustomBlockPropertySchema(
                 name,
                 dataType,
             );

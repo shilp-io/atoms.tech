@@ -5,9 +5,9 @@ import {
     RequirementStatus,
 } from '@/types/base/enums.types';
 
-import { EditableColumn } from '../components/EditableTable';
-import { BlockPropertySchema } from '../types';
-import { DynamicRequirement } from './useRequirementActions';
+import { EditableColumn } from '@/components/custom/BlockCanvas/components/EditableTable';
+import { BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
+import { DynamicRequirement } from '@/components/custom/BlockCanvas/hooks/useRequirementActions';
 
 export const useTableColumns = (
     blockPropertySchemas: BlockPropertySchema[] | undefined,

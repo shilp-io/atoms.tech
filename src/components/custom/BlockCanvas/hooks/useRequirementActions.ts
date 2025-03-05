@@ -13,11 +13,12 @@ import {
 } from '@/types/base/enums.types';
 import { Requirement } from '@/types/base/requirements.types';
 
-import { BlockPropertySchema } from '../types';
+import { BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
 
 // Type for the requirement data that will be displayed in the table
 export type DynamicRequirement = {
     id: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 };
 
@@ -58,6 +59,7 @@ export const useRequirementActions = ({
                 }
                 return acc;
             },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             {} as Record<string, any>,
         );
     };
@@ -263,7 +265,7 @@ export const useRequirementActions = ({
             });
         } catch (error) {
             // Revert local state on error
-            setLocalRequirements((prev) => localRequirements);
+            setLocalRequirements((_prev) => localRequirements);
             throw error;
         }
     };

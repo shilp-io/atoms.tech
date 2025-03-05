@@ -29,6 +29,7 @@ export type Requirement = {
     updated_at: string | null;
     updated_by: string | null;
     version: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data?: Record<string, any> | null;
 };
 

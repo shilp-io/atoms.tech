@@ -9,7 +9,7 @@ export default function HomeLoading() {
                     Loading your dashboard...
                 </h2>
                 <p className="text-muted-foreground">
-                    We're preparing your personalized workspace
+                    We&apos;re preparing your personalized workspace
                 </p>
             </div>
         </div>

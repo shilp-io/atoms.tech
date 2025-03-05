@@ -3,7 +3,7 @@ import React from 'react';
 interface TableBlockLoadingStateProps {
     isLoading: boolean;
     isError: boolean;
-    error: any;
+    error: Error | unknown;
     onCreateDefaultSchemas: () => void;
     noSchemas: boolean;
 }
@@ -11,7 +11,6 @@ interface TableBlockLoadingStateProps {
 export const TableBlockLoadingState: React.FC<TableBlockLoadingStateProps> = ({
     isLoading,
     isError,
-    error,
     onCreateDefaultSchemas,
     noSchemas,
 }) => {

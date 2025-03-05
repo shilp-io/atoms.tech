@@ -27,7 +27,7 @@ export async function login(formData: FormData) {
 
         if (authData.user) {
             // Prefetch user profile
-            const { data: profile } = await supabase
+            const { data: _profile } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', authData.user.id)
@@ -75,6 +75,7 @@ export async function login(formData: FormData) {
         return {
             error: 'An unexpected error occurred. Please try again.',
             success: false,
+            data: error,
         };
     }
 }
@@ -132,6 +133,7 @@ export async function signup(formData: FormData) {
         return {
             error: 'An unexpected error occurred',
             success: false,
+            data: error,
         };
     }
 }

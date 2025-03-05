@@ -8,11 +8,10 @@ import {
     Folder,
     Plus,
     Sparkles,
-    Star,
     Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { CreatePanel } from '@/components/base/panels/CreatePanel';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +25,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
@@ -41,14 +40,13 @@ export default function UserDashboard() {
     const { setOrganization } = useOrganization();
     const queryClient = useQueryClient();
 
-    // Get organizations from query client
-    const organizations =
-        (queryClient.getQueryData(
+    // Ensure organizations is always an array and use memo to prevent re-renders
+    const safeOrganizations = useMemo(() => {
+        const organizations = queryClient.getQueryData(
             queryKeys.organizations.byMembership(user?.id || ''),
-        ) as Organization[]) || [];
-
-    // Ensure organizations is always an array
-    const safeOrganizations = Array.isArray(organizations) ? organizations : [];
+        ) as Organization[] || [];
+        return Array.isArray(organizations) ? organizations : [];
+    }, [queryClient, user?.id]);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('all');

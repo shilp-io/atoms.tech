@@ -1,9 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { MoreHorizontal, UserPlus, Users } from 'lucide-react';
+import { MoreHorizontal, Users } from 'lucide-react';
 import { useParams } from 'next/navigation';
-import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +27,6 @@ interface OrgMembersProps {
 
 export default function OrgMembers({ className }: OrgMembersProps) {
     const params = useParams<{ orgId: string }>();
-    const [isInviteOpen, setIsInviteOpen] = useState(false);
 
     const { data: members, isLoading } = useQuery({
         queryKey: ['organization-members', params.orgId],
@@ -60,15 +58,6 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                         Manage organization members
                     </CardDescription>
                 </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                    onClick={() => setIsInviteOpen(true)}
-                >
-                    <UserPlus className="h-4 w-4" />
-                    <span>Invite</span>
-                </Button>
             </CardHeader>
             <CardContent>
                 {isLoading ? (

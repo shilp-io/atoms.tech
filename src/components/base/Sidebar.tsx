@@ -5,7 +5,6 @@ import {
     Home,
     LucideIcon,
     Plus,
-    Settings,
     Sparkles,
     User,
 } from 'lucide-react';
@@ -37,7 +36,6 @@ import { useOrganizationsByMembership } from '@/hooks/queries/useOrganization';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { OrganizationType } from '@/types/base/enums.types';
-import { Organization } from '@/types/base/organizations.types';
 
 interface MenuItem {
     title: string;
@@ -96,8 +94,6 @@ export default function Sidebar() {
             memberOrgs.length === 0 ||
             (memberOrgs.length === 1 && memberOrgs[0].id === personalOrg.id));
 
-    // Check if user has both personal and enterprise orgs
-    const hasBothOrgTypes = personalOrg && enterpriseOrg;
 
     const navigateToPlayground = useCallback(() => {
         if (personalOrg) {

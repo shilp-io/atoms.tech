@@ -12,7 +12,6 @@ import VerticalToolbar from '@/components/custom/VerticalToolbar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getAuthUserServer, getUserOrganizationsServer } from '@/lib/db/server';
-import { OrganizationType } from '@/types/base/enums.types';
 
 // Loading component for the sidebar
 function SidebarSkeleton() {
@@ -50,7 +49,7 @@ export default async function HomeLayout({
     });
 
     // Add organizations to Next.js data for client components
-    (queryClient as any).organizations = organizations;
+    (queryClient as QueryClient & { organizations: typeof organizations }).organizations = organizations;
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>

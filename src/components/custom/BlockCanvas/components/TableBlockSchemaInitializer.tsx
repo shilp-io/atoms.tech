@@ -4,13 +4,13 @@ import React, { useEffect } from 'react';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 
-import { BlockWithRequirements } from '../types';
+import { BlockWithRequirements, BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
 
 interface TableBlockSchemaInitializerProps {
     block: BlockWithRequirements;
-    blockPropertySchemas: any[] | undefined;
+    blockPropertySchemas: BlockPropertySchema[] | undefined;
     isLoadingSchemas: boolean;
-    createBlockPropertySchemas: () => Promise<any[]>;
+    createBlockPropertySchemas: () => Promise<BlockPropertySchema[]>;
 }
 
 export const TableBlockSchemaInitializer: React.FC<
@@ -57,6 +57,7 @@ export const TableBlockSchemaInitializer: React.FC<
             try {
                 await createBlockPropertySchemas();
             } catch (error) {
+                console.error(error);
                 // Error handling is done in the parent component
             }
         };
@@ -91,7 +92,7 @@ export const TableBlockSchemaInitializer: React.FC<
                     if (!error && data?.length === 0) {
                         try {
                             const schemas = await createBlockPropertySchemas();
-
+                            console.log('schemas', schemas);
                             // Force a query invalidation to refresh the UI
                             queryClient.invalidateQueries({
                                 queryKey:
@@ -100,10 +101,12 @@ export const TableBlockSchemaInitializer: React.FC<
                                     ),
                             });
                         } catch (createError) {
+                            console.error(createError);
                             // Error handling is done in the parent component
                         }
                     }
                 } catch (err) {
+                    console.error(err);
                     // Error handling is done in the parent component
                 }
             }, 5000); // Check after 5 seconds of loading

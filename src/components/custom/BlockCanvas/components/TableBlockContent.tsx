@@ -5,7 +5,9 @@ import { EditableTable } from '@/components/custom/BlockCanvas/components/Editab
 import { useAuth } from '@/hooks/useAuth';
 import { Requirement } from '@/types/base/requirements.types';
 
-import { DynamicRequirement } from '../hooks/useRequirementActions';
+import {
+    DynamicRequirement,
+} from '@/components/custom/BlockCanvas/hooks/useRequirementActions';
 import { AddColumnDialog } from './AddColumnDialog';
 import { EditableColumn } from './EditableTable';
 

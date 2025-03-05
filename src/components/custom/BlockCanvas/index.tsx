@@ -26,10 +26,9 @@ import { useDocumentRealtime } from '@/hooks/queries/useDocumentRealtime';
 import { useAuth } from '@/hooks/useAuth';
 import { useDocumentStore } from '@/lib/store/document.store';
 
-import { EditModeToggle } from './components/EditModeToggle';
-import { SortableBlock } from './components/SortableBlock';
-import { useBlockActions } from './hooks/useBlockActions';
-import { BlockCanvasProps, BlockWithRequirements } from './types';
+import { SortableBlock } from '@/components/custom/BlockCanvas/components/SortableBlock';
+import { useBlockActions } from '@/components/custom/BlockCanvas/hooks/useBlockActions';
+import { BlockCanvasProps, BlockWithRequirements } from '@/components/custom/BlockCanvas/types';
 
 const dropAnimationConfig = {
     ...defaultDropAnimation,
@@ -86,7 +85,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                 />
             );
         },
-        [selectedBlockId, isEditMode, handleUpdateBlock, handleDeleteBlock],
+        [selectedBlockId, isEditMode, handleUpdateBlock, handleDeleteBlock, setIsEditMode],
     );
 
     const handleDragStart = (event: DragStartEvent) => {
@@ -120,15 +119,6 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
 
             // Trigger server update
             handleReorder(newBlocks);
-        }
-    };
-
-    const toggleEditMode = () => {
-        const newEditMode = !isEditMode;
-        setIsEditMode(newEditMode);
-        // Clear block selection when exiting edit mode
-        if (!newEditMode) {
-            setSelectedBlockId(null);
         }
     };
 

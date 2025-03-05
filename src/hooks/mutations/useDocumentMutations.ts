@@ -1,5 +1,4 @@
 import {
-    QueryClient,
     useMutation,
     useQueryClient,
 } from '@tanstack/react-query';
@@ -9,7 +8,6 @@ import { DocumentPropertySchema } from '@/components/custom/BlockCanvas/types';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Document } from '@/types/base/documents.types';
-import { DocumentSchema } from '@/types/validation/documents.validation';
 
 export type CreateDocumentInput = Omit<
     Document,
@@ -202,18 +200,3 @@ export function useCreateDocumentWithDefaultSchemas() {
         },
     });
 }
-
-const invalidateDocumentQueries = (
-    queryClient: QueryClient,
-    data: Document,
-) => {
-    queryClient.invalidateQueries({
-        queryKey: queryKeys.documents.list({}),
-    });
-    queryClient.invalidateQueries({
-        queryKey: queryKeys.documents.detail(data.id),
-    });
-    queryClient.invalidateQueries({
-        queryKey: queryKeys.documents.byProject(data.project_id),
-    });
-};

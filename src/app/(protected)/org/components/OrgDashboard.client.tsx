@@ -6,7 +6,6 @@ import {
     FileBox,
     FolderArchive,
     ListTodo,
-    Users,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useParams, useRouter } from 'next/navigation';
