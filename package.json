@@ -9,7 +9,6 @@
         "lint": "next lint"
     },
     "type": "module",
-    "type": "module",
     "dependencies": {
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
@@ -30,9 +29,6 @@
         "@supabase/supabase-js": "^2.49.1",
         "@tanstack/react-query": "^5.66.11",
         "@tanstack/react-query-devtools": "^5.66.11",
-        "@supabase/supabase-js": "^2.49.1",
-        "@tanstack/react-query": "^5.66.11",
-        "@tanstack/react-query-devtools": "^5.66.11",
         "@tiptap/extension-image": "^2.11.5",
         "@tiptap/extension-link": "^2.11.5",
         "@tiptap/extension-text-align": "^2.11.5",
@@ -46,7 +42,6 @@
         "framer-motion": "^11.18.2",
         "lucide-react": "^0.471.2",
         "next": "^15.2.0",
-        "next": "^15.2.0",
         "next-themes": "^0.4.4",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
@@ -56,33 +51,23 @@
         "tailwind-merge": "^2.6.0",
         "tailwindcss-animate": "^1.0.7",
         "uuid": "^11.1.0",
-        "uuid": "^11.1.0",
         "zod": "^3.24.2",
         "zustand": "^5.0.3"
     },
     "devDependencies": {
-        "@eslint/eslintrc": "^3.3.0",
         "@eslint/eslintrc": "^3.3.0",
         "@tailwindcss/typography": "^0.5.16",
         "@trivago/prettier-plugin-sort-imports": "^5.2.2",
         "@types/node": "^20.17.22",
         "@types/react": "^19.0.10",
         "@types/react-dom": "^19.0.4",
-        "@types/node": "^20.17.22",
-        "@types/react": "^19.0.10",
-        "@types/react-dom": "^19.0.4",
         "babel-plugin-react-compiler": "^19.0.0-beta-e552027-20250112",
-        "eslint": "^9.21.0",
         "eslint": "^9.21.0",
         "eslint-config-next": "15.1.4",
         "postcss": "^8.5.3",
         "prettier": "^3.5.2",
         "supabase": "^2.15.8",
-        "postcss": "^8.5.3",
-        "prettier": "^3.5.2",
-        "supabase": "^2.15.8",
         "tailwindcss": "^3.4.17",
-        "typescript": "^5.8.2"
         "typescript": "^5.8.2"
     }
 }
