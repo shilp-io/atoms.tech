@@ -1,23 +1,38 @@
 'use client';
 
-import { Building, Filter, Folder, Plus, Sparkles, Star, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState, useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import {
+    Building,
+    Filter,
+    Folder,
+    Plus,
+    Sparkles,
+    Star,
+    Users,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 
+import { CreatePanel } from '@/components/base/panels/CreatePanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { queryKeys } from '@/lib/constants/queryKeys';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { OrganizationType } from '@/types/base/enums.types';
 import { Organization } from '@/types/base/organizations.types';
-import { queryKeys } from '@/lib/constants/queryKeys';
-import { CreatePanel } from '@/components/base/panels/CreatePanel';
 
 export default function UserDashboard() {
     const { user, profile } = useUser();
@@ -25,20 +40,23 @@ export default function UserDashboard() {
     const { setCurrentUserId } = useContextStore();
     const { setOrganization } = useOrganization();
     const queryClient = useQueryClient();
-    
+
     // Get organizations from query client
-    const organizations = queryClient.getQueryData(
-        queryKeys.organizations.byMembership(user?.id || '')
-    ) as Organization[] || [];
-    
+    const organizations =
+        (queryClient.getQueryData(
+            queryKeys.organizations.byMembership(user?.id || ''),
+        ) as Organization[]) || [];
+
     // Ensure organizations is always an array
     const safeOrganizations = Array.isArray(organizations) ? organizations : [];
-    
+
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('all');
     const [greeting, setGreeting] = useState('');
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
-    const [createPanelType, setCreatePanelType] = useState<'project' | 'requirement' | 'document' | 'organization'>('organization');
+    const [createPanelType, setCreatePanelType] = useState<
+        'project' | 'requirement' | 'document' | 'organization'
+    >('organization');
     const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
 
     // Set greeting based on time of day
@@ -52,7 +70,9 @@ export default function UserDashboard() {
     // Handle organization selection and navigation
     useEffect(() => {
         if (selectedOrgId) {
-            const selectedOrg = safeOrganizations.find(org => org.id === selectedOrgId);
+            const selectedOrg = safeOrganizations.find(
+                (org) => org.id === selectedOrgId,
+            );
             if (selectedOrg) {
                 setCurrentUserId(user?.id || '');
                 setOrganization(selectedOrg);
@@ -64,7 +84,14 @@ export default function UserDashboard() {
             // Reset the selected org ID after navigation
             setSelectedOrgId(null);
         }
-    }, [selectedOrgId, safeOrganizations, setCurrentUserId, setOrganization, router, user?.id]);
+    }, [
+        selectedOrgId,
+        safeOrganizations,
+        setCurrentUserId,
+        setOrganization,
+        router,
+        user?.id,
+    ]);
 
     const handleRowClick = useCallback((item: Organization) => {
         // Ensure we're only setting a valid UUID as the selected org ID
@@ -79,20 +106,39 @@ export default function UserDashboard() {
     }, []);
 
     // Filter organizations based on search term and active tab
-    const filteredOrganizations = safeOrganizations.filter((org: Organization) => {
-        const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase());
-        if (activeTab === 'all') return matchesSearch;
-        if (activeTab === 'personal') return matchesSearch && org.type === OrganizationType.personal;
-        if (activeTab === 'enterprise') return matchesSearch && org.type === OrganizationType.enterprise;
-        if (activeTab === 'team') return matchesSearch && org.type !== OrganizationType.personal && org.type !== OrganizationType.enterprise;
-        return matchesSearch;
-    });
+    const filteredOrganizations = safeOrganizations.filter(
+        (org: Organization) => {
+            const matchesSearch = org.name
+                .toLowerCase()
+                .includes(searchTerm.toLowerCase());
+            if (activeTab === 'all') return matchesSearch;
+            if (activeTab === 'personal')
+                return matchesSearch && org.type === OrganizationType.personal;
+            if (activeTab === 'enterprise')
+                return (
+                    matchesSearch && org.type === OrganizationType.enterprise
+                );
+            if (activeTab === 'team')
+                return (
+                    matchesSearch &&
+                    org.type !== OrganizationType.personal &&
+                    org.type !== OrganizationType.enterprise
+                );
+            return matchesSearch;
+        },
+    );
 
     // Get counts for each organization type
-    const personalCount = safeOrganizations.filter(org => org.type === OrganizationType.personal).length;
-    const enterpriseCount = safeOrganizations.filter(org => org.type === OrganizationType.enterprise).length;
-    const teamCount = safeOrganizations.filter(org => 
-        org.type !== OrganizationType.personal && org.type !== OrganizationType.enterprise
+    const personalCount = safeOrganizations.filter(
+        (org) => org.type === OrganizationType.personal,
+    ).length;
+    const enterpriseCount = safeOrganizations.filter(
+        (org) => org.type === OrganizationType.enterprise,
+    ).length;
+    const teamCount = safeOrganizations.filter(
+        (org) =>
+            org.type !== OrganizationType.personal &&
+            org.type !== OrganizationType.enterprise,
     ).length;
 
     // Animation variants
@@ -101,19 +147,19 @@ export default function UserDashboard() {
         show: {
             opacity: 1,
             transition: {
-                staggerChildren: 0.1
-            }
-        }
+                staggerChildren: 0.1,
+            },
+        },
     };
 
     const itemVariants = {
         hidden: { y: 20, opacity: 0 },
-        show: { y: 0, opacity: 1 }
+        show: { y: 0, opacity: 1 },
     };
 
     return (
         <div className="container mx-auto p-6 max-w-7xl">
-            <motion.div 
+            <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -121,10 +167,13 @@ export default function UserDashboard() {
             >
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">
-                        {greeting}, {profile?.full_name || user?.email?.split('@')[0]}
+                        {greeting},{' '}
+                        {profile?.full_name || user?.email?.split('@')[0]}
                     </h1>
                     <p className="text-muted-foreground mt-1">
-                        Welcome to your dashboard. You have access to {safeOrganizations.length} organization{safeOrganizations.length !== 1 ? 's' : ''}.
+                        Welcome to your dashboard. You have access to{' '}
+                        {safeOrganizations.length} organization
+                        {safeOrganizations.length !== 1 ? 's' : ''}.
                     </p>
                 </div>
                 <motion.div
@@ -133,8 +182,8 @@ export default function UserDashboard() {
                     transition={{ delay: 0.3 }}
                     className="mt-4 md:mt-0"
                 >
-                    <Button 
-                        size="lg" 
+                    <Button
+                        size="lg"
                         className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md"
                         onClick={handleCreateOrganization}
                     >
@@ -152,11 +201,17 @@ export default function UserDashboard() {
                 >
                     <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 h-full">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg text-blue-700">Organizations</CardTitle>
+                            <CardTitle className="text-lg text-blue-700">
+                                Organizations
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-blue-700">{safeOrganizations.length}</div>
-                            <p className="text-sm text-blue-600 mt-1">Total workspaces</p>
+                            <div className="text-3xl font-bold text-blue-700">
+                                {safeOrganizations.length}
+                            </div>
+                            <p className="text-sm text-blue-600 mt-1">
+                                Total workspaces
+                            </p>
                         </CardContent>
                     </Card>
                 </motion.div>
@@ -168,11 +223,17 @@ export default function UserDashboard() {
                 >
                     <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 h-full">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg text-yellow-700">Playgrounds</CardTitle>
+                            <CardTitle className="text-lg text-yellow-700">
+                                Playgrounds
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-yellow-700">{personalCount}</div>
-                            <p className="text-sm text-yellow-600 mt-1">Personal spaces</p>
+                            <div className="text-3xl font-bold text-yellow-700">
+                                {personalCount}
+                            </div>
+                            <p className="text-sm text-yellow-600 mt-1">
+                                Personal spaces
+                            </p>
                         </CardContent>
                     </Card>
                 </motion.div>
@@ -184,11 +245,17 @@ export default function UserDashboard() {
                 >
                     <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 h-full">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg text-purple-700">Enterprise</CardTitle>
+                            <CardTitle className="text-lg text-purple-700">
+                                Enterprise
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-purple-700">{enterpriseCount}</div>
-                            <p className="text-sm text-purple-600 mt-1">Business workspaces</p>
+                            <div className="text-3xl font-bold text-purple-700">
+                                {enterpriseCount}
+                            </div>
+                            <p className="text-sm text-purple-600 mt-1">
+                                Business workspaces
+                            </p>
                         </CardContent>
                     </Card>
                 </motion.div>
@@ -200,31 +267,45 @@ export default function UserDashboard() {
                 >
                     <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200 h-full">
                         <CardHeader className="pb-2">
-                            <CardTitle className="text-lg text-green-700">Teams</CardTitle>
+                            <CardTitle className="text-lg text-green-700">
+                                Teams
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold text-green-700">{teamCount}</div>
-                            <p className="text-sm text-green-600 mt-1">Collaborative spaces</p>
+                            <div className="text-3xl font-bold text-green-700">
+                                {teamCount}
+                            </div>
+                            <p className="text-sm text-green-600 mt-1">
+                                Collaborative spaces
+                            </p>
                         </CardContent>
                     </Card>
                 </motion.div>
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                <Tabs 
-                    defaultValue="all" 
-                    value={activeTab} 
+                <Tabs
+                    defaultValue="all"
+                    value={activeTab}
                     onValueChange={setActiveTab}
                     className="w-full md:w-auto"
                 >
                     <TabsList className="grid grid-cols-4 w-full md:w-auto">
-                        <TabsTrigger value="all">All ({safeOrganizations.length})</TabsTrigger>
-                        <TabsTrigger value="personal">Playgrounds ({personalCount})</TabsTrigger>
-                        <TabsTrigger value="enterprise">Enterprise ({enterpriseCount})</TabsTrigger>
-                        <TabsTrigger value="team">Teams ({teamCount})</TabsTrigger>
+                        <TabsTrigger value="all">
+                            All ({safeOrganizations.length})
+                        </TabsTrigger>
+                        <TabsTrigger value="personal">
+                            Playgrounds ({personalCount})
+                        </TabsTrigger>
+                        <TabsTrigger value="enterprise">
+                            Enterprise ({enterpriseCount})
+                        </TabsTrigger>
+                        <TabsTrigger value="team">
+                            Teams ({teamCount})
+                        </TabsTrigger>
                     </TabsList>
                 </Tabs>
-                
+
                 <div className="flex w-full md:w-auto space-x-2">
                     <Input
                         type="text"
@@ -239,7 +320,7 @@ export default function UserDashboard() {
                 </div>
             </div>
 
-            <motion.div 
+            <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
@@ -248,16 +329,20 @@ export default function UserDashboard() {
                 {filteredOrganizations.length > 0 ? (
                     filteredOrganizations.map((org: Organization) => (
                         <motion.div key={org.id} variants={itemVariants}>
-                            <Card 
+                            <Card
                                 className="h-full hover:shadow-md transition-all duration-300 cursor-pointer border-2 hover:border-primary/20"
                                 onClick={() => handleRowClick(org)}
                             >
                                 <CardHeader className="pb-3">
                                     <div className="flex justify-between items-start">
-                                        <CardTitle className="text-lg font-semibold">{org.name}</CardTitle>
-                                        {org.type === OrganizationType.personal ? (
+                                        <CardTitle className="text-lg font-semibold">
+                                            {org.name}
+                                        </CardTitle>
+                                        {org.type ===
+                                        OrganizationType.personal ? (
                                             <Sparkles className="h-5 w-5 text-yellow-500" />
-                                        ) : org.type === OrganizationType.enterprise ? (
+                                        ) : org.type ===
+                                          OrganizationType.enterprise ? (
                                             <Building className="h-5 w-5 text-blue-500" />
                                         ) : (
                                             <Users className="h-5 w-5 text-green-500" />
@@ -269,7 +354,8 @@ export default function UserDashboard() {
                                 </CardHeader>
                                 <CardContent className="pb-3">
                                     <p className="text-sm">
-                                        {org.description || 'No description provided'}
+                                        {org.description ||
+                                            'No description provided'}
                                     </p>
                                 </CardContent>
                                 <CardFooter className="flex justify-between pt-0">
@@ -279,18 +365,19 @@ export default function UserDashboard() {
                                             org.status === 'active'
                                                 ? 'border-green-500 text-green-500'
                                                 : org.status === 'inactive'
-                                                ? 'border-gray-500 text-gray-500'
-                                                : 'border-yellow-500 text-yellow-500'
+                                                  ? 'border-gray-500 text-gray-500'
+                                                  : 'border-yellow-500 text-yellow-500'
                                         }
                                     >
                                         {org.status}
                                     </Badge>
                                     <Badge variant="secondary">
-                                        {org.type === OrganizationType.personal 
-                                            ? 'Playground' 
-                                            : org.type === OrganizationType.enterprise 
-                                                ? 'Enterprise' 
-                                                : 'Team'}
+                                        {org.type === OrganizationType.personal
+                                            ? 'Playground'
+                                            : org.type ===
+                                                OrganizationType.enterprise
+                                              ? 'Enterprise'
+                                              : 'Team'}
                                     </Badge>
                                 </CardFooter>
                             </Card>
@@ -299,9 +386,11 @@ export default function UserDashboard() {
                 ) : (
                     <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
                         <Folder className="h-12 w-12 text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-medium">No organizations found</h3>
+                        <h3 className="text-lg font-medium">
+                            No organizations found
+                        </h3>
                         <p className="text-muted-foreground mt-1 mb-4">
-                            {searchTerm 
+                            {searchTerm
                                 ? `No organizations match your search "${searchTerm}"`
                                 : "You don't have any organizations in this category yet"}
                         </p>
@@ -312,7 +401,7 @@ export default function UserDashboard() {
                     </div>
                 )}
             </motion.div>
-            
+
             <CreatePanel
                 isOpen={isCreatePanelOpen}
                 onClose={() => setIsCreatePanelOpen(false)}

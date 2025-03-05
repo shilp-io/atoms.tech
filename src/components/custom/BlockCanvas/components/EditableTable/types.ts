@@ -58,4 +58,4 @@ export interface TableSideMenuProps {
     filterComponent?: React.ReactNode;
     onNewRow: () => void;
     onEnterEditMode: () => void;
-} 
+}

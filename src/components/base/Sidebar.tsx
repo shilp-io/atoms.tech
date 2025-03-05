@@ -1,10 +1,18 @@
 'use client';
 
-import { Building, Home, LucideIcon, Plus, Settings, Sparkles, User } from 'lucide-react';
+import {
+    Building,
+    Home,
+    LucideIcon,
+    Plus,
+    Settings,
+    Sparkles,
+    User,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { CreatePanel } from '@/components/base/panels/CreatePanel';
 import { Button } from '@/components/ui/button';
@@ -43,7 +51,7 @@ const items: MenuItem[] = [
         title: 'Home',
         url: '/home/user',
         icon: Home,
-    }
+    },
 ];
 
 export default function Sidebar() {
@@ -52,14 +60,21 @@ export default function Sidebar() {
     const [isLoading, setIsLoading] = useState(false);
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
     const [isSidebarHidden, setIsSidebarHidden] = useState(false);
-    const [createPanelType, setCreatePanelType] = useState<'project' | 'requirement' | 'document' | 'organization'>('project');
+    const [createPanelType, setCreatePanelType] = useState<
+        'project' | 'requirement' | 'document' | 'organization'
+    >('project');
     const { user, profile } = useUser();
     const { organization } = useOrganization();
-    const { data: memberOrgs, isLoading: isLoadingMemberOrgs } = useOrganizationsByMembership(user?.id || '');
+    const { data: memberOrgs, isLoading: isLoadingMemberOrgs } =
+        useOrganizationsByMembership(user?.id || '');
 
-    const personalOrg = memberOrgs?.find(org => org.type === OrganizationType.personal);
-    const enterpriseOrg = memberOrgs?.find(org => org.type === OrganizationType.enterprise);
-    
+    const personalOrg = memberOrgs?.find(
+        (org) => org.type === OrganizationType.personal,
+    );
+    const enterpriseOrg = memberOrgs?.find(
+        (org) => org.type === OrganizationType.enterprise,
+    );
+
     // Define primaryEnterpriseOrg based on enterpriseOrg
     const primaryEnterpriseOrg = enterpriseOrg;
 
@@ -73,11 +88,14 @@ export default function Sidebar() {
     const isOrgPage = pathname.startsWith('/org');
     const isPlaygroundPage = organization?.type === OrganizationType.personal;
     const isUserDashboardPage = pathname.startsWith('/home/user');
-    
+
     // Check if user has only a personal org and no other memberships
-    const hasOnlyPersonalOrg = personalOrg && (!memberOrgs || memberOrgs.length === 0 || 
-        (memberOrgs.length === 1 && memberOrgs[0].id === personalOrg.id));
-    
+    const hasOnlyPersonalOrg =
+        personalOrg &&
+        (!memberOrgs ||
+            memberOrgs.length === 0 ||
+            (memberOrgs.length === 1 && memberOrgs[0].id === personalOrg.id));
+
     // Check if user has both personal and enterprise orgs
     const hasBothOrgTypes = personalOrg && enterpriseOrg;
 
@@ -179,10 +197,14 @@ export default function Sidebar() {
                                     </SidebarMenuItem>
                                 </Link>
                             ))}
-                            
+
                             {/* Playground option - show when not in playground and user has a personal org */}
-                            {!isLoadingOrgs && personalOrg && (
-                                (isUserDashboardPage || (organization && organization.id !== personalOrg.id)) && (
+                            {!isLoadingOrgs &&
+                                personalOrg &&
+                                (isUserDashboardPage ||
+                                    (organization &&
+                                        organization.id !==
+                                            personalOrg.id)) && (
                                     <SidebarMenuItem className="mb-1">
                                         <SidebarMenuButton asChild>
                                             <Button
@@ -191,29 +213,34 @@ export default function Sidebar() {
                                                 onClick={navigateToPlayground}
                                             >
                                                 <Sparkles className="h-4 w-4 mr-2 text-muted-foreground" />
-                                                <span className="text-sm font-medium">Playground</span>
+                                                <span className="text-sm font-medium">
+                                                    Playground
+                                                </span>
                                             </Button>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
-                                )
-                            )}
-                            
+                                )}
+
                             {/* Enterprise option - show when in playground or user dashboard and user has an enterprise org */}
-                            {!isLoadingOrgs && primaryEnterpriseOrg && (isPlaygroundPage || isUserDashboardPage) && (
-                                <SidebarMenuItem className="mb-1">
-                                    <SidebarMenuButton asChild>
-                                        <Button
-                                            variant="ghost"
-                                            className="w-full justify-start"
-                                            onClick={navigateToEnterprise}
-                                        >
-                                            <Building className="h-4 w-4 mr-2 text-muted-foreground" />
-                                            <span className="text-sm font-medium">Enterprise</span>
-                                        </Button>
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            )}
-                            
+                            {!isLoadingOrgs &&
+                                primaryEnterpriseOrg &&
+                                (isPlaygroundPage || isUserDashboardPage) && (
+                                    <SidebarMenuItem className="mb-1">
+                                        <SidebarMenuButton asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start"
+                                                onClick={navigateToEnterprise}
+                                            >
+                                                <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+                                                <span className="text-sm font-medium">
+                                                    Enterprise
+                                                </span>
+                                            </Button>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )}
+
                             {/* Create Organization button (only if user has only personal org) */}
                             {!isLoadingOrgs && hasOnlyPersonalOrg && (
                                 <SidebarMenuItem className="mb-1">
@@ -229,7 +256,7 @@ export default function Sidebar() {
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             )}
-                            
+
                             {/* Create New button (only on org pages) */}
                             {isOrgPage && (
                                 <SidebarMenuItem>
@@ -245,7 +272,7 @@ export default function Sidebar() {
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             )}
-                            
+
                             <CreatePanel
                                 isOpen={isCreatePanelOpen}
                                 onClose={() => setIsCreatePanelOpen(false)}

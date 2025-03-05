@@ -2,16 +2,20 @@ import React, { useState } from 'react';
 
 import { SidePanel } from '@/components/base/panels/SidePanel';
 import { EditableTable } from '@/components/custom/BlockCanvas/components/EditableTable';
-import { Requirement } from '@/types/base/requirements.types';
 import { useAuth } from '@/hooks/useAuth';
+import { Requirement } from '@/types/base/requirements.types';
+
 import { DynamicRequirement } from '../hooks/useRequirementActions';
-import { EditableColumn } from './EditableTable';
 import { AddColumnDialog } from './AddColumnDialog';
+import { EditableColumn } from './EditableTable';
 
 interface TableBlockContentProps {
     dynamicRequirements: DynamicRequirement[];
     columns: EditableColumn<DynamicRequirement>[];
-    onSaveRequirement: (dynamicReq: DynamicRequirement, isNew: boolean) => Promise<void>;
+    onSaveRequirement: (
+        dynamicReq: DynamicRequirement,
+        isNew: boolean,
+    ) => Promise<void>;
     onDeleteRequirement: (dynamicReq: DynamicRequirement) => Promise<void>;
     onAddColumn: (name: string, dataType: string) => Promise<void>;
     isEditMode: boolean;
@@ -26,21 +30,22 @@ export const TableBlockContent: React.FC<TableBlockContentProps> = ({
     isEditMode,
 }) => {
     const { userProfile } = useAuth();
-    const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
+    const [selectedRequirement, setSelectedRequirement] =
+        useState<Requirement | null>(null);
 
     return (
         <div className="space-y-4">
             <div className="flex justify-between mb-2">
                 {isEditMode && (
                     <div className="flex justify-end">
-                        <AddColumnDialog 
+                        <AddColumnDialog
                             onAddColumn={onAddColumn}
                             disabled={!userProfile?.id}
                         />
                     </div>
                 )}
             </div>
-            
+
             <EditableTable
                 data={dynamicRequirements}
                 columns={columns}
@@ -82,4 +87,4 @@ export const TableBlockContent: React.FC<TableBlockContentProps> = ({
             </SidePanel>
         </div>
     );
-}; 
+};

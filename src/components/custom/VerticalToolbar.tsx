@@ -1,28 +1,33 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
 import { Lock, Unlock } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 
 import Breadcrumb from '@/components/custom/Breadcrumb';
 import { ThemeToggle } from '@/components/custom/toggles/ThemeToggle';
 import { ViewModeToggle } from '@/components/custom/toggles/ViewModeToggle';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { useDocumentStore } from '@/lib/store/document.store';
 import { cn } from '@/lib/utils';
 
 import { LayoutViewToggle } from './toggles/LayoutViewToggle';
-import { useDocumentStore } from '@/lib/store/document.store';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const VerticalToolbar = () => {
     const { state } = useSidebar();
     const [isMobile, setIsMobile] = useState(false);
     const [isTablet, setIsTablet] = useState(false);
     const pathname = usePathname();
-    
+
     // Check if we're on a document page
     const isDocumentPage = pathname?.includes('/documents/');
-    
+
     // Get edit mode state from document store
     const { isEditMode, setIsEditMode } = useDocumentStore();
 
@@ -51,7 +56,7 @@ const VerticalToolbar = () => {
             clearTimeout(timeoutId);
         };
     }, []);
-    
+
     const toggleEditMode = () => {
         setIsEditMode(!isEditMode);
     };
@@ -105,18 +110,18 @@ const VerticalToolbar = () => {
                 <div className="w-10 h-10 flex items-center justify-center bg-background/80 backdrop-blur-sm rounded-md hover:bg-background/90 transition-colors">
                     <ViewModeToggle />
                 </div>
-                
+
                 {/* Edit Mode Toggle - Only show on document pages */}
                 {isDocumentPage && (
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <div 
+                                <div
                                     className={cn(
-                                        "w-10 h-10 flex items-center justify-center backdrop-blur-sm rounded-md transition-colors cursor-pointer",
-                                        isEditMode 
-                                            ? "bg-destructive/80 hover:bg-destructive/90 text-destructive-foreground" 
-                                            : "bg-background/80 hover:bg-background/90"
+                                        'w-10 h-10 flex items-center justify-center backdrop-blur-sm rounded-md transition-colors cursor-pointer',
+                                        isEditMode
+                                            ? 'bg-destructive/80 hover:bg-destructive/90 text-destructive-foreground'
+                                            : 'bg-background/80 hover:bg-background/90',
                                     )}
                                     onClick={toggleEditMode}
                                 >
@@ -128,7 +133,9 @@ const VerticalToolbar = () => {
                                 </div>
                             </TooltipTrigger>
                             <TooltipContent side="right">
-                                {isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
+                                {isEditMode
+                                    ? 'Exit Edit Mode'
+                                    : 'Enter Edit Mode'}
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>

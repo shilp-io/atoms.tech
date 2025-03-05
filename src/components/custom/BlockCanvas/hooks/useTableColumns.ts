@@ -1,18 +1,24 @@
 import React from 'react';
 
-import { BlockPropertySchema } from '../types';
+import {
+    RequirementPriority,
+    RequirementStatus,
+} from '@/types/base/enums.types';
+
 import { EditableColumn } from '../components/EditableTable';
-import { RequirementPriority, RequirementStatus } from '@/types/base/enums.types';
+import { BlockPropertySchema } from '../types';
 import { DynamicRequirement } from './useRequirementActions';
 
-export const useTableColumns = (blockPropertySchemas: BlockPropertySchema[] | undefined) => {
+export const useTableColumns = (
+    blockPropertySchemas: BlockPropertySchema[] | undefined,
+) => {
     // Generate columns dynamically based on block property schemas
     const columns: EditableColumn<DynamicRequirement>[] = React.useMemo(() => {
         if (!blockPropertySchemas) {
             return [];
         }
 
-        return blockPropertySchemas.map(schema => {
+        return blockPropertySchemas.map((schema) => {
             // Create a column for each property schema
             const column: EditableColumn<DynamicRequirement> = {
                 header: schema.name,
@@ -47,4 +53,4 @@ export const useTableColumns = (blockPropertySchemas: BlockPropertySchema[] | un
     }, [blockPropertySchemas]);
 
     return columns;
-}; 
+};

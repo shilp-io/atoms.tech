@@ -4,14 +4,14 @@ import { Menu, User, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, useTransition, useCallback } from 'react';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuTrigger 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
@@ -30,11 +30,11 @@ export function Navbar() {
     useEffect(() => {
         router.prefetch('/login');
         router.prefetch('/billing');
-        
+
         // If authenticated, prefetch the home route and try to determine preferred org
         if (isAuthenticated && userProfile) {
             router.prefetch('/home');
-            
+
             // Try to find the preferred organization
             const fetchPreferredOrg = async () => {
                 try {
@@ -42,16 +42,16 @@ export function Navbar() {
                         .from('organizations')
                         .select('*')
                         .eq('user_id', userProfile.id);
-                    
+
                     if (organizations && organizations.length > 0) {
                         // Prefer enterprise orgs, then personal orgs
                         const enterpriseOrg = organizations.find(
-                            (org) => org.type === OrganizationType.enterprise
+                            (org) => org.type === OrganizationType.enterprise,
                         );
                         const personalOrg = organizations.find(
-                            (org) => org.type === OrganizationType.personal
+                            (org) => org.type === OrganizationType.personal,
                         );
-                        
+
                         if (enterpriseOrg) {
                             setPreferredOrgId(enterpriseOrg.id);
                             router.prefetch(`/org/${enterpriseOrg.id}`);
@@ -61,10 +61,13 @@ export function Navbar() {
                         }
                     }
                 } catch (error) {
-                    console.error('Error fetching preferred organization:', error);
+                    console.error(
+                        'Error fetching preferred organization:',
+                        error,
+                    );
                 }
             };
-            
+
             fetchPreferredOrg();
         }
     }, [router, isAuthenticated, userProfile]);
@@ -148,29 +151,44 @@ export function Navbar() {
                         ) : isAuthenticated ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button 
-                                        variant="outline" 
+                                    <Button
+                                        variant="outline"
                                         className={`btn-secondary bg-black hover:bg-white hover:text-black hidden md:flex gap-2 ${isPending ? 'opacity-70 pointer-events-none' : ''}`}
                                         disabled={isPending}
                                     >
                                         <User size={18} />
                                         <span className="max-w-32 truncate">
-                                            {userProfile?.full_name || 'Account'}
+                                            {userProfile?.full_name ||
+                                                'Account'}
                                         </span>
                                         {isPending && (
                                             <span className="ml-2 h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></span>
                                         )}
                                     </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-[200px]">
-                                    <DropdownMenuItem onClick={handleDashboard} disabled={isPending}>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-[200px]"
+                                >
+                                    <DropdownMenuItem
+                                        onClick={handleDashboard}
+                                        disabled={isPending}
+                                    >
                                         Dashboard
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleBilling} disabled={isPending}>
+                                    <DropdownMenuItem
+                                        onClick={handleBilling}
+                                        disabled={isPending}
+                                    >
                                         Billing
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={handleSignOut} disabled={isPending}>
-                                        {isPending ? 'Signing out...' : 'Sign Out'}
+                                    <DropdownMenuItem
+                                        onClick={handleSignOut}
+                                        disabled={isPending}
+                                    >
+                                        {isPending
+                                            ? 'Signing out...'
+                                            : 'Sign Out'}
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -236,7 +254,9 @@ export function Navbar() {
                                         onClick={handleSignOut}
                                         disabled={isPending}
                                     >
-                                        {isPending ? 'SIGNING OUT...' : 'SIGN OUT'}
+                                        {isPending
+                                            ? 'SIGNING OUT...'
+                                            : 'SIGN OUT'}
                                     </Button>
                                 </>
                             ) : (

@@ -1,9 +1,18 @@
 import { v4 as uuidv4 } from 'uuid';
 
-import { useCreateRequirement, useUpdateRequirement } from '@/hooks/mutations/useRequirementMutations';
+import {
+    useCreateRequirement,
+    useUpdateRequirement,
+} from '@/hooks/mutations/useRequirementMutations';
 import { useSyncRequirementDataWithKVs } from '@/hooks/mutations/useRequirementPropertyKVMutations';
+import {
+    RequirementFormat,
+    RequirementLevel,
+    RequirementPriority,
+    RequirementStatus,
+} from '@/types/base/enums.types';
 import { Requirement } from '@/types/base/requirements.types';
-import { RequirementFormat, RequirementLevel, RequirementPriority, RequirementStatus } from '@/types/base/enums.types';
+
 import { BlockPropertySchema } from '../types';
 
 // Type for the requirement data that will be displayed in the table
@@ -34,16 +43,23 @@ export const useRequirementActions = ({
     // Helper function to create data object from dynamic requirement
     const createDataObjectFromDynamicReq = (
         dynamicReq: DynamicRequirement,
-        schemas: BlockPropertySchema[] | undefined
+        schemas: BlockPropertySchema[] | undefined,
     ) => {
         if (!schemas) return {};
-        
-        return schemas.reduce((acc, schema) => {
-            if (!['Name', 'Description', 'Status', 'Priority'].includes(schema.name)) {
-                acc[schema.name] = dynamicReq[schema.name] || '';
-            }
-            return acc;
-        }, {} as Record<string, any>);
+
+        return schemas.reduce(
+            (acc, schema) => {
+                if (
+                    !['Name', 'Description', 'Status', 'Priority'].includes(
+                        schema.name,
+                    )
+                ) {
+                    acc[schema.name] = dynamicReq[schema.name] || '';
+                }
+                return acc;
+            },
+            {} as Record<string, any>,
+        );
     };
 
     // Convert requirements to dynamic requirements for the table
@@ -52,7 +68,7 @@ export const useRequirementActions = ({
             return [];
         }
 
-        return localRequirements.map(req => {
+        return localRequirements.map((req) => {
             // Start with the requirement ID and basic fields
             const dynamicReq: DynamicRequirement = {
                 id: req.id,
@@ -64,9 +80,13 @@ export const useRequirementActions = ({
 
             // Add properties from requirement data field
             if (req.data) {
-                blockPropertySchemas.forEach(schema => {
+                blockPropertySchemas.forEach((schema) => {
                     // Skip the basic fields that are already added
-                    if (!['Name', 'Description', 'Status', 'Priority'].includes(schema.name)) {
+                    if (
+                        !['Name', 'Description', 'Status', 'Priority'].includes(
+                            schema.name,
+                        )
+                    ) {
                         dynamicReq[schema.name] = req.data?.[schema.name] || '';
                     }
                 });
@@ -79,7 +99,7 @@ export const useRequirementActions = ({
     const saveRequirement = async (
         dynamicReq: DynamicRequirement,
         isNew: boolean,
-        userId: string
+        userId: string,
     ) => {
         if (!userId || !blockPropertySchemas) {
             return;
@@ -87,20 +107,27 @@ export const useRequirementActions = ({
 
         try {
             let requirementId = dynamicReq.id;
-            
+
             if (isNew) {
                 // Generate a UUID for new requirements
                 const tempId = requirementId || uuidv4();
-                
+
                 // Extract name and description from dynamic requirement
                 const name = dynamicReq['Name'] || 'New Requirement';
                 const description = dynamicReq['Description'] || '';
-                const status = (dynamicReq['Status'] as RequirementStatus) || RequirementStatus.draft;
-                const priority = (dynamicReq['Priority'] as RequirementPriority) || RequirementPriority.medium;
-                
+                const status =
+                    (dynamicReq['Status'] as RequirementStatus) ||
+                    RequirementStatus.draft;
+                const priority =
+                    (dynamicReq['Priority'] as RequirementPriority) ||
+                    RequirementPriority.medium;
+
                 // Create data object from dynamic requirement
-                const dataObject = createDataObjectFromDynamicReq(dynamicReq, blockPropertySchemas);
-                
+                const dataObject = createDataObjectFromDynamicReq(
+                    dynamicReq,
+                    blockPropertySchemas,
+                );
+
                 // Create the base requirement with data field
                 const newRequirement: Requirement = {
                     id: tempId,
@@ -129,12 +156,13 @@ export const useRequirementActions = ({
                 };
 
                 // Update local state optimistically
-                setLocalRequirements(prev => [...prev, newRequirement]);
+                setLocalRequirements((prev) => [...prev, newRequirement]);
 
                 // Save the requirement
-                const savedRequirement = await createRequirementMutation.mutateAsync(newRequirement);
+                const savedRequirement =
+                    await createRequirementMutation.mutateAsync(newRequirement);
                 requirementId = savedRequirement.id;
-                
+
                 // Sync the requirement data with KVs
                 await syncRequirementDataWithKVs.mutateAsync({
                     requirementId,
@@ -144,32 +172,52 @@ export const useRequirementActions = ({
                 });
             } else {
                 // Find the original requirement
-                const originalReq = localRequirements.find(req => req.id === requirementId);
+                const originalReq = localRequirements.find(
+                    (req) => req.id === requirementId,
+                );
                 if (!originalReq) {
                     return;
                 }
 
                 // Create data object from dynamic requirement
-                const dataObject = createDataObjectFromDynamicReq(dynamicReq, blockPropertySchemas);
+                const dataObject = createDataObjectFromDynamicReq(
+                    dynamicReq,
+                    blockPropertySchemas,
+                );
 
                 // Update the base requirement with name, description, status, priority
                 const updatedRequirement: Partial<Requirement> = {
                     ...originalReq,
                     name: dynamicReq['Name'] || originalReq.name,
-                    description: dynamicReq['Description'] || originalReq.description,
-                    status: (dynamicReq['Status'] as RequirementStatus) || originalReq.status,
-                    priority: (dynamicReq['Priority'] as RequirementPriority) || originalReq.priority,
+                    description:
+                        dynamicReq['Description'] || originalReq.description,
+                    status:
+                        (dynamicReq['Status'] as RequirementStatus) ||
+                        originalReq.status,
+                    priority:
+                        (dynamicReq['Priority'] as RequirementPriority) ||
+                        originalReq.priority,
                     updated_by: userId,
                 };
 
                 // Update local state optimistically
-                setLocalRequirements(prev =>
-                    prev.map(req => (req.id === requirementId ? { ...req, ...updatedRequirement, data: dataObject } as Requirement : req))
+                setLocalRequirements((prev) =>
+                    prev.map((req) =>
+                        req.id === requirementId
+                            ? ({
+                                  ...req,
+                                  ...updatedRequirement,
+                                  data: dataObject,
+                              } as Requirement)
+                            : req,
+                    ),
                 );
 
                 // Update the requirement
-                await updateRequirementMutation.mutateAsync(updatedRequirement as Requirement);
-                
+                await updateRequirementMutation.mutateAsync(
+                    updatedRequirement as Requirement,
+                );
+
                 // Sync the requirement data with KVs
                 await syncRequirementDataWithKVs.mutateAsync({
                     requirementId,
@@ -181,22 +229,31 @@ export const useRequirementActions = ({
         } catch (error) {
             // Revert local state on error
             if (isNew) {
-                setLocalRequirements(prev => prev.filter(req => req.id !== dynamicReq.id));
+                setLocalRequirements((prev) =>
+                    prev.filter((req) => req.id !== dynamicReq.id),
+                );
             }
             throw error;
         }
     };
 
-    const deleteRequirement = async (dynamicReq: DynamicRequirement, userId: string) => {
+    const deleteRequirement = async (
+        dynamicReq: DynamicRequirement,
+        userId: string,
+    ) => {
         try {
             // Find the original requirement
-            const originalReq = localRequirements.find(req => req.id === dynamicReq.id);
+            const originalReq = localRequirements.find(
+                (req) => req.id === dynamicReq.id,
+            );
             if (!originalReq) {
                 return;
             }
 
             // Update local state optimistically
-            setLocalRequirements(prev => prev.filter(req => req.id !== dynamicReq.id));
+            setLocalRequirements((prev) =>
+                prev.filter((req) => req.id !== dynamicReq.id),
+            );
 
             // Make API call to delete the requirement
             await updateRequirementMutation.mutateAsync({
@@ -206,7 +263,7 @@ export const useRequirementActions = ({
             });
         } catch (error) {
             // Revert local state on error
-            setLocalRequirements(prev => localRequirements);
+            setLocalRequirements((prev) => localRequirements);
             throw error;
         }
     };
@@ -217,4 +274,4 @@ export const useRequirementActions = ({
         deleteRequirement,
         createDataObjectFromDynamicReq,
     };
-}; 
+};

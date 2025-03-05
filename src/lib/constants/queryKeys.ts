@@ -56,30 +56,49 @@ export const queryKeys = {
     },
     documentPropertySchemas: {
         all: ['documentPropertySchemas'] as const,
-        details: () => [...queryKeys.documentPropertySchemas.all, 'detail'] as const,
-        detail: (id: string) => [...queryKeys.documentPropertySchemas.details(), id] as const,
+        details: () =>
+            [...queryKeys.documentPropertySchemas.all, 'detail'] as const,
+        detail: (id: string) =>
+            [...queryKeys.documentPropertySchemas.details(), id] as const,
         byDocument: (documentId: string) =>
-            [...queryKeys.documents.detail(documentId), 'propertySchemas'] as const,
+            [
+                ...queryKeys.documents.detail(documentId),
+                'propertySchemas',
+            ] as const,
     },
     blockPropertySchemas: {
         all: ['blockPropertySchemas'] as const,
-        details: () => [...queryKeys.blockPropertySchemas.all, 'detail'] as const,
-        detail: (id: string) => [...queryKeys.blockPropertySchemas.details(), id] as const,
+        details: () =>
+            [...queryKeys.blockPropertySchemas.all, 'detail'] as const,
+        detail: (id: string) =>
+            [...queryKeys.blockPropertySchemas.details(), id] as const,
         byBlock: (blockId: string) =>
             [...queryKeys.blocks.detail(blockId), 'propertySchemas'] as const,
     },
     requirementPropertyKVs: {
         all: ['requirementPropertyKVs'] as const,
-        details: () => [...queryKeys.requirementPropertyKVs.all, 'detail'] as const,
-        detail: (id: string) => [...queryKeys.requirementPropertyKVs.details(), id] as const,
+        details: () =>
+            [...queryKeys.requirementPropertyKVs.all, 'detail'] as const,
+        detail: (id: string) =>
+            [...queryKeys.requirementPropertyKVs.details(), id] as const,
         byBlock: (blockId: string) =>
             [...queryKeys.blocks.detail(blockId), 'propertyKVs'] as const,
         byRequirement: (requirementId: string) =>
-            [...queryKeys.requirements.detail(requirementId), 'propertyKVs'] as const,
+            [
+                ...queryKeys.requirements.detail(requirementId),
+                'propertyKVs',
+            ] as const,
         byBlockAndRequirement: (blockId: string, requirementId?: string) =>
             requirementId
-                ? [...queryKeys.blocks.detail(blockId), 'propertyKVs', requirementId] as const
-                : [...queryKeys.blocks.detail(blockId), 'propertyKVs'] as const,
+                ? ([
+                      ...queryKeys.blocks.detail(blockId),
+                      'propertyKVs',
+                      requirementId,
+                  ] as const)
+                : ([
+                      ...queryKeys.blocks.detail(blockId),
+                      'propertyKVs',
+                  ] as const),
     },
     projects: {
         all: ['projects'] as const,

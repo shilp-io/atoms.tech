@@ -15,12 +15,13 @@ export async function login(formData: FormData) {
     };
 
     try {
-        const { error, data: authData } = await supabase.auth.signInWithPassword(data);
+        const { error, data: authData } =
+            await supabase.auth.signInWithPassword(data);
 
         if (error) {
             return {
                 error: error.message || 'Invalid credentials',
-                success: false
+                success: false,
             };
         }
 
@@ -31,21 +32,25 @@ export async function login(formData: FormData) {
                 .select('*')
                 .eq('id', authData.user.id)
                 .single();
-            
+
             // Prefetch organizations
             const { data: organizations } = await supabase
                 .from('organizations')
                 .select('*')
                 .eq('user_id', authData.user.id);
-            
+
             // Determine where to redirect based on organizations
             if (organizations && organizations.length > 0) {
                 // Find enterprise organization
-                const enterpriseOrg = organizations.find(org => org.type === OrganizationType.enterprise);
-                
+                const enterpriseOrg = organizations.find(
+                    (org) => org.type === OrganizationType.enterprise,
+                );
+
                 // Find personal organization
-                const personalOrg = organizations.find(org => org.type === OrganizationType.personal);
-                
+                const personalOrg = organizations.find(
+                    (org) => org.type === OrganizationType.personal,
+                );
+
                 if (enterpriseOrg) {
                     // Prefetch enterprise org data
                     await supabase
@@ -53,7 +58,7 @@ export async function login(formData: FormData) {
                         .select('*')
                         .eq('organization_id', enterpriseOrg.id)
                         .eq('user_id', authData.user.id);
-                    
+
                     revalidatePath('/', 'layout');
                     redirect(`/org/${enterpriseOrg.id}`);
                 } else if (personalOrg) {
@@ -69,7 +74,7 @@ export async function login(formData: FormData) {
     } catch (error) {
         return {
             error: 'An unexpected error occurred. Please try again.',
-            success: false
+            success: false,
         };
     }
 }
@@ -101,20 +106,24 @@ export async function signup(formData: FormData) {
         if (error) {
             return {
                 error: error.message,
-                success: false
+                success: false,
             };
         }
 
         if (!authData.session) {
             return {
                 message: 'Check your email to confirm your account',
-                success: true
+                success: true,
             };
         }
 
         // Prefetch user data to make subsequent page loads faster
         if (authData.user) {
-            await supabase.from('profiles').select('*').eq('id', authData.user.id).single();
+            await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', authData.user.id)
+                .single();
         }
 
         revalidatePath('/', 'layout');
@@ -122,14 +131,14 @@ export async function signup(formData: FormData) {
     } catch (error) {
         return {
             error: 'An unexpected error occurred',
-            success: false
+            success: false,
         };
     }
 }
 
 export async function signOut() {
     const supabase = await createClient();
-    
+
     try {
         const { error } = await supabase.auth.signOut();
 

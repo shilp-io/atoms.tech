@@ -4,20 +4,26 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getUserOrganizations } from '@/lib/db/client';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { OrganizationType } from '@/types/base/enums.types';
 import { QueryFilters } from '@/types/base/filters.types';
 import { OrganizationSchema } from '@/types/validation/organizations.validation';
-import { OrganizationType } from '@/types/base/enums.types';
 
 export function useOrganization(orgId: string) {
     return useQuery({
         queryKey: queryKeys.organizations.detail(orgId),
         queryFn: async () => {
             // Validate that orgId is a valid UUID format before querying
-            if (!orgId || orgId === 'user' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orgId)) {
+            if (
+                !orgId ||
+                orgId === 'user' ||
+                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                    orgId,
+                )
+            ) {
                 console.error('Invalid organization ID format:', orgId);
                 throw new Error('Invalid organization ID format');
             }
-            
+
             const { data, error } = await supabase
                 .from('organizations')
                 .select('*')
@@ -64,14 +70,25 @@ export function useOrganizationsByMembership(userId: string) {
         queryKey: queryKeys.organizations.byMembership(userId),
         queryFn: async () => {
             // Validate userId
-            if (!userId || userId === 'user' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
-                console.log('useOrganizationsByMembership called with invalid userId:', userId);
+            if (
+                !userId ||
+                userId === 'user' ||
+                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                    userId,
+                )
+            ) {
+                console.log(
+                    'useOrganizationsByMembership called with invalid userId:',
+                    userId,
+                );
                 return [];
             }
-            
+
             try {
                 const orgs = await getUserOrganizations(userId);
-                console.log(`Retrieved ${orgs.length} organizations for user ${userId}`);
+                console.log(
+                    `Retrieved ${orgs.length} organizations for user ${userId}`,
+                );
                 return orgs;
             } catch (error) {
                 console.error('Error in useOrganizationsByMembership:', error);
@@ -87,11 +104,17 @@ export function useOrgsByUser(userId: string) {
         queryKey: queryKeys.organizations.byUser(userId),
         queryFn: async () => {
             // Validate userId
-            if (!userId || userId === 'user' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+            if (
+                !userId ||
+                userId === 'user' ||
+                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                    userId,
+                )
+            ) {
                 console.error('Invalid user ID format:', userId);
                 return [];
             }
-            
+
             const { data, error } = await supabase
                 .from('organizations')
                 .select('*')
@@ -114,11 +137,17 @@ export function usePersonalOrg(userId: string) {
         queryKey: queryKeys.organizations.createdBy(userId),
         queryFn: async () => {
             // Validate userId
-            if (!userId || userId === 'user' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+            if (
+                !userId ||
+                userId === 'user' ||
+                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                    userId,
+                )
+            ) {
                 console.error('Invalid user ID format:', userId);
                 throw new Error('Invalid user ID format');
             }
-            
+
             const { data: organization, error } = await supabase
                 .from('organizations')
                 .select('*')

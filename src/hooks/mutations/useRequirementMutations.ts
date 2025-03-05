@@ -152,7 +152,7 @@ export function useDeleteRequirement() {
 // Helper function to update requirement data
 export function useSyncRequirementData() {
     const updateRequirementMutation = useUpdateRequirement();
-    
+
     return useMutation({
         mutationFn: async ({
             requirementId,

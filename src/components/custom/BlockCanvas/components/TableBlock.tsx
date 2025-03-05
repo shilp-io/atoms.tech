@@ -4,53 +4,55 @@ import React, { useEffect, useState } from 'react';
 
 import { useBlockPropertySchemas } from '@/hooks/queries/usePropertySchemas';
 import { useAuth } from '@/hooks/useAuth';
-import { Requirement } from '@/types/base/requirements.types';
 import { useDocumentStore } from '@/lib/store/document.store';
+import { Requirement } from '@/types/base/requirements.types';
 
-import { BlockProps } from '../types';
+import {
+    DynamicRequirement,
+    useRequirementActions,
+} from '../hooks/useRequirementActions';
 import { useTableBlockActions } from '../hooks/useTableBlockActions';
-import { useRequirementActions, DynamicRequirement } from '../hooks/useRequirementActions';
 import { useTableColumns } from '../hooks/useTableColumns';
-import { TableBlockSchemaInitializer } from './TableBlockSchemaInitializer';
-import { TableBlockLoadingState } from './TableBlockLoadingState';
+import { BlockProps } from '../types';
 import { TableBlockContent } from './TableBlockContent';
+import { TableBlockLoadingState } from './TableBlockLoadingState';
+import { TableBlockSchemaInitializer } from './TableBlockSchemaInitializer';
 
 export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
     const { userProfile } = useAuth();
-    const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
+    const [selectedRequirement, setSelectedRequirement] =
+        useState<Requirement | null>(null);
     const [localRequirements, setLocalRequirements] = useState<Requirement[]>(
         block.requirements || [],
     );
-    
+
     // Use the document store for edit mode state
     const { isEditMode: globalIsEditMode } = useDocumentStore();
-    
+
     // Fetch block property schemas
-    const { 
-        data: blockPropertySchemas, 
-        isLoading: isLoadingSchemas, 
-        isError: isSchemasError, 
-        error: schemasError 
+    const {
+        data: blockPropertySchemas,
+        isLoading: isLoadingSchemas,
+        isError: isSchemasError,
+        error: schemasError,
     } = useBlockPropertySchemas(block.id);
-    
+
     // Initialize table block actions
-    const { createBlockPropertySchemas, createCustomBlockPropertySchema } = useTableBlockActions({
-        documentId: block.document_id,
-        blockId: block.id,
-    });
+    const { createBlockPropertySchemas, createCustomBlockPropertySchema } =
+        useTableBlockActions({
+            documentId: block.document_id,
+            blockId: block.id,
+        });
 
     // Initialize requirement actions
-    const { 
-        getDynamicRequirements, 
-        saveRequirement, 
-        deleteRequirement 
-    } = useRequirementActions({
-        blockId: block.id,
-        documentId: block.document_id,
-        localRequirements,
-        setLocalRequirements,
-        blockPropertySchemas,
-    });
+    const { getDynamicRequirements, saveRequirement, deleteRequirement } =
+        useRequirementActions({
+            blockId: block.id,
+            documentId: block.document_id,
+            localRequirements,
+            setLocalRequirements,
+            blockPropertySchemas,
+        });
 
     // Get table columns
     const columns = useTableColumns(blockPropertySchemas);
@@ -66,7 +68,7 @@ export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
         isNew: boolean,
     ) => {
         if (!userProfile?.id) return;
-        
+
         try {
             await saveRequirement(dynamicReq, isNew, userProfile.id);
         } catch (error) {
@@ -77,7 +79,7 @@ export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
     // Handle deleting a requirement
     const handleDeleteRequirement = async (dynamicReq: DynamicRequirement) => {
         if (!userProfile?.id) return;
-        
+
         try {
             await deleteRequirement(dynamicReq, userProfile.id);
         } catch (error) {
@@ -88,37 +90,42 @@ export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
     // Handle adding a new column
     const handleAddColumn = async (name: string, dataType: string) => {
         if (!userProfile?.id) return;
-        
+
         try {
             // Create a new block property schema
-            const schema = await createCustomBlockPropertySchema(name, dataType);
-            
+            const schema = await createCustomBlockPropertySchema(
+                name,
+                dataType,
+            );
+
             // Update all existing requirements with the new column
             if (localRequirements.length > 0) {
-                await Promise.all(localRequirements.map(async (req) => {
-                    // Skip deleted requirements
-                    if (req.is_deleted) return;
-                    
-                    // Add the new column to the requirement's data
-                    const updatedData = {
-                        ...(req.data || {}),
-                        [name]: '', // Initialize with empty value
-                    };
-                    
-                    // Sync the requirement data and KVs
-                    await saveRequirement(
-                        { 
-                            id: req.id, 
-                            Name: req.name,
-                            Description: req.description,
-                            Status: req.status,
-                            Priority: req.priority,
-                            ...updatedData
-                        },
-                        false,
-                        userProfile.id
-                    );
-                }));
+                await Promise.all(
+                    localRequirements.map(async (req) => {
+                        // Skip deleted requirements
+                        if (req.is_deleted) return;
+
+                        // Add the new column to the requirement's data
+                        const updatedData = {
+                            ...(req.data || {}),
+                            [name]: '', // Initialize with empty value
+                        };
+
+                        // Sync the requirement data and KVs
+                        await saveRequirement(
+                            {
+                                id: req.id,
+                                Name: req.name,
+                                Description: req.description,
+                                Status: req.status,
+                                Priority: req.priority,
+                                ...updatedData,
+                            },
+                            false,
+                            userProfile.id,
+                        );
+                    }),
+                );
             }
         } catch (error) {
             // Handle error (could add toast notification here)
@@ -145,20 +152,25 @@ export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode }) => {
                 isError={isSchemasError}
                 error={schemasError}
                 onCreateDefaultSchemas={createBlockPropertySchemas}
-                noSchemas={!blockPropertySchemas || blockPropertySchemas.length === 0}
+                noSchemas={
+                    !blockPropertySchemas || blockPropertySchemas.length === 0
+                }
             />
 
             {/* Table Content */}
-            {!isLoadingSchemas && !isSchemasError && blockPropertySchemas && blockPropertySchemas.length > 0 && (
-                <TableBlockContent
-                    dynamicRequirements={dynamicRequirements}
-                    columns={columns}
-                    onSaveRequirement={handleSaveRequirement}
-                    onDeleteRequirement={handleDeleteRequirement}
-                    onAddColumn={handleAddColumn}
-                    isEditMode={globalIsEditMode}
-                />
-            )}
+            {!isLoadingSchemas &&
+                !isSchemasError &&
+                blockPropertySchemas &&
+                blockPropertySchemas.length > 0 && (
+                    <TableBlockContent
+                        dynamicRequirements={dynamicRequirements}
+                        columns={columns}
+                        onSaveRequirement={handleSaveRequirement}
+                        onDeleteRequirement={handleDeleteRequirement}
+                        onAddColumn={handleAddColumn}
+                        isEditMode={globalIsEditMode}
+                    />
+                )}
         </>
     );
 };

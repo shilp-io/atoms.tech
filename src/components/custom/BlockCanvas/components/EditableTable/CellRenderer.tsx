@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -9,9 +10,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+
 import { CellValue, EditableColumn } from './types';
 
-interface CellRendererProps<T extends Record<string, CellValue> & { id: string }> {
+interface CellRendererProps<
+    T extends Record<string, CellValue> & { id: string },
+> {
     item: T;
     column: EditableColumn<T>;
     isEditing: boolean;
@@ -19,13 +23,9 @@ interface CellRendererProps<T extends Record<string, CellValue> & { id: string }
     onCellChange: (itemId: string, accessor: keyof T, value: CellValue) => void;
 }
 
-export function CellRenderer<T extends Record<string, CellValue> & { id: string }>({
-    item,
-    column,
-    isEditing,
-    value,
-    onCellChange,
-}: CellRendererProps<T>) {
+export function CellRenderer<
+    T extends Record<string, CellValue> & { id: string },
+>({ item, column, isEditing, value, onCellChange }: CellRendererProps<T>) {
     if (isEditing) {
         switch (column.type) {
             case 'select':
@@ -106,4 +106,4 @@ export function CellRenderer<T extends Record<string, CellValue> & { id: string 
                 : String(value ?? '')}
         </div>
     );
-} 
+}

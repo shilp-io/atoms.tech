@@ -6,8 +6,19 @@ import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { getOrganizationMembers } from '@/lib/db/client';
 import { UserRoleType } from '@/types';
 
@@ -45,11 +56,13 @@ export default function OrgMembers({ className }: OrgMembersProps) {
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
                     <CardTitle className="text-xl">Members</CardTitle>
-                    <CardDescription>Manage organization members</CardDescription>
+                    <CardDescription>
+                        Manage organization members
+                    </CardDescription>
                 </div>
-                <Button 
-                    variant="outline" 
-                    size="sm" 
+                <Button
+                    variant="outline"
+                    size="sm"
                     className="flex items-center gap-1"
                     onClick={() => setIsInviteOpen(true)}
                 >
@@ -61,7 +74,10 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                 {isLoading ? (
                     <div className="space-y-3">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="flex items-center justify-between animate-pulse">
+                            <div
+                                key={i}
+                                className="flex items-center justify-between animate-pulse"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-gray-200"></div>
                                     <div className="space-y-1">
@@ -76,29 +92,47 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                 ) : members && members.length > 0 ? (
                     <div className="space-y-3">
                         {members.map((member) => (
-                            <div key={member.id} className="flex items-center justify-between">
+                            <div
+                                key={member.id}
+                                className="flex items-center justify-between"
+                            >
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                                         <Users className="h-4 w-4 text-primary" />
                                     </div>
                                     <div>
-                                        <div className="font-medium">{member.profiles?.full_name || 'User'}</div>
-                                        <div className="text-sm text-muted-foreground">{member.profiles?.email}</div>
+                                        <div className="font-medium">
+                                            {member.profiles?.full_name ||
+                                                'User'}
+                                        </div>
+                                        <div className="text-sm text-muted-foreground">
+                                            {member.profiles?.email}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(member.role)}`}>
+                                    <span
+                                        className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(member.role)}`}
+                                    >
                                         {member.role}
                                     </span>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 p-0"
+                                            >
                                                 <MoreHorizontal className="h-4 w-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem>Change role</DropdownMenuItem>
-                                            <DropdownMenuItem className="text-red-600">Remove</DropdownMenuItem>
+                                            <DropdownMenuItem>
+                                                Change role
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem className="text-red-600">
+                                                Remove
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </div>
@@ -108,7 +142,9 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                 ) : (
                     <div className="text-center py-6">
                         <Users className="h-8 w-8 mx-auto text-muted-foreground" />
-                        <h3 className="mt-2 text-sm font-medium">No members found</h3>
+                        <h3 className="mt-2 text-sm font-medium">
+                            No members found
+                        </h3>
                         <p className="mt-1 text-xs text-muted-foreground">
                             Invite members to collaborate
                         </p>
@@ -117,4 +153,4 @@ export default function OrgMembers({ className }: OrgMembersProps) {
             </CardContent>
         </Card>
     );
-} 
+}

@@ -95,7 +95,11 @@ export function CreatePanel({
                         value={activeTab}
                         onValueChange={(value: string) =>
                             setActiveTab(
-                                value as 'project' | 'requirement' | 'document' | 'organization',
+                                value as
+                                    | 'project'
+                                    | 'requirement'
+                                    | 'document'
+                                    | 'organization',
                             )
                         }
                     >

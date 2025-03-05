@@ -16,10 +16,10 @@ export default async function UserDashboardLayout({
 }) {
     const queryClient = new QueryClient();
     const user = await getAuthUserServer();
-    
+
     // Fetch organizations on the server side
     const organizations = await getUserOrganizationsServer(user.user.id);
-    
+
     // Prefetch organizations for client components
     await queryClient.prefetchQuery({
         queryKey: queryKeys.organizations.byMembership(user.user.id),
@@ -36,4 +36,4 @@ export default async function UserDashboardLayout({
             {children}
         </HydrationBoundary>
     );
-} 
+}

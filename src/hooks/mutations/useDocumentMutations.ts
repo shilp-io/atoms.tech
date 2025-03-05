@@ -5,11 +5,11 @@ import {
 } from '@tanstack/react-query';
 import { v4 as uuidv4 } from 'uuid';
 
+import { DocumentPropertySchema } from '@/components/custom/BlockCanvas/types';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Document } from '@/types/base/documents.types';
 import { DocumentSchema } from '@/types/validation/documents.validation';
-import { DocumentPropertySchema } from '@/components/custom/BlockCanvas/types';
 
 export type CreateDocumentInput = Omit<
     Document,
@@ -82,7 +82,13 @@ export function useDeleteDocument() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({ id, deletedBy }: { id: string; deletedBy: string }) => {
+        mutationFn: async ({
+            id,
+            deletedBy,
+        }: {
+            id: string;
+            deletedBy: string;
+        }) => {
             const { data, error } = await supabase
                 .from('documents')
                 .update({
@@ -128,7 +134,9 @@ export function useCreateDocumentPropertySchema() {
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({
-                queryKey: queryKeys.documentPropertySchemas.byDocument(data.document_id),
+                queryKey: queryKeys.documentPropertySchemas.byDocument(
+                    data.document_id,
+                ),
             });
         },
     });
@@ -136,11 +144,13 @@ export function useCreateDocumentPropertySchema() {
 
 export function useCreateDocumentWithDefaultSchemas() {
     const createDocumentMutation = useCreateDocument();
-    const createDocumentPropertySchemaMutation = useCreateDocumentPropertySchema();
+    const createDocumentPropertySchemaMutation =
+        useCreateDocumentPropertySchema();
 
     return useMutation({
         mutationFn: async (document: Partial<Document>) => {
-            const createdDocument = await createDocumentMutation.mutateAsync(document);
+            const createdDocument =
+                await createDocumentMutation.mutateAsync(document);
 
             const defaultSchemas: Partial<DocumentPropertySchema>[] = [
                 {
@@ -182,8 +192,10 @@ export function useCreateDocumentWithDefaultSchemas() {
 
             await Promise.all(
                 defaultSchemas.map(async (schema) => {
-                    return await createDocumentPropertySchemaMutation.mutateAsync(schema);
-                })
+                    return await createDocumentPropertySchemaMutation.mutateAsync(
+                        schema,
+                    );
+                }),
             );
 
             return createdDocument;

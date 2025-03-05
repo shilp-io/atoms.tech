@@ -1,7 +1,7 @@
 'use client';
 
-import { Filter, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Filter, Plus } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+
 import { TableSideMenuProps } from './types';
 
 export const TableSideMenu = ({
@@ -72,4 +73,4 @@ export const TableSideMenu = ({
             </TooltipProvider>
         </motion.div>
     );
-}; 
+};

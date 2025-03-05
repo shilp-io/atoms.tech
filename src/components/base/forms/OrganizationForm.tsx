@@ -19,19 +19,27 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { BillingPlan, OrganizationType, PricingPlanInterval } from '@/types/base/enums.types';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import {
+    BillingPlan,
+    OrganizationType,
+    PricingPlanInterval,
+} from '@/types/base/enums.types';
 
 const formSchema = z.object({
     name: z.string().min(2, {
         message: 'Organization name must be at least 2 characters.',
     }),
-    slug: z.string().min(2, {
-        message: 'Slug must be at least 2 characters.',
-    }).regex(/^[a-z0-9-]+$/, {
-        message: 'Slug can only contain lowercase letters, numbers, and hyphens.',
-    }),
+    slug: z
+        .string()
+        .min(2, {
+            message: 'Slug must be at least 2 characters.',
+        })
+        .regex(/^[a-z0-9-]+$/, {
+            message:
+                'Slug can only contain lowercase letters, numbers, and hyphens.',
+        }),
     description: z.string().optional(),
 });
 
@@ -129,13 +137,13 @@ export default function OrganizationForm({ onSuccess }: OrganizationFormProps) {
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const name = e.target.value;
         form.setValue('name', name);
-        
+
         // Generate slug from name (lowercase, replace spaces with hyphens, remove special chars)
         const slug = name
             .toLowerCase()
             .replace(/\s+/g, '-')
             .replace(/[^a-z0-9-]/g, '');
-        
+
         form.setValue('slug', slug);
     };
 
@@ -149,9 +157,9 @@ export default function OrganizationForm({ onSuccess }: OrganizationFormProps) {
                         <FormItem>
                             <FormLabel>Organization Name</FormLabel>
                             <FormControl>
-                                <Input 
-                                    placeholder="Acme Corporation" 
-                                    {...field} 
+                                <Input
+                                    placeholder="Acme Corporation"
+                                    {...field}
                                     onChange={handleNameChange}
                                 />
                             </FormControl>
@@ -170,10 +178,14 @@ export default function OrganizationForm({ onSuccess }: OrganizationFormProps) {
                         <FormItem>
                             <FormLabel>Organization Slug</FormLabel>
                             <FormControl>
-                                <Input placeholder="acme-corporation" {...field} />
+                                <Input
+                                    placeholder="acme-corporation"
+                                    {...field}
+                                />
                             </FormControl>
                             <FormDescription>
-                                Used in URLs. Only lowercase letters, numbers, and hyphens.
+                                Used in URLs. Only lowercase letters, numbers,
+                                and hyphens.
                             </FormDescription>
                             <FormMessage />
                         </FormItem>
@@ -206,4 +218,4 @@ export default function OrganizationForm({ onSuccess }: OrganizationFormProps) {
             </form>
         </Form>
     );
-} 
+}

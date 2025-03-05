@@ -561,4 +561,4 @@ export function EditableTable<
             </AlertDialog>
         </LayoutGroup>
     );
-} 
+}

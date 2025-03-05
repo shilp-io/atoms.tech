@@ -1,8 +1,9 @@
-import React, { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
 
-import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { queryKeys } from '@/lib/constants/queryKeys';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
+
 import { BlockWithRequirements } from '../types';
 
 interface TableBlockSchemaInitializerProps {
@@ -12,7 +13,9 @@ interface TableBlockSchemaInitializerProps {
     createBlockPropertySchemas: () => Promise<any[]>;
 }
 
-export const TableBlockSchemaInitializer: React.FC<TableBlockSchemaInitializerProps> = ({
+export const TableBlockSchemaInitializer: React.FC<
+    TableBlockSchemaInitializerProps
+> = ({
     block,
     blockPropertySchemas,
     isLoadingSchemas,
@@ -24,19 +27,25 @@ export const TableBlockSchemaInitializer: React.FC<TableBlockSchemaInitializerPr
     useEffect(() => {
         const channel = supabase
             .channel(`block_property_schemas_${block.id}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'block_property_schemas',
-                filter: `block_id=eq.${block.id}`,
-            }, () => {
-                // Invalidate the query to trigger a refetch
-                queryClient.invalidateQueries({
-                    queryKey: queryKeys.blockPropertySchemas.byBlock(block.id),
-                });
-            })
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'block_property_schemas',
+                    filter: `block_id=eq.${block.id}`,
+                },
+                () => {
+                    // Invalidate the query to trigger a refetch
+                    queryClient.invalidateQueries({
+                        queryKey: queryKeys.blockPropertySchemas.byBlock(
+                            block.id,
+                        ),
+                    });
+                },
+            )
             .subscribe();
-            
+
         return () => {
             supabase.removeChannel(channel);
         };
@@ -51,16 +60,25 @@ export const TableBlockSchemaInitializer: React.FC<TableBlockSchemaInitializerPr
                 // Error handling is done in the parent component
             }
         };
-        
-        if (!isLoadingSchemas && blockPropertySchemas?.length === 0 && block.type === 'table') {
+
+        if (
+            !isLoadingSchemas &&
+            blockPropertySchemas?.length === 0 &&
+            block.type === 'table'
+        ) {
             createSchemas();
         }
-    }, [blockPropertySchemas, block.type, createBlockPropertySchemas, isLoadingSchemas]);
+    }, [
+        blockPropertySchemas,
+        block.type,
+        createBlockPropertySchemas,
+        isLoadingSchemas,
+    ]);
 
     // Manually check database for schemas if we're stuck loading
     useEffect(() => {
         let timeoutId: NodeJS.Timeout;
-        
+
         if (isLoadingSchemas) {
             timeoutId = setTimeout(async () => {
                 try {
@@ -69,14 +87,17 @@ export const TableBlockSchemaInitializer: React.FC<TableBlockSchemaInitializerPr
                         .select('*')
                         .eq('block_id', block.id)
                         .eq('is_deleted', false);
-                        
+
                     if (!error && data?.length === 0) {
                         try {
                             const schemas = await createBlockPropertySchemas();
-                            
+
                             // Force a query invalidation to refresh the UI
                             queryClient.invalidateQueries({
-                                queryKey: queryKeys.blockPropertySchemas.byBlock(block.id),
+                                queryKey:
+                                    queryKeys.blockPropertySchemas.byBlock(
+                                        block.id,
+                                    ),
                             });
                         } catch (createError) {
                             // Error handling is done in the parent component
@@ -87,7 +108,7 @@ export const TableBlockSchemaInitializer: React.FC<TableBlockSchemaInitializerPr
                 }
             }, 5000); // Check after 5 seconds of loading
         }
-        
+
         return () => {
             if (timeoutId) clearTimeout(timeoutId);
         };
@@ -95,4 +116,4 @@ export const TableBlockSchemaInitializer: React.FC<TableBlockSchemaInitializerPr
 
     // This is a utility component that doesn't render anything
     return null;
-}; 
+};

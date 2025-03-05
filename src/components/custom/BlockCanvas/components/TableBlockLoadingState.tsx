@@ -16,7 +16,9 @@ export const TableBlockLoadingState: React.FC<TableBlockLoadingStateProps> = ({
     noSchemas,
 }) => {
     if (isLoading) {
-        return <div className="p-4 text-center">Loading property schemas...</div>;
+        return (
+            <div className="p-4 text-center">Loading property schemas...</div>
+        );
     }
 
     if (isError) {
@@ -31,7 +33,7 @@ export const TableBlockLoadingState: React.FC<TableBlockLoadingStateProps> = ({
         return (
             <div className="p-4 text-center">
                 <p>No property schemas found for this table.</p>
-                <button 
+                <button
                     className="mt-2 px-4 py-2 bg-blue-500 text-white rounded"
                     onClick={onCreateDefaultSchemas}
                 >
@@ -42,4 +44,4 @@ export const TableBlockLoadingState: React.FC<TableBlockLoadingStateProps> = ({
     }
 
     return null;
-}; 
+};

@@ -46,8 +46,10 @@ export default function DocumentForm({
 }: DocumentFormProps) {
     const { userProfile } = useAuth();
     const { toast } = useToast();
-    const { mutateAsync: createDocumentWithSchemas, isPending: isCreatingDocument } =
-        useCreateDocumentWithDefaultSchemas();
+    const {
+        mutateAsync: createDocumentWithSchemas,
+        isPending: isCreatingDocument,
+    } = useCreateDocumentWithDefaultSchemas();
 
     const form = useForm<DocumentFormValues>({
         resolver: zodResolver(documentFormSchema),
@@ -78,7 +80,8 @@ export default function DocumentForm({
             toast({
                 variant: 'default',
                 title: 'Success',
-                description: 'Document created successfully with default property schemas',
+                description:
+                    'Document created successfully with default property schemas',
             });
             onSuccess();
         } catch (error) {

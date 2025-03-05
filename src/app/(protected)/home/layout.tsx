@@ -1,11 +1,11 @@
 'use server';
 
-import { Suspense } from 'react';
 import {
     HydrationBoundary,
     QueryClient,
     dehydrate,
 } from '@tanstack/react-query';
+import { Suspense } from 'react';
 
 import Sidebar from '@/components/base/Sidebar';
 import VerticalToolbar from '@/components/custom/VerticalToolbar';
@@ -37,10 +37,10 @@ export default async function HomeLayout({
 }) {
     const queryClient = new QueryClient();
     const user = await getAuthUserServer();
-    
+
     // Fetch organizations on the server side
     const organizations = await getUserOrganizationsServer(user.user.id);
-    
+
     // Prefetch organizations for client components
     await queryClient.prefetchQuery({
         queryKey: queryKeys.organizations.byMembership(user.user.id),
@@ -58,9 +58,7 @@ export default async function HomeLayout({
                 <Suspense fallback={<SidebarSkeleton />}>
                     <Sidebar />
                 </Suspense>
-                <div className="relative flex-1 p-16">
-                    {children}
-                </div>
+                <div className="relative flex-1 p-16">{children}</div>
                 <VerticalToolbar />
             </SidebarProvider>
         </HydrationBoundary>
