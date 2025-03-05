@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 
+import { BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
 import {
     useCreateRequirement,
     useUpdateRequirement,
@@ -12,8 +13,6 @@ import {
     RequirementStatus,
 } from '@/types/base/enums.types';
 import { Requirement } from '@/types/base/requirements.types';
-
-import { BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
 
 // Type for the requirement data that will be displayed in the table
 export type DynamicRequirement = {

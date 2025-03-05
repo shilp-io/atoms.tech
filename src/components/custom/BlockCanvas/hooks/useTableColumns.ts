@@ -1,13 +1,12 @@
 import React from 'react';
 
+import { EditableColumn } from '@/components/custom/BlockCanvas/components/EditableTable';
+import { DynamicRequirement } from '@/components/custom/BlockCanvas/hooks/useRequirementActions';
+import { BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
 import {
     RequirementPriority,
     RequirementStatus,
 } from '@/types/base/enums.types';
-
-import { EditableColumn } from '@/components/custom/BlockCanvas/components/EditableTable';
-import { BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
-import { DynamicRequirement } from '@/components/custom/BlockCanvas/hooks/useRequirementActions';
 
 export const useTableColumns = (
     blockPropertySchemas: BlockPropertySchema[] | undefined,

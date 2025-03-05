@@ -2,14 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-    Building,
-    Filter,
-    Folder,
-    Plus,
-    Sparkles,
-    Users,
-} from 'lucide-react';
+import { Building, Filter, Folder, Plus, Sparkles, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -42,9 +35,10 @@ export default function UserDashboard() {
 
     // Ensure organizations is always an array and use memo to prevent re-renders
     const safeOrganizations = useMemo(() => {
-        const organizations = queryClient.getQueryData(
-            queryKeys.organizations.byMembership(user?.id || ''),
-        ) as Organization[] || [];
+        const organizations =
+            (queryClient.getQueryData(
+                queryKeys.organizations.byMembership(user?.id || ''),
+            ) as Organization[]) || [];
         return Array.isArray(organizations) ? organizations : [];
     }, [queryClient, user?.id]);
 

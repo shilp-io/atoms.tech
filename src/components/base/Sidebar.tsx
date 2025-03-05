@@ -1,13 +1,6 @@
 'use client';
 
-import {
-    Building,
-    Home,
-    LucideIcon,
-    Plus,
-    Sparkles,
-    User,
-} from 'lucide-react';
+import { Building, Home, LucideIcon, Plus, Sparkles, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -93,7 +86,6 @@ export default function Sidebar() {
         (!memberOrgs ||
             memberOrgs.length === 0 ||
             (memberOrgs.length === 1 && memberOrgs[0].id === personalOrg.id));
-
 
     const navigateToPlayground = useCallback(() => {
         if (personalOrg) {

@@ -1,10 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect } from 'react';
 
+import {
+    BlockPropertySchema,
+    BlockWithRequirements,
+} from '@/components/custom/BlockCanvas/types';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-
-import { BlockWithRequirements, BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
 
 interface TableBlockSchemaInitializerProps {
     block: BlockWithRequirements;

@@ -1,14 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query';
+
+import {
+    BlockPropertySchema,
+    DocumentPropertySchema,
+} from '@/components/custom/BlockCanvas/types';
 import {
     useCreateBlockPropertySchema,
     useDocumentPropertySchemas,
 } from '@/hooks/queries/usePropertySchemas';
 import { useAuth } from '@/hooks/useAuth';
 import { queryKeys } from '@/lib/constants/queryKeys';
-import {
-    BlockPropertySchema,
-    DocumentPropertySchema,
-} from '@/components/custom/BlockCanvas/types';
 
 interface UseTableBlockActionsProps {
     documentId: string;
@@ -20,9 +21,8 @@ export const useTableBlockActions = ({
     blockId,
 }: UseTableBlockActionsProps) => {
     const { userProfile } = useAuth();
-    const {
-        data: documentPropertySchemas,
-    } = useDocumentPropertySchemas(documentId);
+    const { data: documentPropertySchemas } =
+        useDocumentPropertySchemas(documentId);
     const createBlockPropertySchemaMutation = useCreateBlockPropertySchema();
     const queryClient = useQueryClient();
 

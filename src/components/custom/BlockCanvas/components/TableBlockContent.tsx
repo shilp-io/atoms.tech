@@ -2,12 +2,10 @@ import React, { useState } from 'react';
 
 import { SidePanel } from '@/components/base/panels/SidePanel';
 import { EditableTable } from '@/components/custom/BlockCanvas/components/EditableTable';
+import { DynamicRequirement } from '@/components/custom/BlockCanvas/hooks/useRequirementActions';
 import { useAuth } from '@/hooks/useAuth';
 import { Requirement } from '@/types/base/requirements.types';
 
-import {
-    DynamicRequirement,
-} from '@/components/custom/BlockCanvas/hooks/useRequirementActions';
 import { AddColumnDialog } from './AddColumnDialog';
 import { EditableColumn } from './EditableTable';
 

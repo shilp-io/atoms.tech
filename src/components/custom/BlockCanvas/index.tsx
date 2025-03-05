@@ -21,14 +21,16 @@ import {
 import { Table, Type } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
 
+import { SortableBlock } from '@/components/custom/BlockCanvas/components/SortableBlock';
+import { useBlockActions } from '@/components/custom/BlockCanvas/hooks/useBlockActions';
+import {
+    BlockCanvasProps,
+    BlockWithRequirements,
+} from '@/components/custom/BlockCanvas/types';
 import { Button } from '@/components/ui/button';
 import { useDocumentRealtime } from '@/hooks/queries/useDocumentRealtime';
 import { useAuth } from '@/hooks/useAuth';
 import { useDocumentStore } from '@/lib/store/document.store';
-
-import { SortableBlock } from '@/components/custom/BlockCanvas/components/SortableBlock';
-import { useBlockActions } from '@/components/custom/BlockCanvas/hooks/useBlockActions';
-import { BlockCanvasProps, BlockWithRequirements } from '@/components/custom/BlockCanvas/types';
 
 const dropAnimationConfig = {
     ...defaultDropAnimation,
@@ -85,7 +87,13 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                 />
             );
         },
-        [selectedBlockId, isEditMode, handleUpdateBlock, handleDeleteBlock, setIsEditMode],
+        [
+            selectedBlockId,
+            isEditMode,
+            handleUpdateBlock,
+            handleDeleteBlock,
+            setIsEditMode,
+        ],
     );
 
     const handleDragStart = (event: DragStartEvent) => {

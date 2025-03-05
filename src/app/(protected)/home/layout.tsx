@@ -49,7 +49,9 @@ export default async function HomeLayout({
     });
 
     // Add organizations to Next.js data for client components
-    (queryClient as QueryClient & { organizations: typeof organizations }).organizations = organizations;
+    (
+        queryClient as QueryClient & { organizations: typeof organizations }
+    ).organizations = organizations;
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>

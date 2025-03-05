@@ -29,7 +29,9 @@ export default async function UserDashboardLayout({
     });
 
     // Make organizations available to client components
-    (queryClient as QueryClient & { organizations: typeof organizations }).organizations = organizations;
+    (
+        queryClient as QueryClient & { organizations: typeof organizations }
+    ).organizations = organizations;
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>

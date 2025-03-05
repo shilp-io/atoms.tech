@@ -2,11 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useBlockPropertySchemas } from '@/hooks/queries/usePropertySchemas';
-import { useAuth } from '@/hooks/useAuth';
-import { useDocumentStore } from '@/lib/store/document.store';
-import { Requirement } from '@/types/base/requirements.types';
-
 import {
     DynamicRequirement,
     useRequirementActions,
@@ -14,11 +9,19 @@ import {
 import { useTableBlockActions } from '@/components/custom/BlockCanvas/hooks/useTableBlockActions';
 import { useTableColumns } from '@/components/custom/BlockCanvas/hooks/useTableColumns';
 import { BlockProps } from '@/components/custom/BlockCanvas/types';
+import { useBlockPropertySchemas } from '@/hooks/queries/usePropertySchemas';
+import { useAuth } from '@/hooks/useAuth';
+import { useDocumentStore } from '@/lib/store/document.store';
+import { Requirement } from '@/types/base/requirements.types';
+
 import { TableBlockContent } from './TableBlockContent';
 import { TableBlockLoadingState } from './TableBlockLoadingState';
 import { TableBlockSchemaInitializer } from './TableBlockSchemaInitializer';
 
-export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode: _isEditMode }) => {
+export const TableBlock: React.FC<BlockProps> = ({
+    block,
+    isEditMode: _isEditMode,
+}) => {
     const { userProfile } = useAuth();
     const [_selectedRequirement, _setSelectedRequirement] =
         useState<Requirement | null>(null);
@@ -95,10 +98,7 @@ export const TableBlock: React.FC<BlockProps> = ({ block, isEditMode: _isEditMod
 
         try {
             // Create a new block property schema
-            await createCustomBlockPropertySchema(
-                name,
-                dataType,
-            );
+            await createCustomBlockPropertySchema(name, dataType);
 
             // Update all existing requirements with the new column
             if (localRequirements.length > 0) {
