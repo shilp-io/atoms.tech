@@ -21,6 +21,7 @@ import {
     getUserOrganizationsServer,
     getUserProjectsServer,
 } from '@/lib/db/server';
+import ExcalidrawWrapper from '@/components/custom/LandingPage/excalidrawWrapper';
 
 export default async function Home() {
     // Initialize query client for server-side prefetching
@@ -76,6 +77,7 @@ export default async function Home() {
                             <Features />
                         </div>
                         <HowItWorks />
+                        <ExcalidrawWrapper />
                         <TimeSavingEdge />
                         <div className="section-divider">
                             <Industries />
