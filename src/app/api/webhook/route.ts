@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
                     id: userId,
                     stripe_customer_id: session.customer,
                     stripe_subscription_id: session.subscription,
-                    subscription_status: true,
+                    subscription_status: null,
                 })
 
             if (error) {

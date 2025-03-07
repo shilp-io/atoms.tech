@@ -1,7 +1,6 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { GetStartedButton } from './get-started-button';
 import CheckoutButton from './CheckoutButton';
 export default function PricingPage() {
 
