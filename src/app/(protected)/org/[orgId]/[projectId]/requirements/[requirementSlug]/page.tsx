@@ -4,7 +4,6 @@ import {
     Brain,
     Check,
     CircleAlert,
-    FileSpreadsheet,
     Scale,
     Target,
     Upload,
@@ -160,11 +159,9 @@ export default function RequirementPage() {
         analysisPipelineRunId,
         organizationId,
     );
-    const [analysisResultLink, setAnalysisResultLink] = useState<string>('');
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
 
     const handleAnalyze = async () => {
-        setAnalysisResultLink('');
         setAnalysisData(null);
 
         // check if the requirement is empty
@@ -201,22 +198,6 @@ export default function RequirementPage() {
         switch (analysisResponse?.state) {
             case 'DONE': {
                 console.log('Analysis response:', analysisResponse);
-                const analysisResultLink =
-                    analysisResponse.outputs?.googleSheetLink;
-
-                if (!analysisResultLink) {
-                    console.error('No analysis result link found in response');
-                    break;
-                }
-
-                if (Array.isArray(analysisResultLink)) {
-                    console.error(
-                        'Multiple analysis result links found in response',
-                    );
-                    break;
-                }
-
-                setAnalysisResultLink(analysisResultLink);
 
                 let analysisJSON = analysisResponse.outputs?.analysisJson;
 
@@ -236,8 +217,20 @@ export default function RequirementPage() {
                 }
 
                 try {
+                    // if ```json``` is present in the string, remove it
+                    analysisJSON = analysisJSON.replace('```json\n', '');
+                    analysisJSON = analysisJSON.replace('```', '');
+
                     const parsedData = JSON.parse(analysisJSON);
-                    setAnalysisData(parsedData);
+                    setAnalysisData({
+                        earsReq: parsedData['EARS Generated Requirement'],
+                        incoseReq: parsedData['INCOSE_FORMAT'],
+                        incoseFeedback:
+                            parsedData['INCOSE_REQUIREMENT_FEEDBACK'],
+                        generalFeedback:
+                            parsedData['ENHANCED_GENERAL_FEEDBACK'],
+                        relevantRegulations: parsedData['COMPLIANCE_FEEDBACK'],
+                    });
                 } catch (error) {
                     console.error('Failed to parse analysis JSON:', error);
                 }
@@ -315,18 +308,6 @@ export default function RequirementPage() {
                                     <span>
                                         {missingReqError || missingFilesError}
                                     </span>
-                                </div>
-                            )}
-                            {analysisResultLink && (
-                                <div className="flex items-center gap-2 text-green-500 bg-green-50 p-2 rounded">
-                                    <FileSpreadsheet className="h-4 w-4" />
-                                    <a
-                                        href={analysisResultLink}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        View Analysis Results
-                                    </a>
                                 </div>
                             )}
                             <input
