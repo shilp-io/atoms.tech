@@ -21,11 +21,17 @@ import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useGumloop } from '@/hooks/useGumloop';
 
 interface AnalysisData {
-    earsReq: string;
-    incoseReq: string;
+    reqId: string;
+    originalRequirement: string;
+    earsRequirement: string;
+    earsPattern: string;
+    earsTemplate: string;
+    incoseFormat: string;
     incoseFeedback: string;
-    generalFeedback: string;
-    relevantRegulations: string;
+    complianceFeedback: string;
+    enhancedReqEars: string;
+    enhancedReqIncose: string;
+    enhancedGeneralFeedback: string;
 }
 
 export default function RequirementPage() {
@@ -223,13 +229,22 @@ export default function RequirementPage() {
 
                     const parsedData = JSON.parse(analysisJSON);
                     setAnalysisData({
-                        earsReq: parsedData['EARS Generated Requirement'],
-                        incoseReq: parsedData['INCOSE_FORMAT'],
+                        reqId: parsedData['REQ ID'],
+                        originalRequirement: parsedData['Original Requirement'],
+                        earsRequirement:
+                            parsedData['EARS Generated Requirement'],
+                        earsPattern: parsedData['EARS Pattern'],
+                        earsTemplate: parsedData['EARS_SYNTAX_TEMPLATE'],
+                        incoseFormat: parsedData['INCOSE_FORMAT'],
                         incoseFeedback:
                             parsedData['INCOSE_REQUIREMENT_FEEDBACK'],
-                        generalFeedback:
+                        complianceFeedback: parsedData['COMPLIANCE_FEEDBACK'],
+                        enhancedReqEars:
+                            parsedData['ENHANCED_REQUIREMENT_EARS'],
+                        enhancedReqIncose:
+                            parsedData['ENHANCED_REQUIREMENT_INCOSE'],
+                        enhancedGeneralFeedback:
                             parsedData['ENHANCED_GENERAL_FEEDBACK'],
-                        relevantRegulations: parsedData['COMPLIANCE_FEEDBACK'],
                     });
                 } catch (error) {
                     console.error('Failed to parse analysis JSON:', error);
@@ -358,7 +373,7 @@ export default function RequirementPage() {
                 <div className="space-y-4">
                     <h2 className="text-2xl font-bold mb-4">AI Analysis</h2>
 
-                    {/* General Feedback */}
+                    {/* Original Requirement */}
                     <Card className="p-6">
                         <div className="flex items-start gap-4">
                             <div className="rounded-full bg-primary/10 p-3">
@@ -366,13 +381,17 @@ export default function RequirementPage() {
                             </div>
                             <div>
                                 <h3 className="font-semibold mb-1">
-                                    General Feedback
+                                    Original Requirement
                                 </h3>
                                 {analysisData ? (
                                     <div className="text-muted-foreground text-sm">
-                                        <ReactMarkdown>
-                                            {analysisData.generalFeedback}
-                                        </ReactMarkdown>
+                                        <p>
+                                            <strong>ID:</strong>{' '}
+                                            {analysisData.reqId}
+                                        </p>
+                                        <p>
+                                            {analysisData.originalRequirement}
+                                        </p>
                                     </div>
                                 ) : (
                                     <p className="text-muted-foreground text-sm">
@@ -384,46 +403,93 @@ export default function RequirementPage() {
                         </div>
                     </Card>
 
-                    {/* EARS Analysis */}
+                    {/* EARS */}
                     <FoldingCard
                         icon={<Target />}
-                        title="EARS Analysis"
+                        title="EARS"
                         disabled={!analysisData}
+                        defaultOpen={false}
                     >
                         <div className="text-muted-foreground text-sm">
-                            <ReactMarkdown>
-                                {analysisData?.earsReq}
-                            </ReactMarkdown>
+                            <p>
+                                <strong>Requirement:</strong>{' '}
+                                {analysisData?.earsRequirement}
+                            </p>
+                            <p>
+                                <strong>Pattern:</strong>{' '}
+                                {analysisData?.earsPattern}
+                            </p>
+                            <p>
+                                <strong>Template:</strong>{' '}
+                                {analysisData?.earsTemplate}
+                            </p>
                         </div>
                     </FoldingCard>
 
-                    {/* INCOSE Analysis */}
+                    {/* INCOSE */}
                     <FoldingCard
                         icon={<Check />}
-                        title="INCOSE Analysis"
+                        title="INCOSE"
                         disabled={!analysisData}
+                        defaultOpen={false}
                     >
                         <div className="text-muted-foreground text-sm">
+                            <p>
+                                <strong>Format:</strong>
+                            </p>
                             <ReactMarkdown>
-                                {analysisData?.incoseReq}
+                                {analysisData?.incoseFormat}
                             </ReactMarkdown>
-                        </div>
-                        <div className="text-muted-foreground text-sm mt-2">
+                            <p className="mt-2">
+                                <strong>Feedback:</strong>
+                            </p>
                             <ReactMarkdown>
                                 {analysisData?.incoseFeedback}
                             </ReactMarkdown>
                         </div>
                     </FoldingCard>
 
-                    {/* Regulations */}
+                    {/* Compliance */}
                     <FoldingCard
                         icon={<Scale />}
-                        title="Relevant Regulations"
+                        title="Compliance"
                         disabled={!analysisData}
+                        defaultOpen={false}
                     >
                         <div className="text-muted-foreground text-sm">
                             <ReactMarkdown>
-                                {analysisData?.relevantRegulations}
+                                {analysisData?.complianceFeedback}
+                            </ReactMarkdown>
+                        </div>
+                    </FoldingCard>
+
+                    {/* Enhanced */}
+                    <FoldingCard
+                        icon={<Wand />}
+                        title="Enhanced"
+                        disabled={!analysisData}
+                        defaultOpen={false}
+                    >
+                        <div className="text-muted-foreground text-sm">
+                            <p>
+                                <strong>Enhanced EARS:</strong>
+                            </p>
+                            <ReactMarkdown>
+                                {analysisData?.enhancedReqEars}
+                            </ReactMarkdown>
+
+                            <p className="mt-2">
+                                <strong>Enhanced INCOSE:</strong>
+                            </p>
+                            <ReactMarkdown>
+                                {analysisData?.enhancedReqIncose}
+                            </ReactMarkdown>
+
+                            <p className="mt-2">
+                                <strong>General Feedback:</strong>
+                            </p>
+                            <ReactMarkdown>
+                                {analysisData?.enhancedGeneralFeedback}
                             </ReactMarkdown>
                         </div>
                     </FoldingCard>
