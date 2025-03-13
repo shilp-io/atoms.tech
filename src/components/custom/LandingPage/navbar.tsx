@@ -22,6 +22,10 @@ import { GridBackground } from './grid-background';
 
 // src/components/custom/LandingPage/navbar.tsx
 
+// src/components/custom/LandingPage/navbar.tsx
+
+// src/components/custom/LandingPage/navbar.tsx
+
 export function Navbar() {
     const cookies = useCookies();
     const [isMenuOpen, setIsMenuOpen] = useState(false);

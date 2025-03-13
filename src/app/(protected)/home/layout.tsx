@@ -17,6 +17,10 @@ import { getAuthUserServer, getUserOrganizationsServer } from '@/lib/db/server';
 
 // src/app/(protected)/home/layout.tsx
 
+// src/app/(protected)/home/layout.tsx
+
+// src/app/(protected)/home/layout.tsx
+
 // Loading component for the sidebar
 function SidebarSkeleton() {
     return (
