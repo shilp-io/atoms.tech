@@ -1,4 +1,3 @@
-// src/components/custom/LandingPage/navbar.tsx
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';

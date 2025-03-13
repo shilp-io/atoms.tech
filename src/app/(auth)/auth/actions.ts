@@ -1,4 +1,3 @@
-// src/app/(auth)/auth/actions.ts
 'use server';
 
 import { revalidatePath } from 'next/cache';

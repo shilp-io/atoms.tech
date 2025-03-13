@@ -1,5 +1,3 @@
-// src/app/(protected)/home/layout.tsx
-
 'use server';
 
 import { QueryClient } from '@tanstack/react-query';

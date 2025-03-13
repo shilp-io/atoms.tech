@@ -1,4 +1,3 @@
-// src/app/(protected)/org/[orgId]/page.tsx
 'use client';
 
 import { useTheme } from 'next-themes';
