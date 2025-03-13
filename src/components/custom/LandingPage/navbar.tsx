@@ -1,5 +1,4 @@
 // src/components/custom/LandingPage/navbar.tsx
-
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,14 +16,8 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useOrganizationsByMembership } from '@/hooks/queries/useOrganization';
 import { useAuth } from '@/hooks/useAuth';
-
 import { GridBackground } from './grid-background';
-
-// src/components/custom/LandingPage/navbar.tsx
-
-// src/components/custom/LandingPage/navbar.tsx
 
 export function Navbar() {
     const cookies = useCookies();
@@ -192,19 +185,12 @@ export function Navbar() {
                                         disabled={
                                             isPending || isNavigatingToDashboard
                                         }
-                                        className={`btn-secondary bg-black hover:bg-white hover:text-black hidden md:flex gap-2 ${isPending || isNavigatingToDashboard ? 'opacity-70 pointer-events-none' : ''}`}
-                                        disabled={
-                                            isPending || isNavigatingToDashboard
-                                        }
                                     >
                                         <User size={18} />
                                         <span className="max-w-32 truncate">
                                             {userProfile?.full_name ||
                                                 'Account'}
                                         </span>
-                                        {(isPending ||
-                                            isNavigatingToDashboard) && (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
                                         {(isPending ||
                                             isNavigatingToDashboard) && (
                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -217,9 +203,6 @@ export function Navbar() {
                                 >
                                     <DropdownMenuItem
                                         onClick={handleDashboard}
-                                        disabled={
-                                            isPending || isNavigatingToDashboard
-                                        }
                                         disabled={
                                             isPending || isNavigatingToDashboard
                                         }
@@ -306,11 +289,7 @@ export function Navbar() {
                                     <Button
                                         variant="outline"
                                         className={`btn-secondary bg-black hover:bg-white hover:text-black w-full ${isPending || isNavigatingToDashboard ? 'opacity-70 pointer-events-none' : ''}`}
-                                        className={`btn-secondary bg-black hover:bg-white hover:text-black w-full ${isPending || isNavigatingToDashboard ? 'opacity-70 pointer-events-none' : ''}`}
                                         onClick={handleDashboard}
-                                        disabled={
-                                            isPending || isNavigatingToDashboard
-                                        }
                                         disabled={
                                             isPending || isNavigatingToDashboard
                                         }
