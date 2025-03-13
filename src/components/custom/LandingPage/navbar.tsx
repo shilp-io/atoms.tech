@@ -20,12 +20,6 @@ import { useAuth } from '@/hooks/useAuth';
 
 import { GridBackground } from './grid-background';
 
-// src/components/custom/LandingPage/navbar.tsx
-
-// src/components/custom/LandingPage/navbar.tsx
-
-// src/components/custom/LandingPage/navbar.tsx
-
 export function Navbar() {
     const cookies = useCookies();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -79,12 +73,9 @@ export function Navbar() {
 
     const handleDashboard = useCallback(() => {
         setIsNavigatingToDashboard(true);
-        setIsNavigatingToDashboard(true);
         startTransition(() => {
             // If we have a preferred org, go directly there
             if (preferredOrgId) {
-                // We can navigate directly to the org dashboard
-                // The data should already be prefetched from the server
                 // We can navigate directly to the org dashboard
                 // The data should already be prefetched from the server
                 router.push(`/org/${preferredOrgId}`);
@@ -110,13 +101,6 @@ export function Navbar() {
             await signOut();
         });
     };
-
-    // Reset navigation state when the component unmounts or when isPending changes to false
-    useEffect(() => {
-        if (!isPending) {
-            setIsNavigatingToDashboard(false);
-        }
-    }, [isPending]);
 
     // Reset navigation state when the component unmounts or when isPending changes to false
     useEffect(() => {

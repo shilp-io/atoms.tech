@@ -16,16 +16,6 @@ import { OrganizationProvider } from '@/lib/providers/organization.provider';
 import { UserProvider } from '@/lib/providers/user.provider';
 import { Organization } from '@/types/base/organizations.types';
 
-// src/app/(protected)/layout.tsx
-
-// src/app/(protected)/layout.tsx
-
-// src/app/(protected)/layout.tsx
-
-// src/app/(protected)/layout.tsx
-
-// src/app/(protected)/layout.tsx
-
 function RootLayoutSkeleton() {
     return (
         <div className="h-screen w-screen flex items-center justify-center">

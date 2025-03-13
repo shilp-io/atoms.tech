@@ -17,18 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Organization, Project } from '@/types';
-
 import OrgMembers from './OrgMembers.client';
-
-// src/app/(protected)/org/components/OrgDashboard.client.tsx
-
-// src/app/(protected)/org/components/OrgDashboard.client.tsx
-
-// src/app/(protected)/org/components/OrgDashboard.client.tsx
-
-// src/app/(protected)/org/components/OrgDashboard.client.tsx
-
-// src/app/(protected)/org/components/OrgDashboard.client.tsx
 
 interface OrgDashboardProps {
     organization: Organization | undefined;

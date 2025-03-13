@@ -11,17 +11,6 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getAuthUserServer, getUserOrganizationsServer } from '@/lib/db/server';
 
-// src/app/(protected)/home/layout.tsx
-
-// src/app/(protected)/home/layout.tsx
-
-// src/app/(protected)/home/layout.tsx
-
-// src/app/(protected)/home/layout.tsx
-
-// src/app/(protected)/home/layout.tsx
-
-// Loading component for the sidebar
 function SidebarSkeleton() {
     return (
         <div className="w-64 h-screen bg-background border-r border-border animate-pulse">
