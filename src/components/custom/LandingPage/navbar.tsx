@@ -17,7 +17,10 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+
 import { GridBackground } from './grid-background';
+
+// src/components/custom/LandingPage/navbar.tsx
 
 export function Navbar() {
     const cookies = useCookies();

@@ -26,6 +26,8 @@ import { Separator } from '@/components/ui/separator';
 
 // src/app/(auth)/login/page.tsx
 
+// src/app/(auth)/login/page.tsx
+
 // Create a separate client component for the login form
 function LoginForm() {
     const router = useRouter();

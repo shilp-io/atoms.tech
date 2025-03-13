@@ -20,6 +20,8 @@ import { Organization, Project } from '@/types';
 
 // src/app/(protected)/org/[orgId]/page.tsx
 
+// src/app/(protected)/org/[orgId]/page.tsx
+
 export default function OrgPage() {
     const router = useRouter();
     const params = useParams<{ orgId: string }>();
