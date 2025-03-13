@@ -10,6 +10,12 @@ import { Industries } from '@/components/custom/LandingPage/industries';
 import { Navbar } from '@/components/custom/LandingPage/navbar';
 import { Testimonials } from '@/components/custom/LandingPage/testimonials';
 import { TimeSavingEdge } from '@/components/custom/LandingPage/time-saving-edge';
+import { queryKeys } from '@/lib/constants/queryKeys';
+import {
+    getAuthUserServer,
+    getUserOrganizationsServer,
+    getUserProjectsServer,
+} from '@/lib/db/server';
 
 export default async function Home() {
     return (
