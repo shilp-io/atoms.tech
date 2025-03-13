@@ -1,4 +1,3 @@
-// src/app/(protected)/layout.tsx
 'use server';
 
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
@@ -15,10 +14,6 @@ import { prefetchUserDashboard } from '@/lib/db/utils/prefetchData';
 import { OrganizationProvider } from '@/lib/providers/organization.provider';
 import { UserProvider } from '@/lib/providers/user.provider';
 import { Organization } from '@/types/base/organizations.types';
-
-// src/app/(protected)/layout.tsx
-
-// src/app/(protected)/layout.tsx
 
 function RootLayoutSkeleton() {
     return (
