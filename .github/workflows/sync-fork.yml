@@ -1,0 +1,54 @@
+name: Sync Fork
+
+on:
+    workflow_run:
+        workflows: [Build and Lint]
+        branches:
+            - main
+        types: [completed]
+
+jobs:
+    sync-fork:
+        runs-on: ubuntu-latest
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Git
+              run: |
+                  git config --global user.name "GitHub Action"
+                  git config --global user.email "action@github.com"
+
+            - name: Login to GitHub
+              env:
+                  GH_USERNAME: ${{ secrets.FORK_GH_USERNAME }}
+                  GH_TOKEN: ${{ secrets.FORK_GH_TOKEN }}
+              run: |
+                  echo "$GH_TOKEN" | gh auth login --with-token
+                  gh auth status
+
+            - name: Sync fork
+              env:
+                  FORK_REPO: ${{ secrets.FORK_REPO }}
+              run: |
+                  # Clone the fork repository
+                  git clone https://github.com/${FORK_REPO}.git fork-repo
+                  cd fork-repo
+
+                  # Add upstream remote
+                  git remote add upstream https://github.com/${{ github.repository }}.git
+
+                  # Fetch upstream changes
+                  git fetch upstream
+
+                  # Sync main branch
+                  git checkout main
+                  git merge upstream/main --no-edit
+
+                  # Push changes to fork
+                  git push origin main
+
+                  echo "Fork successfully synced with upstream repository"
