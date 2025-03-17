@@ -22,11 +22,9 @@ export function UserProvider({
     initialProfile: Profile;
 }) {
     return (
-        <UserContext.Provider
-            value={{ user: initialUser, profile: initialProfile }}
-        >
+        <UserContext value={{ user: initialUser, profile: initialProfile }}>
             {children}
-        </UserContext.Provider>
+        </UserContext>
     );
 }
 

@@ -20,9 +20,9 @@ export const ProjectProvider = ({
 }) => {
     const [project, setProject] = useState<Project | null>(initialProject);
     return (
-        <ProjectContext.Provider value={{ project, setProject }}>
+        <ProjectContext value={{ project, setProject }}>
             {children}
-        </ProjectContext.Provider>
+        </ProjectContext>
     );
 };
 

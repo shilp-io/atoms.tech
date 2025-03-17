@@ -10,13 +10,7 @@ import type {
     Ref,
     RefObject,
 } from 'react';
-import {
-    createContext,
-    useCallback,
-    use,
-    useEffect,
-    useState,
-} from 'react';
+import { createContext, use, useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -135,7 +129,7 @@ const SidebarProvider = ({
     };
 
     return (
-        <SidebarContext.Provider value={contextValue}>
+        <SidebarContext value={contextValue}>
             <TooltipProvider delayDuration={0}>
                 <div
                     style={
@@ -155,7 +149,7 @@ const SidebarProvider = ({
                     {children}
                 </div>
             </TooltipProvider>
-        </SidebarContext.Provider>
+        </SidebarContext>
     );
 };
 SidebarProvider.displayName = 'SidebarProvider';

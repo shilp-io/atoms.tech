@@ -30,7 +30,7 @@ export const OrganizationProvider = ({
         );
 
     return (
-        <OrganizationContext.Provider
+        <OrganizationContext
             value={{
                 organizations,
                 setOrganizations,
@@ -39,7 +39,7 @@ export const OrganizationProvider = ({
             }}
         >
             {children}
-        </OrganizationContext.Provider>
+        </OrganizationContext>
     );
 };
 
