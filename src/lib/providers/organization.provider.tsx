@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, use, useState } from 'react';
 
 import { Organization } from '@/types/base/organizations.types';
 
@@ -44,7 +44,7 @@ export const OrganizationProvider = ({
 };
 
 export const useOrganization = () => {
-    const context = useContext(OrganizationContext);
+    const context = use(OrganizationContext);
     if (!context) {
         throw new Error(
             'useOrganization must be used within an OrganizationProvider',

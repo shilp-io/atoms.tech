@@ -1,7 +1,7 @@
 'use client';
 
 import { User } from '@supabase/supabase-js';
-import { ReactNode, createContext, useContext } from 'react';
+import { ReactNode, createContext, use } from 'react';
 
 import { Profile } from '@/types';
 
@@ -31,7 +31,7 @@ export function UserProvider({
 }
 
 export function useUser() {
-    const context = useContext(UserContext);
+    const context = use(UserContext);
     if (context === undefined) {
         throw new Error('useUser must be used within a UserProvider');
     }

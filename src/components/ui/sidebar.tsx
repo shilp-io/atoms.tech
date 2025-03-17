@@ -13,7 +13,7 @@ import type {
 import {
     createContext,
     useCallback,
-    useContext,
+    use,
     useEffect,
     useState,
 } from 'react';
@@ -52,7 +52,7 @@ type SidebarContext = {
 const SidebarContext = createContext<SidebarContext | null>(null);
 
 function useSidebar() {
-    const context = useContext(SidebarContext);
+    const context = use(SidebarContext);
     if (!context) {
         throw new Error('useSidebar must be used within a SidebarProvider.');
     }
