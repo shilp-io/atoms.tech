@@ -1,4 +1,4 @@
-import React from 'react';
+import type { HTMLAttributes } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -6,7 +6,7 @@ const Textarea = ({
     className,
     placeholder,
     ...props
-}: React.HTMLAttributes<HTMLTextAreaElement> & {
+}: HTMLAttributes<HTMLTextAreaElement> & {
     placeholder?: string;
 }) => {
     return (

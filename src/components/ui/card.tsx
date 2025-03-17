@@ -1,4 +1,4 @@
-import React from 'react';
+import type { HTMLAttributes, RefObject } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -6,8 +6,8 @@ const Card = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-    ref?: React.RefObject<HTMLDivElement>;
+}: HTMLAttributes<HTMLDivElement> & {
+    ref?: RefObject<HTMLDivElement>;
 }) => (
     <div
         ref={ref}
@@ -21,8 +21,8 @@ const CardHeader = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-    ref?: React.RefObject<HTMLDivElement>;
+}: HTMLAttributes<HTMLDivElement> & {
+    ref?: RefObject<HTMLDivElement>;
 }) => (
     <div
         ref={ref}
@@ -36,8 +36,8 @@ const CardTitle = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-    ref?: React.RefObject<HTMLDivElement>;
+}: HTMLAttributes<HTMLDivElement> & {
+    ref?: RefObject<HTMLDivElement>;
 }) => (
     <div
         ref={ref}
@@ -51,8 +51,8 @@ const CardDescription = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-    ref?: React.RefObject<HTMLDivElement>;
+}: HTMLAttributes<HTMLDivElement> & {
+    ref?: RefObject<HTMLDivElement>;
 }) => (
     <div
         ref={ref}
@@ -66,8 +66,8 @@ const CardContent = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-    ref?: React.RefObject<HTMLDivElement>;
+}: HTMLAttributes<HTMLDivElement> & {
+    ref?: RefObject<HTMLDivElement>;
 }) => <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />;
 CardContent.displayName = 'CardContent';
 
@@ -75,8 +75,8 @@ const CardFooter = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-    ref?: React.RefObject<HTMLDivElement>;
+}: HTMLAttributes<HTMLDivElement> & {
+    ref?: RefObject<HTMLDivElement>;
 }) => (
     <div
         ref={ref}

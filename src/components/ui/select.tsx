@@ -2,7 +2,7 @@
 
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
-import React from 'react';
+import type { ComponentProps } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -17,7 +17,7 @@ const SelectTrigger = ({
     className,
     children,
     ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger>) => (
+}: ComponentProps<typeof SelectPrimitive.Trigger>) => (
     <SelectPrimitive.Trigger
         ref={ref}
         className={cn(
@@ -38,7 +38,7 @@ const SelectScrollUpButton = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) => (
+}: ComponentProps<typeof SelectPrimitive.ScrollUpButton>) => (
     <SelectPrimitive.ScrollUpButton
         ref={ref}
         className={cn(
@@ -56,7 +56,7 @@ const SelectScrollDownButton = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) => (
+}: ComponentProps<typeof SelectPrimitive.ScrollDownButton>) => (
     <SelectPrimitive.ScrollDownButton
         ref={ref}
         className={cn(
@@ -77,7 +77,7 @@ const SelectContent = ({
     children,
     position = 'popper',
     ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) => (
+}: ComponentProps<typeof SelectPrimitive.Content>) => (
     <SelectPrimitive.Portal>
         <SelectPrimitive.Content
             ref={ref}
@@ -110,7 +110,7 @@ const SelectLabel = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof SelectPrimitive.Label>) => (
+}: ComponentProps<typeof SelectPrimitive.Label>) => (
     <SelectPrimitive.Label
         ref={ref}
         className={cn('px-2 py-1.5 text-sm font-semibold', className)}
@@ -124,7 +124,7 @@ const SelectItem = ({
     className,
     children,
     ...props
-}: React.ComponentProps<typeof SelectPrimitive.Item>) => (
+}: ComponentProps<typeof SelectPrimitive.Item>) => (
     <SelectPrimitive.Item
         ref={ref}
         className={cn(
@@ -147,7 +147,7 @@ const SelectSeparator = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof SelectPrimitive.Separator>) => (
+}: ComponentProps<typeof SelectPrimitive.Separator>) => (
     <SelectPrimitive.Separator
         ref={ref}
         className={cn('-mx-1 my-1 h-px bg-muted', className)}

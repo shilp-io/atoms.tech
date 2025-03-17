@@ -1,7 +1,7 @@
 'use client';
 
 import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
-import * as React from 'react';
+import type { ComponentProps, HTMLAttributes } from 'react';
 
 import { buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ const AlertDialogOverlay = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) => (
+}: ComponentProps<typeof AlertDialogPrimitive.Overlay>) => (
     <AlertDialogPrimitive.Overlay
         className={cn(
             'fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
@@ -32,7 +32,7 @@ const AlertDialogContent = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Content>) => (
+}: ComponentProps<typeof AlertDialogPrimitive.Content>) => (
     <AlertDialogPortal>
         <AlertDialogOverlay />
         <AlertDialogPrimitive.Content
@@ -50,7 +50,7 @@ AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 const AlertDialogHeader = ({
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: HTMLAttributes<HTMLDivElement>) => (
     <div
         className={cn(
             'flex flex-col space-y-2 text-center sm:text-left',
@@ -64,7 +64,7 @@ AlertDialogHeader.displayName = 'AlertDialogHeader';
 const AlertDialogFooter = ({
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: HTMLAttributes<HTMLDivElement>) => (
     <div
         className={cn(
             'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
@@ -79,7 +79,7 @@ const AlertDialogTitle = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Title>) => (
+}: ComponentProps<typeof AlertDialogPrimitive.Title>) => (
     <AlertDialogPrimitive.Title
         ref={ref}
         className={cn('text-lg font-semibold', className)}
@@ -92,7 +92,7 @@ const AlertDialogDescription = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Description>) => (
+}: ComponentProps<typeof AlertDialogPrimitive.Description>) => (
     <AlertDialogPrimitive.Description
         ref={ref}
         className={cn('text-sm text-muted-foreground', className)}
@@ -106,7 +106,7 @@ const AlertDialogAction = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Action>) => (
+}: ComponentProps<typeof AlertDialogPrimitive.Action>) => (
     <AlertDialogPrimitive.Action
         ref={ref}
         className={cn(buttonVariants(), className)}
@@ -119,7 +119,7 @@ const AlertDialogCancel = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Cancel>) => (
+}: ComponentProps<typeof AlertDialogPrimitive.Cancel>) => (
     <AlertDialogPrimitive.Cancel
         ref={ref}
         className={cn(

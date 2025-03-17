@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import React from 'react';
+import type { HTMLAttributes, RefObject } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -24,8 +24,8 @@ const Alert = ({
     className,
     variant,
     ...props
-}: React.HTMLAttributes<HTMLDivElement> & {
-    ref?: React.RefObject<HTMLDivElement>;
+}: HTMLAttributes<HTMLDivElement> & {
+    ref?: RefObject<HTMLDivElement>;
 } & VariantProps<typeof alertVariants>) => (
     <div
         ref={ref}
@@ -40,8 +40,8 @@ const AlertTitle = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLHeadingElement> & {
-    ref?: React.RefObject<HTMLParagraphElement>;
+}: HTMLAttributes<HTMLHeadingElement> & {
+    ref?: RefObject<HTMLParagraphElement>;
 }) => (
     <h5
         ref={ref}
@@ -58,8 +58,8 @@ const AlertDescription = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLParagraphElement> & {
-    ref?: React.RefObject<HTMLParagraphElement>;
+}: HTMLAttributes<HTMLParagraphElement> & {
+    ref?: RefObject<HTMLParagraphElement>;
 }) => (
     <div
         ref={ref}

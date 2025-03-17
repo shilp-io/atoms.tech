@@ -2,7 +2,7 @@
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import React from 'react';
+import type { ComponentProps, HTMLAttributes } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -18,7 +18,7 @@ const DialogOverlay = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof DialogPrimitive.Overlay>) => (
+}: ComponentProps<typeof DialogPrimitive.Overlay>) => (
     <DialogPrimitive.Overlay
         ref={ref}
         className={cn(
@@ -35,7 +35,7 @@ const DialogContent = ({
     className,
     children,
     ...props
-}: React.ComponentProps<typeof DialogPrimitive.Content>) => (
+}: ComponentProps<typeof DialogPrimitive.Content>) => (
     <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
@@ -59,7 +59,7 @@ DialogContent.displayName = DialogPrimitive.Content.displayName;
 const DialogHeader = ({
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: HTMLAttributes<HTMLDivElement>) => (
     <div
         className={cn(
             'flex flex-col space-y-1.5 text-center sm:text-left',
@@ -73,7 +73,7 @@ DialogHeader.displayName = 'DialogHeader';
 const DialogFooter = ({
     className,
     ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+}: HTMLAttributes<HTMLDivElement>) => (
     <div
         className={cn(
             'flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2',
@@ -88,7 +88,7 @@ const DialogTitle = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof DialogPrimitive.Title>) => (
+}: ComponentProps<typeof DialogPrimitive.Title>) => (
     <DialogPrimitive.Title
         ref={ref}
         className={cn(
@@ -104,7 +104,7 @@ const DialogDescription = ({
     ref,
     className,
     ...props
-}: React.ComponentProps<typeof DialogPrimitive.Description>) => (
+}: ComponentProps<typeof DialogPrimitive.Description>) => (
     <DialogPrimitive.Description
         ref={ref}
         className={cn('text-sm text-muted-foreground', className)}

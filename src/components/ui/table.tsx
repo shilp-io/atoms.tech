@@ -1,4 +1,9 @@
-import React from 'react';
+import type {
+    HTMLAttributes,
+    RefObject,
+    TdHTMLAttributes,
+    ThHTMLAttributes,
+} from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -6,8 +11,8 @@ const Table = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLTableElement> & {
-    ref?: React.RefObject<HTMLTableElement>;
+}: HTMLAttributes<HTMLTableElement> & {
+    ref?: RefObject<HTMLTableElement>;
 }) => (
     <div className="relative w-full overflow-auto">
         <table
@@ -23,8 +28,8 @@ const TableHeader = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLTableSectionElement> & {
-    ref?: React.RefObject<HTMLTableSectionElement>;
+}: HTMLAttributes<HTMLTableSectionElement> & {
+    ref?: RefObject<HTMLTableSectionElement>;
 }) => (
     <thead ref={ref} className={cn('[&_tr]:border-b', className)} {...props} />
 );
@@ -34,8 +39,8 @@ const TableBody = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLTableSectionElement> & {
-    ref?: React.RefObject<HTMLTableSectionElement>;
+}: HTMLAttributes<HTMLTableSectionElement> & {
+    ref?: RefObject<HTMLTableSectionElement>;
 }) => (
     <tbody
         ref={ref}
@@ -49,8 +54,8 @@ const TableFooter = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLTableSectionElement> & {
-    ref?: React.RefObject<HTMLTableSectionElement>;
+}: HTMLAttributes<HTMLTableSectionElement> & {
+    ref?: RefObject<HTMLTableSectionElement>;
 }) => (
     <tfoot
         ref={ref}
@@ -67,8 +72,8 @@ const TableRow = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLTableRowElement> & {
-    ref?: React.RefObject<HTMLTableRowElement>;
+}: HTMLAttributes<HTMLTableRowElement> & {
+    ref?: RefObject<HTMLTableRowElement>;
 }) => (
     <tr
         ref={ref}
@@ -85,8 +90,8 @@ const TableHead = ({
     ref,
     className,
     ...props
-}: React.ThHTMLAttributes<HTMLTableCellElement> & {
-    ref?: React.RefObject<HTMLTableCellElement>;
+}: ThHTMLAttributes<HTMLTableCellElement> & {
+    ref?: RefObject<HTMLTableCellElement>;
 }) => (
     <th
         ref={ref}
@@ -103,8 +108,8 @@ const TableCell = ({
     ref,
     className,
     ...props
-}: React.TdHTMLAttributes<HTMLTableCellElement> & {
-    ref?: React.RefObject<HTMLTableCellElement>;
+}: TdHTMLAttributes<HTMLTableCellElement> & {
+    ref?: RefObject<HTMLTableCellElement>;
 }) => (
     <td
         ref={ref}
@@ -121,8 +126,8 @@ const TableCaption = ({
     ref,
     className,
     ...props
-}: React.HTMLAttributes<HTMLTableCaptionElement> & {
-    ref?: React.RefObject<HTMLTableCaptionElement>;
+}: HTMLAttributes<HTMLTableCaptionElement> & {
+    ref?: RefObject<HTMLTableCaptionElement>;
 }) => (
     <caption
         ref={ref}
