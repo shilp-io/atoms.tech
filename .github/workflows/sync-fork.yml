@@ -22,9 +22,11 @@ jobs:
                   fetch-depth: 0
 
             - name: Setup Git
+              env:
+                  GH_EMAIL: ${{ secrets.FORK_GH_EMAIL }}
               run: |
-                  git config --global user.name "GitHub Action"
-                  git config --global user.email "action@github.com"
+                  git config --global user.name $GH_USERNAME
+                  git config --global user.email $GH_EMAIL
 
             - name: Login to GitHub
               run: |
