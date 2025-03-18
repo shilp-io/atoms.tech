@@ -40,7 +40,6 @@ export default function RequirementPage() {
     const { requirementSlug } = useParams<{
         requirementSlug: string;
     }>();
-    console.log(requirementSlug);
     const { data: requirement, isLoading: isReqLoading } =
         useRequirement(requirementSlug);
     const [reqText, setReqText] = useState<string>();
