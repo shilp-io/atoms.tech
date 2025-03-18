@@ -117,6 +117,7 @@ export default function RequirementPage() {
 
             if (pdfFiles.length == 0) {
                 setIsUploading(false);
+                setCurrentFile('');
             }
         } catch (error) {
             setIsUploading(false);
