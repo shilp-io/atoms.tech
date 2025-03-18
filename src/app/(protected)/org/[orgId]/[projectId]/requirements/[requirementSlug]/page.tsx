@@ -4,7 +4,6 @@ import {
     Brain,
     Check,
     CircleAlert,
-    Fan,
     Scale,
     Target,
     Upload,
