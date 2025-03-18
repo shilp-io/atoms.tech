@@ -4,6 +4,7 @@ import {
     Brain,
     Check,
     CircleAlert,
+    Fan,
     Scale,
     Target,
     Upload,
@@ -92,42 +93,30 @@ export default function RequirementPage() {
             const uploadedFileNames = await uploadFiles(files);
             console.log('Files uploaded successfully:', uploadedFileNames);
 
-            // Only process PDFs, otherwise just add the file directly to uploadedFiles
-            if (
-                uploadedFileNames.some((name) =>
-                    name.toLowerCase().endsWith('.pdf'),
-                )
-            ) {
-                // Get only PDF files for conversion
-                const pdfFiles = uploadedFileNames.filter((name) =>
-                    name.toLowerCase().endsWith('.pdf'),
-                );
+            // Get only PDF files for conversion
+            const pdfFiles = uploadedFileNames.filter((name) =>
+                name.toLowerCase().endsWith('.pdf'),
+            );
 
-                if (pdfFiles.length > 0) {
-                    const { run_id } = await startPipeline({
-                        fileNames: pdfFiles,
-                        pipelineType: 'file-processing',
-                    });
-                    setConvertPipelineRunId(run_id);
-                }
-
-                // Add non-PDF files directly to uploadedFiles
-                uploadedFileNames.forEach((fileName) => {
-                    if (!fileName.toLowerCase().endsWith('.pdf')) {
-                        setUploadedFiles((prev) => ({
-                            ...prev,
-                            [fileName]: fileName,
-                        }));
-                    }
+            if (pdfFiles.length > 0) {
+                const { run_id } = await startPipeline({
+                    fileNames: pdfFiles,
+                    pipelineType: 'file-processing',
                 });
-            } else {
-                // If no PDFs, just add all files directly
-                uploadedFileNames.forEach((fileName) => {
+                setConvertPipelineRunId(run_id);
+            }
+
+            // Add non-PDF files directly to uploadedFiles
+            uploadedFileNames.forEach((fileName) => {
+                if (!fileName.toLowerCase().endsWith('.pdf')) {
                     setUploadedFiles((prev) => ({
                         ...prev,
                         [fileName]: fileName,
                     }));
-                });
+                }
+            });
+
+            if (pdfFiles.length == 0) {
                 setIsUploading(false);
             }
         } catch (error) {
