@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
@@ -17,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { useCreateDocument } from '@/hooks/mutations/useDocumentMutations';
+import { useCreateDocumentWithDefaultSchemas } from '@/hooks/mutations/useDocumentMutations';
 import { useAuth } from '@/hooks/useAuth';
 
 // Document form schema based on the Document type and validation
@@ -46,8 +45,10 @@ export default function DocumentForm({
 }: DocumentFormProps) {
     const { userProfile } = useAuth();
     const { toast } = useToast();
-    const { mutateAsync: createDocument, isPending: isCreatingDocument } =
-        useCreateDocument();
+    const {
+        mutateAsync: createDocumentWithSchemas,
+        isPending: isCreatingDocument,
+    } = useCreateDocumentWithDefaultSchemas();
 
     const form = useForm<DocumentFormValues>({
         resolver: zodResolver(documentFormSchema),
@@ -65,7 +66,7 @@ export default function DocumentForm({
         }
 
         try {
-            await createDocument({
+            await createDocumentWithSchemas({
                 name: data.name,
                 description: data.description || null,
                 project_id: projectId,
@@ -78,18 +79,19 @@ export default function DocumentForm({
             toast({
                 variant: 'default',
                 title: 'Success',
-                description: 'Document created successfully',
+                description:
+                    'Document created successfully with default property schemas',
             });
             onSuccess();
         } catch (error) {
-            console.error('Failed to create document:', error);
+            console.error('Failed to create document with schemas:', error);
             toast({
                 variant: 'destructive',
                 title: 'Error',
                 description:
                     error instanceof Error
                         ? error.message
-                        : 'Failed to create document',
+                        : 'Failed to create document with schemas',
             });
         }
     }

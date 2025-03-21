@@ -1,17 +1,50 @@
 'use client';
 
-import { Menu, X } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { Loader2, Menu, User, X } from 'lucide-react';
+import { useCookies } from 'next-client-cookies';
 import Image from 'next/image';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState, useTransition } from 'react';
 
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
 
 import { GridBackground } from './grid-background';
 
 export function Navbar() {
+    const cookies = useCookies();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { isAuthenticated, isLoading, userProfile, signOut } = useAuth();
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+    const [preferredOrgId, setPreferredOrgId] = useState<string | null>(null);
+    const queryClient = useQueryClient();
+    const [isNavigatingToDashboard, setIsNavigatingToDashboard] =
+        useState(false);
+
+    useEffect(() => {
+        const cookieOrgId = cookies.get('preferred_org_id');
+        if (cookieOrgId) {
+            setPreferredOrgId(cookieOrgId);
+
+            if (isAuthenticated) {
+                router.prefetch(`/org/${cookieOrgId}`);
+            }
+        }
+    }, [router, isAuthenticated, cookies]);
+
+    useEffect(() => {
+        router.prefetch('/login');
+        router.prefetch('/home');
+    }, [router]);
 
     const navLinks = [
         { href: '/#features', label: 'Features' },
@@ -31,8 +64,82 @@ export function Navbar() {
         </Link>
     );
 
+    const handleSignIn = () => {
+        startTransition(() => {
+            router.push('/login');
+        });
+    };
+
+    const handleDashboard = useCallback(() => {
+        setIsNavigatingToDashboard(true);
+        startTransition(() => {
+            // If we have a preferred org, go directly there
+            if (preferredOrgId) {
+                // We can navigate directly to the org dashboard
+                // The data should already be prefetched from the server
+                router.push(`/org/${preferredOrgId}`);
+            } else {
+                // Otherwise use the /home route handler
+                router.push('/home');
+            }
+        });
+    }, [router, preferredOrgId]);
+
+    const handleBilling = () => {
+        startTransition(() => {
+            router.push('/billing');
+        });
+    };
+
+    const handleSignOut = () => {
+        startTransition(async () => {
+            // Clear prefetched data when signing out
+            queryClient.clear();
+            // Clear prefetched data when signing out
+            queryClient.clear();
+            await signOut();
+        });
+    };
+
+    // Reset navigation state when the component unmounts or when isPending changes to false
+    useEffect(() => {
+        if (!isPending) {
+            setIsNavigatingToDashboard(false);
+        }
+    }, [isPending]);
+
     return (
         <header className="fixed top-0 left-0 right-0 min-h-16 px-6 py-3 bg-black text-white border-b border-1px border-white z-50">
+            {/* Show full-screen loading overlay when navigating to dashboard */}
+            {isNavigatingToDashboard && (
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+                    <div className="flex flex-col items-center space-y-4 text-center">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                        <h2 className="text-2xl font-bold tracking-tight">
+                            Loading dashboard...
+                        </h2>
+                        <p className="text-muted-foreground">
+                            We&apos;re preparing your organization workspace
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Show full-screen loading overlay when navigating to dashboard */}
+            {isNavigatingToDashboard && (
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+                    <div className="flex flex-col items-center space-y-4 text-center">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                        <h2 className="text-2xl font-bold tracking-tight">
+                            Loading dashboard...
+                        </h2>
+                        <p className="text-muted-foreground">
+                            We&apos;re preparing your organization workspace
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="relative">
                 <div className="container mx-auto flex justify-between items-center">
                     <Link href="/" className="atoms-logo flex">
@@ -41,9 +148,7 @@ export function Navbar() {
                             alt="Atoms logo"
                             width={24}
                             height={24}
-                            className="object-contain invert mx-2 w-auto h-auto
-                                sm:w-[28px] sm:h-[28px]
-                                md:w-[32px] md:h-[32px]"
+                            className="object-contain invert mx-2 w-auto h-auto sm:w-[28px] sm:h-[28px] md:w-[32px] md:h-[32px]"
                         />
                         <span className="font-semibold text-base sm:text-lg md:text-xl">
                             ATOMS.TECH
@@ -59,17 +164,100 @@ export function Navbar() {
 
                     {/* Mobile Menu Button */}
                     <div className="flex items-center gap-4">
-                        <Button
-                            variant="outline"
-                            className="btn-secondary bg-black hover:bg-white hover:text-black hidden md:flex"
-                            onClick={() => redirect('/login')}
-                        >
-                            SIGN IN
-                        </Button>
+                        {isLoading ? (
+                            <div className="h-9 w-24 bg-gray-700 animate-pulse rounded-md"></div>
+                        ) : isAuthenticated ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className={`btn-secondary bg-black hover:bg-white hover:text-black hidden md:flex gap-2 ${isPending || isNavigatingToDashboard ? 'opacity-70 pointer-events-none' : ''}`}
+                                        disabled={
+                                            isPending || isNavigatingToDashboard
+                                        }
+                                    >
+                                        <User size={18} />
+                                        <span className="max-w-32 truncate">
+                                            {userProfile?.full_name ||
+                                                'Account'}
+                                        </span>
+                                        {(isPending ||
+                                            isNavigatingToDashboard) && (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-[200px]"
+                                >
+                                    <DropdownMenuItem
+                                        onClick={handleDashboard}
+                                        disabled={
+                                            isPending || isNavigatingToDashboard
+                                        }
+                                    >
+                                        {isPending ||
+                                        isNavigatingToDashboard ? (
+                                            <div className="flex items-center">
+                                                <span className="mr-2">
+                                                    Dashboard
+                                                </span>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            </div>
+                                        ) : (
+                                            'Dashboard'
+                                        )}
+                                        {isPending ||
+                                        isNavigatingToDashboard ? (
+                                            <div className="flex items-center">
+                                                <span className="mr-2">
+                                                    Dashboard
+                                                </span>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            </div>
+                                        ) : (
+                                            'Dashboard'
+                                        )}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={handleBilling}
+                                        disabled={isPending}
+                                    >
+                                        Billing
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={handleSignOut}
+                                        disabled={isPending}
+                                    >
+                                        {isPending
+                                            ? 'Signing out...'
+                                            : 'Sign Out'}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <Button
+                                variant="outline"
+                                className={`btn-secondary bg-black hover:bg-white hover:text-black hidden md:flex ${isPending ? 'opacity-70 pointer-events-none' : ''}`}
+                                onClick={handleSignIn}
+                                disabled={isPending}
+                            >
+                                {isPending ? (
+                                    <>
+                                        <span className="mr-2">SIGNING IN</span>
+                                        <span className="h-4 w-4 rounded-full border-2 border-t-transparent border-white animate-spin"></span>
+                                    </>
+                                ) : (
+                                    'SIGN IN'
+                                )}
+                            </Button>
+                        )}
                         <button
                             className="md:hidden text-white p-2 touch-manipulation"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                            disabled={isPending}
                         >
                             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                         </button>
@@ -86,13 +274,68 @@ export function Navbar() {
                             {navLinks.map((link) => (
                                 <NavLink key={link.href} {...link} />
                             ))}
-                            <Button
-                                variant="outline"
-                                className="btn-secondary bg-black hover:bg-white hover:text-black w-full"
-                                onClick={() => redirect('/login')}
-                            >
-                                SIGN IN
-                            </Button>
+                            {isAuthenticated ? (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        className={`btn-secondary bg-black hover:bg-white hover:text-black w-full ${isPending || isNavigatingToDashboard ? 'opacity-70 pointer-events-none' : ''}`}
+                                        onClick={handleDashboard}
+                                        disabled={
+                                            isPending || isNavigatingToDashboard
+                                        }
+                                    >
+                                        {isPending ||
+                                        isNavigatingToDashboard ? (
+                                            <div className="flex items-center justify-center">
+                                                <span className="mr-2">
+                                                    LOADING
+                                                </span>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            </div>
+                                        ) : (
+                                            'DASHBOARD'
+                                        )}
+                                        {isPending ||
+                                        isNavigatingToDashboard ? (
+                                            <div className="flex items-center justify-center">
+                                                <span className="mr-2">
+                                                    LOADING
+                                                </span>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            </div>
+                                        ) : (
+                                            'DASHBOARD'
+                                        )}
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className={`btn-secondary bg-black hover:bg-white hover:text-black w-full ${isPending ? 'opacity-70 pointer-events-none' : ''}`}
+                                        onClick={handleBilling}
+                                        disabled={isPending}
+                                    >
+                                        BILLING
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className={`btn-secondary bg-black hover:bg-white hover:text-black w-full ${isPending ? 'opacity-70 pointer-events-none' : ''}`}
+                                        onClick={handleSignOut}
+                                        disabled={isPending}
+                                    >
+                                        {isPending
+                                            ? 'SIGNING OUT...'
+                                            : 'SIGN OUT'}
+                                    </Button>
+                                </>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    className={`btn-secondary bg-black hover:bg-white hover:text-black w-full ${isPending ? 'opacity-70 pointer-events-none' : ''}`}
+                                    onClick={handleSignIn}
+                                    disabled={isPending}
+                                >
+                                    {isPending ? 'LOADING...' : 'SIGN IN'}
+                                </Button>
+                            )}
                         </nav>
                     </div>
                 )}

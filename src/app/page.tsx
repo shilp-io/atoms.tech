@@ -1,5 +1,4 @@
-'use client';
-
+// app/page.tsx
 import { Contact } from '@/components/custom/LandingPage/contact';
 import { CTA } from '@/components/custom/LandingPage/cta';
 import { Features } from '@/components/custom/LandingPage/features';
@@ -12,7 +11,7 @@ import { Navbar } from '@/components/custom/LandingPage/navbar';
 import { Testimonials } from '@/components/custom/LandingPage/testimonials';
 import { TimeSavingEdge } from '@/components/custom/LandingPage/time-saving-edge';
 
-export default function Home() {
+export default async function Home() {
     return (
         <div className="min-h-screen bg-[#0f0f0f] text-[#B5B5B5] relative">
             <div className="relative z-10">

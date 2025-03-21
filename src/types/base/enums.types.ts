@@ -1,4 +1,3 @@
-// src/types/base/enums.ts
 export const EntityType = {
     document: 'document',
     requirement: 'requirement',
@@ -40,6 +39,7 @@ export type NotificationType =
 export const OrganizationType = {
     personal: 'personal',
     team: 'team',
+    enterprise: 'enterprise',
 } as const;
 export type OrganizationType =
     (typeof OrganizationType)[keyof typeof OrganizationType];

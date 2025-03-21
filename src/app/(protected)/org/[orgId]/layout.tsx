@@ -1,12 +1,14 @@
-import { HydrationBoundary, dehydrate } from '@tanstack/react-query';
-import { QueryClient } from '@tanstack/react-query';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
 import Sidebar from '@/components/base/Sidebar';
 import VerticalToolbar from '@/components/custom/VerticalToolbar';
+import { OrgDashboardSkeleton } from '@/components/custom/skeletons/OrgDashboardSkeleton';
 import { SidebarProvider } from '@/components/ui/sidebar';
-import { queryKeys } from '@/lib/constants/queryKeys';
-import { getAuthUserServer, getUserProjectsServer } from '@/lib/db/server';
+import { getQueryClient } from '@/lib/constants/queryClient';
+import { getAuthUserServer } from '@/lib/db/server';
+import { prefetchOrgPageData } from '@/lib/db/utils/prefetchData';
 
 interface OrgLayoutProps {
     children: React.ReactNode;
@@ -14,35 +16,44 @@ interface OrgLayoutProps {
 }
 
 export default async function OrgLayout({ children, params }: OrgLayoutProps) {
+    const queryClient = getQueryClient();
     const { orgId } = await params;
+    if (!orgId) notFound();
 
-    if (!orgId) {
-        notFound();
-    }
-
-    const queryClient = new QueryClient();
-    const user = await getAuthUserServer();
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('user_id')?.value;
 
     try {
-        await queryClient.prefetchQuery({
-            queryKey: queryKeys.projects.byOrganization(orgId),
-            queryFn: async () => {
-                return await getUserProjectsServer(user?.user.id || '', orgId);
-            },
-        });
-    } catch (error) {
-        console.error('Error fetching projects:', error);
-    }
+        await prefetchOrgPageData(
+            orgId,
+            userId ?? (await getAuthUserServer()).user.id,
+            queryClient,
+        );
 
-    return (
-        <HydrationBoundary state={dehydrate(queryClient)}>
+        return (
             <SidebarProvider>
                 <Sidebar />
                 <div className="relative flex-1 p-16">
-                    {children}
-                    <VerticalToolbar />
+                    <Suspense fallback={<OrgDashboardSkeleton />}>
+                        {children}
+                    </Suspense>
                 </div>
+                <VerticalToolbar />
             </SidebarProvider>
-        </HydrationBoundary>
-    );
+        );
+    } catch (error: unknown) {
+        console.error('Error in organization layout:', error);
+
+        // Handle not found or permission errors
+        if ((error as { status?: number }).status === 404) {
+            return notFound();
+        }
+
+        // Handle other errors
+        return (
+            <div className="error-container">
+                <p>Error loading organization: {(error as Error).message}</p>
+            </div>
+        );
+    }
 }

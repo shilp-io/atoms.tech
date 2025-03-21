@@ -1,10 +1,10 @@
 'use client';
 
-import { Home, LucideIcon, Plus, Settings, User } from 'lucide-react';
+import { Building, Home, LucideIcon, Plus, Sparkles, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { CreatePanel } from '@/components/base/panels/CreatePanel';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,9 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
+import { OrganizationType } from '@/types/base/enums.types';
 
 interface MenuItem {
     title: string;
@@ -37,18 +39,8 @@ interface MenuItem {
 const items: MenuItem[] = [
     {
         title: 'Home',
-        url: '/home',
+        url: '/home/user',
         icon: Home,
-    },
-    {
-        title: 'Teams',
-        url: '/teams',
-        icon: User,
-    },
-    {
-        title: 'Settings',
-        url: '/settings',
-        icon: Settings,
     },
 ];
 
@@ -58,11 +50,66 @@ export default function Sidebar() {
     const [isLoading, setIsLoading] = useState(false);
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
     const [isSidebarHidden, setIsSidebarHidden] = useState(false);
+    const [createPanelType, setCreatePanelType] = useState<
+        'project' | 'requirement' | 'document' | 'organization'
+    >('project');
+
     const { user, profile } = useUser();
+    const { organizations, currentOrganization } = useOrganization();
+
+    // Find personal and enterprise organizations from context
+    const personalOrg = organizations.find(
+        (org) => org.type === OrganizationType.personal,
+    );
+    const enterpriseOrg = organizations.find(
+        (org) => org.type === OrganizationType.enterprise,
+    );
+
+    // Define primaryEnterpriseOrg based on enterpriseOrg
+    const primaryEnterpriseOrg = enterpriseOrg;
 
     const isOrgPage = pathname.startsWith('/org');
+    const isPlaygroundPage =
+        currentOrganization?.type === OrganizationType.personal;
+    const isUserDashboardPage = pathname.startsWith('/home/user');
 
-    const handleSignOut = async () => {
+    // Check if user has only a personal org and no other memberships
+    const hasOnlyPersonalOrg =
+        personalOrg &&
+        (!organizations ||
+            organizations.length === 0 ||
+            (organizations.length === 1 &&
+                organizations[0].id === personalOrg.id));
+
+    const navigateToPlayground = useCallback(() => {
+        if (personalOrg) {
+            console.log('Navigating to playground:', personalOrg.id);
+            router.push(`/org/${personalOrg.id}`);
+        } else {
+            console.log('No personal organization found');
+        }
+    }, [personalOrg, router]);
+
+    const navigateToEnterprise = useCallback(() => {
+        if (primaryEnterpriseOrg) {
+            console.log('Navigating to enterprise:', primaryEnterpriseOrg.id);
+            router.push(`/org/${primaryEnterpriseOrg.id}`);
+        } else {
+            console.log('No enterprise organization found');
+        }
+    }, [primaryEnterpriseOrg, router]);
+
+    const handleCreateOrganization = useCallback(() => {
+        setCreatePanelType('organization');
+        setIsCreatePanelOpen(true);
+    }, []);
+
+    const handleCreateNew = useCallback(() => {
+        setCreatePanelType('project');
+        setIsCreatePanelOpen(true);
+    }, []);
+
+    const handleSignOut = useCallback(async () => {
         try {
             setIsLoading(true);
             const response = await fetch('/auth/signout', {
@@ -79,7 +126,7 @@ export default function Sidebar() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [router]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -130,29 +177,88 @@ export default function Sidebar() {
                                     </SidebarMenuItem>
                                 </Link>
                             ))}
+
+                            {/* Playground option - show when not in playground and user has a personal org */}
+                            {!isLoading &&
+                                personalOrg &&
+                                (isUserDashboardPage ||
+                                    (currentOrganization &&
+                                        currentOrganization.id !==
+                                            personalOrg.id)) && (
+                                    <SidebarMenuItem className="mb-1">
+                                        <SidebarMenuButton asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start"
+                                                onClick={navigateToPlayground}
+                                            >
+                                                <Sparkles className="h-4 w-4 mr-2 text-muted-foreground" />
+                                                <span className="text-sm font-medium">
+                                                    Playground
+                                                </span>
+                                            </Button>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )}
+
+                            {/* Enterprise option - show when in playground or user dashboard and user has an enterprise org */}
+                            {!isLoading &&
+                                primaryEnterpriseOrg &&
+                                (isPlaygroundPage || isUserDashboardPage) && (
+                                    <SidebarMenuItem className="mb-1">
+                                        <SidebarMenuButton asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start"
+                                                onClick={navigateToEnterprise}
+                                            >
+                                                <Building className="h-4 w-4 mr-2 text-muted-foreground" />
+                                                <span className="text-sm font-medium">
+                                                    Enterprise
+                                                </span>
+                                            </Button>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                )}
+
+                            {/* Create Organization button (only if user has only personal org) */}
+                            {!isLoading && hasOnlyPersonalOrg && (
+                                <SidebarMenuItem className="mb-1">
+                                    <SidebarMenuButton asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={handleCreateOrganization}
+                                        >
+                                            <Building className="h-4 w-4 mr-2" />
+                                            <span>Create Organization</span>
+                                        </Button>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            )}
+
+                            {/* Create New button (only on org pages) */}
                             {isOrgPage && (
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
                                         <Button
                                             variant="outline"
                                             className="w-full relative z-20"
-                                            onClick={() =>
-                                                setIsCreatePanelOpen(true)
-                                            }
+                                            onClick={handleCreateNew}
                                         >
-                                            <Plus className="h-4 w-4" />
+                                            <Plus className="h-4 w-4 mr-2" />
                                             <span>Create New</span>
                                         </Button>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             )}
-                            {isOrgPage && (
-                                <CreatePanel
-                                    isOpen={isCreatePanelOpen}
-                                    onClose={() => setIsCreatePanelOpen(false)}
-                                    showTabs="show"
-                                />
-                            )}
+
+                            <CreatePanel
+                                isOpen={isCreatePanelOpen}
+                                onClose={() => setIsCreatePanelOpen(false)}
+                                showTabs={createPanelType}
+                                initialTab={createPanelType}
+                            />
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>

@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 
 import DocumentForm from '@/components/base/forms/DocumentForm';
+import OrganizationForm from '@/components/base/forms/OrganizationForm';
 import ProjectForm from '@/components/base/forms/ProjectForm';
 import {
     Sheet,
@@ -18,9 +19,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 export interface CreatePanelProps {
     isOpen: boolean;
     onClose: () => void;
-    initialTab?: 'project' | 'requirement' | 'document';
+    initialTab?: 'project' | 'requirement' | 'document' | 'organization';
     projectId?: string; // For creating requirements under a project
-    showTabs?: 'show' | 'project' | 'requirement' | 'document';
+    showTabs?: 'show' | 'project' | 'requirement' | 'document' | 'organization';
 }
 
 export function CreatePanel({
@@ -30,7 +31,7 @@ export function CreatePanel({
     projectId,
     showTabs = 'show',
 }: CreatePanelProps) {
-    const [activeTab, setActiveTab] = React.useState(initialTab);
+    const [activeTab, setActiveTab] = useState(initialTab);
 
     const handleClose = () => {
         onClose();
@@ -70,6 +71,9 @@ export function CreatePanel({
                                 onSuccess={handleClose}
                             />
                         )}
+                        {showTabs === 'organization' && (
+                            <OrganizationForm onSuccess={handleClose} />
+                        )}
                     </div>
                 </SheetContent>
             </Sheet>
@@ -91,16 +95,22 @@ export function CreatePanel({
                         value={activeTab}
                         onValueChange={(value: string) =>
                             setActiveTab(
-                                value as 'project' | 'requirement' | 'document',
+                                value as
+                                    | 'project'
+                                    | 'requirement'
+                                    | 'document'
+                                    | 'organization',
                             )
                         }
                     >
-                        <TabsList className="grid grid-cols-2 w-full">
+                        <TabsList className="grid grid-cols-3 w-full">
                             <TabsTrigger value="project">Project</TabsTrigger>
                             <TabsTrigger value="requirement">
                                 Requirement
                             </TabsTrigger>
-                            <TabsTrigger value="document">Document</TabsTrigger>
+                            <TabsTrigger value="organization">
+                                Organization
+                            </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="project" className="mt-6">
@@ -113,6 +123,10 @@ export function CreatePanel({
                                 onSuccess={handleClose}
                             /> */}
                             <div>Requirement Form: Work in Progress</div>
+                        </TabsContent>
+
+                        <TabsContent value="organization" className="mt-6">
+                            <OrganizationForm onSuccess={handleClose} />
                         </TabsContent>
                     </Tabs>
                 </div>
