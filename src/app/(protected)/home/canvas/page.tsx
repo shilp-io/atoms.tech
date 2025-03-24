@@ -9,12 +9,8 @@ const ExcalidrawWithClientOnly = dynamic(
     },
   );
 
-export default function Canvas() {
+export default function Draw() {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="prose max-w-3xl">
-                <ExcalidrawWithClientOnly />
-            </div>
-        </div>
+     <ExcalidrawWithClientOnly />
     );
 }

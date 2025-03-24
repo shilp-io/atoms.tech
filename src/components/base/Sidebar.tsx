@@ -1,6 +1,6 @@
 'use client';
 
-import { Building, Home, LucideIcon, Plus, Sparkles, User } from 'lucide-react';
+import { Building, Home, LucideIcon, PenTool, Plus, Sparkles, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -15,6 +15,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+    CanvasMenuItem,
     SidebarContainer,
     SidebarContent,
     SidebarFooter,
@@ -185,6 +186,13 @@ export default function Sidebar() {
                                     </SidebarMenuItem>
                                 </Link>
                             ))}
+
+                            {/* Canvas option - for diagramming */}
+                            <CanvasMenuItem 
+                                className="mb-1" 
+                                isActive={pathname === '/home/canvas'}
+                                onClick={() => router.push('/home/canvas')}
+                            />
 
                             {/* Playground option - show when not in playground and user has a personal org */}
                             {!isLoadingOrgs &&

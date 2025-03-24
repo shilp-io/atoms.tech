@@ -2,7 +2,7 @@
 
 import { Slot } from '@radix-ui/react-slot';
 import { VariantProps, cva } from 'class-variance-authority';
-import { PanelLeft } from 'lucide-react';
+import { PanelLeft, PenTool, Pencil } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -750,6 +750,47 @@ const SidebarMenuSubButton = React.forwardRef<
 });
 SidebarMenuSubButton.displayName = 'SidebarMenuSubButton';
 
+/**
+ * Canvas Menu Item Component
+ * 
+ * This component provides a Canvas menu item for the sidebar.
+ * It will navigate to a drawing canvas for diagramming.
+ */
+const CanvasMenuItem = React.forwardRef<
+    HTMLLIElement,
+    React.ComponentProps<'li'> & {
+        isActive?: boolean;
+        onClick?: () => void;
+    }
+>(({ isActive = false, onClick, ...props }, ref) => {
+    return (
+        <SidebarMenuItem ref={ref} {...props}>
+            <SidebarMenuButton 
+                tooltip="Canvas" 
+                isActive={isActive} 
+                onClick={onClick}
+            >
+                <PenTool className="size-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Canvas</span>
+            </SidebarMenuButton>
+        </SidebarMenuItem>
+    );
+});
+CanvasMenuItem.displayName = 'CanvasMenuItem';
+
+/**
+ * Example usage of Canvas sidebar menu item:
+ * 
+ * <SidebarMenu>
+ *   <SidebarMenuItem>
+ *     <SidebarMenuButton tooltip="Canvas" isActive={false}>
+ *       <PenTool className="size-4" />
+ *       <span>Canvas</span>
+ *     </SidebarMenuButton>
+ *   </SidebarMenuItem>
+ * </SidebarMenu>
+ */
+
 export {
     SidebarContainer,
     SidebarContent,
@@ -774,5 +815,6 @@ export {
     SidebarRail,
     SidebarSeparator,
     SidebarTrigger,
+    CanvasMenuItem,
     useSidebar,
 };
