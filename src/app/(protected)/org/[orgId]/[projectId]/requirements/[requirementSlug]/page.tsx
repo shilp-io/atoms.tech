@@ -4,20 +4,27 @@ import {
     Brain,
     Check,
     CircleAlert,
+    FilePlus,
     Scale,
     Target,
     Upload,
     Wand,
 } from 'lucide-react';
 import { useParams, usePathname } from 'next/navigation';
-import type { ChangeEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FoldingCard } from '@/components/ui/folding-card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     useUpdateExternalDocumentGumloopName,
     useUploadExternalDocument,
@@ -67,6 +74,18 @@ export default function RequirementPage() {
     };
 
     const { data: existingDocs } = useExternalDocumentsByOrg(organizationId);
+    const existingDocsNameMap = useMemo(() => {
+        if (!existingDocs) return {};
+        return existingDocs.reduce(
+            (acc, doc) => {
+                acc[doc.name] = doc.gumloop_name || doc.name;
+                return acc;
+            },
+            {} as { [key: string]: string },
+        );
+    }, [existingDocs]);
+    const [existingDocsValue, setExistingDocsValue] = useState<string>('');
+
     const [selectedFiles, setSelectedFiles] = useState<{
         [key: string]: string;
     }>({});
@@ -163,6 +182,17 @@ export default function RequirementPage() {
             setIsUploading(false);
             console.error('Failed to upload files:', error);
         }
+    };
+
+    const handleExistingDocSelect = (docName: string) => {
+        if (missingFilesError) {
+            setMissingFilesError('');
+        }
+        setSelectedFiles((prev) => ({
+            ...prev,
+            [existingDocsNameMap[docName]]: docName,
+        }));
+        setExistingDocsValue('');
     };
 
     // set the uploadedFiles when the pipeline run is completed
@@ -421,6 +451,31 @@ export default function RequirementPage() {
                                 )}
                                 {uploadButtonText}
                             </Button>
+
+                            {existingDocs && existingDocs.length > 0 && (
+                                <div className="mt-2">
+                                    <Select
+                                        value={existingDocsValue}
+                                        onValueChange={handleExistingDocSelect}
+                                    >
+                                        <SelectTrigger className="w-full gap-2">
+                                            <FilePlus className="h-4 w-4" />
+                                            <SelectValue placeholder="Add existing document" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {existingDocs.map((doc) => (
+                                                <SelectItem
+                                                    key={doc.id}
+                                                    value={doc.name}
+                                                >
+                                                    {doc.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+
                             {Object.keys(selectedFiles).length > 0 && (
                                 <div className="mt-4">
                                     <h4 className="text-sm font-medium mb-2">
