@@ -1,6 +1,13 @@
 "use client";
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { useState, useEffect, useCallback } from "react";
+import type { 
+  AppState, 
+  BinaryFiles, 
+  ExcalidrawInitialDataState,
+} from "@excalidraw/excalidraw/types";
+
+import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types"
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase/supabaseBrowser";
 import "@excalidraw/excalidraw/index.css";
 
@@ -8,9 +15,10 @@ const ExcalidrawWrapper: React.FC = () => {
   const [diagramId, setDiagramId] = useState<number | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<ExcalidrawInitialDataState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExistingDiagram, setIsExistingDiagram] = useState(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Initialize diagram ID and load data on mount
   useEffect(() => {
@@ -70,7 +78,11 @@ const ExcalidrawWrapper: React.FC = () => {
     initializeDiagram();
   }, []);
 
-  const saveDiagram = useCallback(async (elements: any, appState: any, files: any) => {
+  const saveDiagram = useCallback(async (
+    elements: readonly ExcalidrawElement[],
+    appState: AppState,
+    files: BinaryFiles
+  ) => {
     if (!diagramId || isAutoSaving) return;
     
     // Only prevent saving if it's a new diagram and there are no elements
@@ -117,16 +129,35 @@ const ExcalidrawWrapper: React.FC = () => {
   }, [diagramId, isAutoSaving, isExistingDiagram]);
 
   // Debounced save function to avoid too many API calls
-  const debouncedSave = useCallback(
-    debounce((elements: any, appState: any, files: any) => {
+  const debouncedSave = useCallback((
+    elements: readonly ExcalidrawElement[],
+    appState: AppState,
+    files: BinaryFiles
+  ) => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
       saveDiagram(elements, appState, files);
-    }, 2000),
-    [saveDiagram]
-  );
+    }, 2000);
+  }, [saveDiagram]);
 
-  const handleChange = useCallback((elements: any, appState: any, files: any) => {
+  const handleChange = useCallback((
+    elements: readonly ExcalidrawElement[],
+    appState: AppState,
+    files: BinaryFiles
+  ) => {
     debouncedSave(elements, appState, files);
   }, [debouncedSave]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -146,14 +177,5 @@ const ExcalidrawWrapper: React.FC = () => {
     </div>
   );
 };
-
-// Debounce utility function
-function debounce(func: Function, wait: number) {
-  let timeout: ReturnType<typeof setTimeout>;
-  return function(...args: any[]) {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
 
 export default ExcalidrawWrapper;

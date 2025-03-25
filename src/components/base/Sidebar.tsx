@@ -1,6 +1,6 @@
 'use client';
 
-import { Building, Home, LucideIcon, PenTool, Plus, Sparkles, User } from 'lucide-react';
+import { Building, Home, LucideIcon, Plus, Sparkles, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
