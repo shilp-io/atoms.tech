@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { ProjectSchema } from '@/types/validation/projects.validation';
+
 
 export const getProjectBySlug = async (slug: string) => {
     const { data, error } = await supabase
@@ -32,11 +32,7 @@ export const getUserProjects = async (userId: string, orgId: string) => {
 
     if (error) throw error;
 
-    const parsedProjects = projectData.map((project) =>
-        ProjectSchema.parse(project),
-    );
-
-    return parsedProjects;
+    return projectData;
 };
 
 export const getProjectMembers = async (projectId: string) => {

@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
-import { BlockSchema } from '@/types/validation/blocks.validation';
+
 
 export type CreateBlockInput = Omit<
     Block,
@@ -42,7 +42,7 @@ export function useCreateBlock() {
                 throw new Error('Failed to create block');
             }
 
-            return BlockSchema.parse(block);
+            return block
         },
     });
 }
@@ -74,7 +74,7 @@ export function useUpdateBlock() {
                 throw new Error('Failed to update block');
             }
 
-            return BlockSchema.parse(block);
+            return block
         },
     });
 }
@@ -110,7 +110,7 @@ export function useDeleteBlock() {
                 throw new Error('Failed to delete block');
             }
 
-            return BlockSchema.parse(block);
+            return block
         },
     });
 }
