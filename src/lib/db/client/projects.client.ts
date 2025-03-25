@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 
-
 export const getProjectBySlug = async (slug: string) => {
     const { data, error } = await supabase
         .from('projects')

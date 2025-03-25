@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 
-
 export const getProjectDocuments = async (projectId: string) => {
     const { data, error } = await supabase
         .from('documents')
@@ -9,7 +8,7 @@ export const getProjectDocuments = async (projectId: string) => {
         .eq('is_deleted', false);
 
     if (error) throw error;
-    return data
+    return data;
 };
 
 export const getDocumentBlocksAndRequirements = async (documentId: string) => {
@@ -39,5 +38,5 @@ export const getDocumentData = async (documentId: string) => {
         .single();
 
     if (error) throw error;
-    return data
+    return data;
 };

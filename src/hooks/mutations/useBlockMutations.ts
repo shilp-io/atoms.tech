@@ -3,7 +3,6 @@ import { useMutation } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
 
-
 export type CreateBlockInput = Omit<
     Block,
     | 'id'
@@ -42,7 +41,7 @@ export function useCreateBlock() {
                 throw new Error('Failed to create block');
             }
 
-            return block
+            return block;
         },
     });
 }
@@ -74,7 +73,7 @@ export function useUpdateBlock() {
                 throw new Error('Failed to update block');
             }
 
-            return block
+            return block;
         },
     });
 }
@@ -110,7 +109,7 @@ export function useDeleteBlock() {
                 throw new Error('Failed to delete block');
             }
 
-            return block
+            return block;
         },
     });
 }
