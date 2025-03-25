@@ -11,6 +11,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase/supabaseBrowser";
 import "@excalidraw/excalidraw/index.css";
 
+const LAST_DIAGRAM_ID_KEY = 'lastExcalidrawDiagramId';
+
 const ExcalidrawWrapper: React.FC = () => {
   const [diagramId, setDiagramId] = useState<number | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
@@ -19,6 +21,10 @@ const ExcalidrawWrapper: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isExistingDiagram, setIsExistingDiagram] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const lastSavedDataRef = useRef<{
+    elements: readonly ExcalidrawElement[];
+    appState: AppState;
+  } | null>(null);
 
   // Initialize diagram ID and load data on mount
   useEffect(() => {
@@ -26,10 +32,24 @@ const ExcalidrawWrapper: React.FC = () => {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const idFromUrl = urlParams.get('id');
+        const lastDiagramId = localStorage.getItem(LAST_DIAGRAM_ID_KEY);
+        
+        // Priority: URL param > localStorage > new diagram
+        let id: number | null = null;
         
         if (idFromUrl && !isNaN(Number(idFromUrl))) {
-          const id = Number(idFromUrl);
+          id = Number(idFromUrl);
+        } else if (lastDiagramId && !isNaN(Number(lastDiagramId))) {
+          id = Number(lastDiagramId);
+          // Update URL with the stored ID
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.set('id', id.toString());
+          window.history.pushState({}, '', newUrl);
+        }
+
+        if (id) {
           setDiagramId(id);
+          localStorage.setItem(LAST_DIAGRAM_ID_KEY, id.toString());
           
           // Fetch existing diagram data
           const { data, error } = await supabase
@@ -40,11 +60,15 @@ const ExcalidrawWrapper: React.FC = () => {
           
           if (error) {
             console.error('Error loading diagram:', error);
+            // If error is not found, create new diagram
+            if (error.code === 'PGRST116') {
+              createNewDiagram();
+            }
           } else if (data?.diagram_data) {
             setIsExistingDiagram(true);
             // Ensure the data structure matches Excalidraw's expectations
             const { elements, appState, files } = data.diagram_data;
-            setInitialData({
+            const initialDataState = {
               elements: elements || [],
               appState: {
                 ...(appState || {}),
@@ -54,19 +78,15 @@ const ExcalidrawWrapper: React.FC = () => {
                 zoom: appState?.zoom || { value: 1 },
               },
               files: files || {},
-            });
+            };
+            setInitialData(initialDataState);
+            lastSavedDataRef.current = {
+              elements: initialDataState.elements,
+              appState: initialDataState.appState,
+            };
           }
         } else {
-          // Generate a random number for ID
-          const timestamp = Date.now();
-          const random = Math.floor(Math.random() * 1000000);
-          const newId = Number(`${timestamp}${random}`);
-          setDiagramId(newId);
-          
-          // Update URL with the new ID
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.set('id', newId.toString());
-          window.history.pushState({}, '', newUrl);
+          createNewDiagram();
         }
       } catch (error) {
         console.error('Error initializing diagram:', error);
@@ -75,7 +95,49 @@ const ExcalidrawWrapper: React.FC = () => {
       }
     };
 
+    const createNewDiagram = () => {
+      const timestamp = Date.now();
+      const random = Math.floor(Math.random() * 1000000);
+      const newId = Number(`${timestamp}${random}`);
+      setDiagramId(newId);
+      localStorage.setItem(LAST_DIAGRAM_ID_KEY, newId.toString());
+      
+      // Update URL with the new ID
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.set('id', newId.toString());
+      window.history.pushState({}, '', newUrl);
+    };
+
     initializeDiagram();
+  }, []);
+
+  const hasChanges = useCallback((
+    elements: readonly ExcalidrawElement[],
+    appState: AppState
+  ) => {
+    if (!lastSavedDataRef.current) return true;
+
+    // Compare elements
+    const prevElements = lastSavedDataRef.current.elements;
+    if (prevElements.length !== elements.length) return true;
+
+    // Deep compare elements
+    for (let i = 0; i < elements.length; i++) {
+      const curr = elements[i];
+      const prev = prevElements[i];
+      if (JSON.stringify(curr) !== JSON.stringify(prev)) return true;
+    }
+
+    // Compare relevant appState properties that we care about
+    const currentViewBg = appState.viewBackgroundColor;
+    const prevViewBg = lastSavedDataRef.current.appState.viewBackgroundColor;
+    if (currentViewBg !== prevViewBg) return true;
+
+    const currentZoom = appState.zoom;
+    const prevZoom = lastSavedDataRef.current.appState.zoom;
+    if (JSON.stringify(currentZoom) !== JSON.stringify(prevZoom)) return true;
+
+    return false;
   }, []);
 
   const saveDiagram = useCallback(async (
@@ -90,6 +152,12 @@ const ExcalidrawWrapper: React.FC = () => {
       console.log('New diagram with no elements - skipping save');
       return;
     }
+
+    // Check if there are actual changes to save
+    if (!hasChanges(elements, appState)) {
+      console.log('No changes detected - skipping save');
+      return;
+    }
     
     try {
       setIsAutoSaving(true);
@@ -98,7 +166,7 @@ const ExcalidrawWrapper: React.FC = () => {
         elements,
         appState: {
           ...appState,
-          collaborators: [], // Ensure this is always an array when saving
+          collaborators: new Map(), // Initialize as empty Map instead of array
         },
         files
       };
@@ -118,15 +186,25 @@ const ExcalidrawWrapper: React.FC = () => {
         return;
       }
       
+      // Update last saved data reference
+      lastSavedDataRef.current = {
+        elements,
+        appState: {
+          ...appState,
+          collaborators: new Map(),
+        },
+      };
+      
       setIsExistingDiagram(true); // Mark as existing after first successful save
       setLastSaved(new Date());
+      localStorage.setItem(LAST_DIAGRAM_ID_KEY, diagramId.toString());
       console.log('Diagram saved successfully');
     } catch (error) {
       console.error('Error saving diagram:', error);
     } finally {
       setIsAutoSaving(false);
     }
-  }, [diagramId, isAutoSaving, isExistingDiagram]);
+  }, [diagramId, isAutoSaving, isExistingDiagram, hasChanges]);
 
   // Debounced save function to avoid too many API calls
   const debouncedSave = useCallback((
