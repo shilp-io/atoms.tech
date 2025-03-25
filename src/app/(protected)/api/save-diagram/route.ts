@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
         .from("excalidraw_diagrams")
         .upsert({
             id: diagramId,
-            diagram: diagramData,
+            diagram_data: diagramData,
             updated_at: new Date().toISOString(),
         });
         
