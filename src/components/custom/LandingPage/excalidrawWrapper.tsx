@@ -10,6 +10,7 @@ const ExcalidrawWrapper: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [initialData, setInitialData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExistingDiagram, setIsExistingDiagram] = useState(false);
 
   // Initialize diagram ID and load data on mount
   useEffect(() => {
@@ -32,6 +33,7 @@ const ExcalidrawWrapper: React.FC = () => {
           if (error) {
             console.error('Error loading diagram:', error);
           } else if (data?.diagram_data) {
+            setIsExistingDiagram(true);
             // Ensure the data structure matches Excalidraw's expectations
             const { elements, appState, files } = data.diagram_data;
             setInitialData({
@@ -71,6 +73,12 @@ const ExcalidrawWrapper: React.FC = () => {
   const saveDiagram = useCallback(async (elements: any, appState: any, files: any) => {
     if (!diagramId || isAutoSaving) return;
     
+    // Only prevent saving if it's a new diagram and there are no elements
+    if (!isExistingDiagram && (!elements || elements.length === 0)) {
+      console.log('New diagram with no elements - skipping save');
+      return;
+    }
+    
     try {
       setIsAutoSaving(true);
       
@@ -98,6 +106,7 @@ const ExcalidrawWrapper: React.FC = () => {
         return;
       }
       
+      setIsExistingDiagram(true); // Mark as existing after first successful save
       setLastSaved(new Date());
       console.log('Diagram saved successfully');
     } catch (error) {
@@ -105,7 +114,7 @@ const ExcalidrawWrapper: React.FC = () => {
     } finally {
       setIsAutoSaving(false);
     }
-  }, [diagramId, isAutoSaving]);
+  }, [diagramId, isAutoSaving, isExistingDiagram]);
 
   // Debounced save function to avoid too many API calls
   const debouncedSave = useCallback(
