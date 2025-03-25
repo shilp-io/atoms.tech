@@ -5,28 +5,55 @@ import { supabase } from "@/lib/supabase/supabaseBrowser";
 import "@excalidraw/excalidraw/index.css";
 
 const ExcalidrawWrapper: React.FC = () => {
-  const [diagramId, setDiagramId] = useState<string | null>(null);
+  const [diagramId, setDiagramId] = useState<number | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [initialData, setInitialData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize diagram ID on component mount
+  // Initialize diagram ID and load data on mount
   useEffect(() => {
-    // Use existing ID from URL or storage, or generate a new one
-    const urlParams = new URLSearchParams(window.location.search);
-    const idFromUrl = urlParams.get('id');
-    
-    if (idFromUrl) {
-      setDiagramId(idFromUrl);
-    } else {
-      // Generate a unique ID if none exists
-      const newId = crypto.randomUUID();
-      setDiagramId(newId);
-      
-      // Update URL with the new ID
-      const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set('id', newId);
-      window.history.pushState({}, '', newUrl);
-    }
+    const initializeDiagram = async () => {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const idFromUrl = urlParams.get('id');
+        
+        if (idFromUrl && !isNaN(Number(idFromUrl))) {
+          const id = Number(idFromUrl);
+          setDiagramId(id);
+          
+          // Fetch existing diagram data
+          const { data, error } = await supabase
+            .from('excalidraw_diagrams')
+            .select('diagram_data')
+            .eq('id', id)
+            .single();
+          
+          if (error) {
+            console.error('Error loading diagram:', error);
+          } else if (data?.diagram_data) {
+            setInitialData(data.diagram_data);
+          }
+        } else {
+          // Generate a random number for ID
+          const timestamp = Date.now();
+          const random = Math.floor(Math.random() * 1000000);
+          const newId = Number(`${timestamp}${random}`);
+          setDiagramId(newId);
+          
+          // Update URL with the new ID
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.set('id', newId.toString());
+          window.history.pushState({}, '', newUrl);
+        }
+      } catch (error) {
+        console.error('Error initializing diagram:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeDiagram();
   }, []);
 
   const saveDiagram = useCallback(async (elements: any, appState: any, files: any) => {
@@ -41,12 +68,14 @@ const ExcalidrawWrapper: React.FC = () => {
         files
       };
       
+      const now = new Date().toISOString();
       const { error } = await supabase
         .from('excalidraw_diagrams')
         .upsert({
           id: diagramId,
-          diagram: diagramData,
-          updated_at: new Date().toISOString(),
+          diagram_data: diagramData,
+          updated_at: now,
+          created_at: now,
         });
 
       if (error) {
@@ -75,6 +104,10 @@ const ExcalidrawWrapper: React.FC = () => {
     debouncedSave(elements, appState, files);
   }, [debouncedSave]);
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div style={{ height: "720px", width: "1280px" }}>
       {lastSaved && (
@@ -84,6 +117,7 @@ const ExcalidrawWrapper: React.FC = () => {
       )}
       <Excalidraw
         onChange={handleChange}
+        initialData={initialData}
       />
     </div>
   );
