@@ -149,7 +149,7 @@ export default function RequirementPage() {
                 }
             });
 
-            // Add non-PDF files directly to uploadedFiles
+            // Add non-PDF files directly to selectedFiles
             nonPdfFiles.forEach((file) => {
                 setSelectedFiles((prev) => ({
                     ...prev,
@@ -195,7 +195,7 @@ export default function RequirementPage() {
         setExistingDocsValue('');
     };
 
-    // set the uploadedFiles when the pipeline run is completed
+    // set the selectedFiles when the pipeline run is completed
     useEffect(() => {
         switch (convertResponse?.state) {
             case 'DONE': {
