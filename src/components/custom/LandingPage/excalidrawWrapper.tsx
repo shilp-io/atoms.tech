@@ -32,7 +32,19 @@ const ExcalidrawWrapper: React.FC = () => {
           if (error) {
             console.error('Error loading diagram:', error);
           } else if (data?.diagram_data) {
-            setInitialData(data.diagram_data);
+            // Ensure the data structure matches Excalidraw's expectations
+            const { elements, appState, files } = data.diagram_data;
+            setInitialData({
+              elements: elements || [],
+              appState: {
+                ...(appState || {}),
+                collaborators: [],
+                currentItemFontFamily: appState?.currentItemFontFamily || 1,
+                viewBackgroundColor: appState?.viewBackgroundColor || "#ffffff",
+                zoom: appState?.zoom || { value: 1 },
+              },
+              files: files || {},
+            });
           }
         } else {
           // Generate a random number for ID
@@ -64,7 +76,10 @@ const ExcalidrawWrapper: React.FC = () => {
       
       const diagramData = {
         elements,
-        appState,
+        appState: {
+          ...appState,
+          collaborators: [], // Ensure this is always an array when saving
+        },
         files
       };
       
