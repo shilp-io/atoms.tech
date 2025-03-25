@@ -2,7 +2,7 @@
 
 import { Slot } from '@radix-ui/react-slot';
 import { VariantProps, cva } from 'class-variance-authority';
-import { PanelLeft, PenTool, Pencil } from 'lucide-react';
+import { PanelLeft, PenTool } from 'lucide-react';
 import React from 'react';
 
 import { Button } from '@/components/ui/button';

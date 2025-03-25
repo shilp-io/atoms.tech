@@ -1,6 +1,7 @@
 "use client";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase/supabaseBrowser";
 import "@excalidraw/excalidraw/index.css";
 
 const ExcalidrawWrapper: React.FC = () => {
@@ -40,20 +41,16 @@ const ExcalidrawWrapper: React.FC = () => {
         files
       };
       
-      const response = await fetch('/api/save-diagram', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          diagramData,
-          diagramId,
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error saving diagram:', errorData);
+      const { error } = await supabase
+        .from('excalidraw_diagrams')
+        .upsert({
+          id: diagramId,
+          diagram: diagramData,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) {
+        console.error('Error saving diagram:', error);
         return;
       }
       
@@ -75,7 +72,6 @@ const ExcalidrawWrapper: React.FC = () => {
   );
 
   const handleChange = useCallback((elements: any, appState: any, files: any) => {
-    // console.log("Excalidraw elements changed:", elements);
     debouncedSave(elements, appState, files);
   }, [debouncedSave]);
 
