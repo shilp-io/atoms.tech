@@ -67,34 +67,18 @@ export default function RequirementPage() {
     };
 
     const { data: existingDocs } = useExternalDocumentsByOrg(organizationId);
-    const [currentFiles, setCurrentFiles] = useState<
-        { name: string; supabaseId: string }[]
-    >([]);
-    // uploaded files maps processed file name to original file name
     const [selectedFiles, setSelectedFiles] = useState<{
         [key: string]: string;
     }>({});
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [processingPdfFiles, setProcessingPdfFiles] = useState<
+        { name: string; supabaseId: string }[]
+    >([]);
+
     const uploadFileToSupabase = useUploadExternalDocument();
     const updateGumloopName = useUpdateExternalDocumentGumloopName();
-
-    // useEffect(() => {
-    //     // upon first mount, load all documents already uploaded to Supabase
-    //     // and set them as selectedFiles
-    //     if (!existingDocs) {
-    //         console.log('No documents loaded yet');
-    //         return;
-    //     }
-    //     setSelectedFiles(
-    //         existingDocs.reduce<{ [key: string]: string }>((acc, doc) => {
-    //             if (!doc.name || !doc.gumloop_name) return acc;
-    //             acc[doc.name] = doc.gumloop_name;
-    //             return acc;
-    //         }, {}),
-    //     );
-    //     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // }, []);
 
     const { startPipeline, getPipelineRun, uploadFiles } = useGumloop();
     const [convertPipelineRunId, setConvertPipelineRunId] =
@@ -168,7 +152,7 @@ export default function RequirementPage() {
                 return;
             }
 
-            setCurrentFiles(pdfFiles);
+            setProcessingPdfFiles(pdfFiles);
 
             const { run_id } = await startPipeline({
                 fileNames: pdfFiles.map((file) => file.name),
@@ -205,7 +189,7 @@ export default function RequirementPage() {
 
                 for (let i = 0; i < convertedFileNames.length; i++) {
                     const convertedFileName = convertedFileNames[i];
-                    const currentFile = currentFiles[i];
+                    const currentFile = processingPdfFiles[i];
                     updateGumloopName.mutate({
                         documentId: currentFile.supabaseId,
                         gumloopName: convertedFileName,
@@ -229,8 +213,13 @@ export default function RequirementPage() {
         }
         setIsUploading(false);
         setConvertPipelineRunId('');
-        setCurrentFiles([]);
-    }, [convertResponse, currentFiles, organizationId, updateGumloopName]);
+        setProcessingPdfFiles([]);
+    }, [
+        convertResponse,
+        processingPdfFiles,
+        organizationId,
+        updateGumloopName,
+    ]);
 
     const [uploadButtonText, setUploadButtonText] = useState('Upload Files');
 
