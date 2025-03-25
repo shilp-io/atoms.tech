@@ -125,6 +125,15 @@ export const queryKeys = {
             [...queryKeys.organizations.root, 'createdBy', userId] as const,
     },
 
+    organizationInvitations: {
+        root: ['organizationInvitations'] as const,
+        byOrg: (orgId: string) =>
+            [...queryKeys.organizationInvitations.root, 'org', orgId] as const,
+        byEmail: (email: string) =>
+            [...queryKeys.organizationInvitations.root, 'email', email] as const,
+        byCreator: (userId: string) => ['organizationInvitations', 'byCreator', userId],
+    },
+
     traceLinks: {
         root: ['traceLinks'] as const,
         bySource: (sourceId: string, sourceType: string) =>

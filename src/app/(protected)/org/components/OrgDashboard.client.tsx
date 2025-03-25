@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Organization, Project } from '@/types';
 
 import OrgMembers from './OrgMembers.client';
+import OrgInvitations from './OrgInvitations.client';
 
 interface OrgDashboardProps {
     organization: Organization | undefined;
@@ -92,7 +93,11 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                 onValueChange={setActiveTab}
                 className="w-full"
             >
-                <TabsList className="grid grid-cols-5 w-full">
+                <TabsList
+                    className={`grid ${
+                        props.organization?.type === 'enterprise' ? 'grid-cols-6' : 'grid-cols-5'
+                    } w-full`}
+                >
                     <TabsTrigger
                         value="overview"
                         className="flex items-center gap-2"
@@ -128,6 +133,15 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                         <ListTodo className="h-4 w-4" />
                         <span>Tasks</span>
                     </TabsTrigger>
+                    {props.organization?.type === 'enterprise' && (
+                        <TabsTrigger
+                            value="invitations"
+                            className="flex items-center gap-2"
+                        >
+                            <ListTodo className="h-4 w-4" />
+                            <span>Invitations</span>
+                        </TabsTrigger>
+                    )}
                 </TabsList>
 
                 {/* Organization Overview Tab */}
@@ -410,6 +424,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                     </div>
                 </TabsContent>
 
+                
                 {/* Tasks Tab */}
                 <TabsContent value="tasks" className="space-y-6">
                     <div className="flex justify-between items-center">
@@ -431,6 +446,12 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                             Create Task
                         </button>
                     </div>
+                </TabsContent>
+                
+                <TabsContent value="invitations" className="space-y-6">
+                    {props.organization?.type === 'enterprise' ? (
+                        <OrgInvitations orgId={props.orgId} />
+                    ) : null}
                 </TabsContent>
             </Tabs>
         </div>
