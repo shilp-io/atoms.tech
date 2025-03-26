@@ -33,7 +33,7 @@ import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments'
 import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useChunkr } from '@/hooks/useChunkr';
 import { useGumloop } from '@/hooks/useGumloop';
-import { TaskStatus } from '@/lib/services/chunkr';
+import { TaskResponse, TaskStatus } from '@/lib/services/chunkr';
 
 interface AnalysisData {
     reqId: string;
@@ -102,9 +102,9 @@ export default function RequirementPage() {
     const updateGumloopName = useUpdateExternalDocumentGumloopName();
 
     const { startPipeline, getPipelineRun, uploadFiles } = useGumloop();
-    const { startOcrTask, getTaskStatus } = useChunkr();
-    const [ocrPipelineTaskId, setOcrPipelineTaskId] = useState<string>('');
-    const { data: taskStatus } = getTaskStatus(ocrPipelineTaskId);
+    const { startOcrTask, getTaskStatuses } = useChunkr();
+    const [ocrPipelineTaskIds, setOcrPipelineTaskIds] = useState<string[]>([]);
+    const taskStatusQueries = getTaskStatuses(ocrPipelineTaskIds);
 
     const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length) return;
@@ -182,7 +182,7 @@ export default function RequirementPage() {
             const taskIds = await startOcrTask(
                 pdfFiles.map((file) => file.file),
             );
-            setOcrPipelineTaskId(taskIds[0]);
+            setOcrPipelineTaskIds(taskIds);
         } catch (error) {
             setIsUploading(false);
             console.error('Failed to upload files:', error);
@@ -202,62 +202,81 @@ export default function RequirementPage() {
 
     // set the selectedFiles when the pipeline run is completed
     useEffect(() => {
-        switch (taskStatus?.status) {
-            case TaskStatus.SUCCEEDED: {
-                // from each parsed file, construct a File object
-                const markdownFiles = [taskStatus].map((file) => {
-                    let mdContents = '';
-                    for (const chunk of file.output.chunks) {
-                        for (const segment of chunk.segments) {
-                            mdContents += segment.markdown + '\n';
-                        }
-                        mdContents += '\n';
+        // Check if taskStatuses array is empty or any queries are still loading
+        if (!taskStatusQueries.length) {
+            return;
+        }
+
+        // Check if any task failed
+        if (
+            taskStatusQueries.some(
+                (query) =>
+                    query.isError || query.data?.status === TaskStatus.FAILED,
+            )
+        ) {
+            console.error('One or more OCR pipeline tasks failed');
+            setIsUploading(false);
+            setOcrPipelineTaskIds([]);
+            setProcessingPdfFiles([]);
+            return;
+        }
+
+        // Process all successful tasks
+        if (
+            taskStatusQueries.every(
+                (query) =>
+                    query.isSuccess &&
+                    query.data?.status === TaskStatus.SUCCEEDED,
+            )
+        ) {
+            // from each parsed file, construct a File object
+            const markdownFiles = taskStatusQueries.map((query) => {
+                const file = query.data as TaskResponse;
+                let mdContents = '';
+                for (const chunk of file.output.chunks) {
+                    for (const segment of chunk.segments) {
+                        mdContents += segment.markdown + '\n';
                     }
                     mdContents += '\n';
-                    const mdFilename = `${file.output.file_name.split('.pdf')[0]}.md`;
-                    const mdBlob = new Blob([mdContents], {
-                        type: 'text/markdown',
-                    });
-                    return new File([mdBlob], mdFilename);
-                });
-
-                uploadFiles(markdownFiles);
-                console.log('Uploaded files to Gumloop');
-
-                for (let i = 0; i < markdownFiles.length; i++) {
-                    const convertedFileName = markdownFiles[i].name;
-                    const currentFile = processingPdfFiles[i];
-                    updateGumloopName.mutate({
-                        documentId: currentFile.supabaseId,
-                        gumloopName: convertedFileName,
-                        orgId: organizationId,
-                    });
-                    console.log(
-                        'Updated Gumloop name for file:',
-                        convertedFileName,
-                    );
-
-                    setSelectedFiles((prev) => ({
-                        ...prev,
-                        [convertedFileName]: currentFile.name,
-                    }));
                 }
-                break;
+                mdContents += '\n';
+                const mdFilename = `${file.output.file_name.split('.pdf')[0]}.md`;
+                const mdBlob = new Blob([mdContents], {
+                    type: 'text/markdown',
+                });
+                return new File([mdBlob], mdFilename);
+            });
+
+            uploadFiles(markdownFiles);
+            console.log('Uploaded files to Gumloop');
+
+            for (let i = 0; i < markdownFiles.length; i++) {
+                const convertedFileName = markdownFiles[i].name;
+                const currentFile = processingPdfFiles[i];
+                updateGumloopName.mutate({
+                    documentId: currentFile.supabaseId,
+                    gumloopName: convertedFileName,
+                    orgId: organizationId,
+                });
+                console.log(
+                    'Updated Gumloop name for file:',
+                    convertedFileName,
+                );
+
+                setSelectedFiles((prev) => ({
+                    ...prev,
+                    [convertedFileName]: currentFile.name,
+                }));
             }
-            case TaskStatus.FAILED: {
-                console.error('Pipeline run failed');
-                break;
-            }
-            default:
-                return;
+
+            setIsUploading(false);
+            setOcrPipelineTaskIds([]);
+            setProcessingPdfFiles([]);
         }
-        setIsUploading(false);
-        setOcrPipelineTaskId('');
-        setProcessingPdfFiles([]);
     }, [
         organizationId,
         processingPdfFiles,
-        taskStatus,
+        taskStatusQueries,
         updateGumloopName,
         uploadFiles,
     ]);
@@ -266,13 +285,13 @@ export default function RequirementPage() {
 
     useEffect(() => {
         if (isUploading) {
-            if (ocrPipelineTaskId.length > 0) {
+            if (ocrPipelineTaskIds.length > 0) {
                 setUploadButtonText('Converting...');
             } else setUploadButtonText('Uploading...');
         } else {
             setUploadButtonText('Upload Files');
         }
-    }, [isUploading, ocrPipelineTaskId]);
+    }, [isUploading, ocrPipelineTaskIds]);
 
     const [isReasoning, setIsReasoning] = useState(false);
     const [isAnalysing, setIsAnalysing] = useState(false);

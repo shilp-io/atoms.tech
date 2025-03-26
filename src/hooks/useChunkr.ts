@@ -1,7 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+    Query,
+    useMutation,
+    useQueries,
+    useQuery,
+    useQueryClient,
+} from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 
-import { TaskResponse } from '@/lib/services/chunkr';
+import { TaskResponse, TaskStatus } from '@/lib/services/chunkr';
 
 interface ChunkrOptions {
     skipCache?: boolean;
@@ -76,16 +82,40 @@ export function useChunkr(options: ChunkrOptions = {}) {
             refetchInterval: (query) => {
                 const status = query.state.data?.status;
                 if (
-                    status === 'Succeeded' ||
-                    status === 'Failed' ||
-                    status === 'Cancelled'
+                    status === TaskStatus.STARTING ||
+                    status === TaskStatus.PROCESSING
                 ) {
-                    return false;
+                    return 2000;
                 }
-                return status === 'Starting' || status === 'Processing'
-                    ? 2000
-                    : false;
+                return false;
             },
+        });
+    };
+
+    const useTaskStatuses = (taskIds: string[]) => {
+        return useQueries({
+            queries: taskIds.map((taskId) => ({
+                queryKey: ['ocrTask', taskId],
+                queryFn: () => getTaskStatus(taskId),
+                enabled: !!taskId && !options.skipCache,
+                refetchInterval: (
+                    query: Query<
+                        TaskResponse,
+                        Error,
+                        TaskResponse,
+                        readonly unknown[]
+                    >,
+                ) => {
+                    const status = query.state.data?.status;
+                    if (
+                        status === TaskStatus.STARTING ||
+                        status === TaskStatus.PROCESSING
+                    ) {
+                        return 2000;
+                    }
+                    return false;
+                },
+            })),
         });
     };
 
@@ -95,6 +125,7 @@ export function useChunkr(options: ChunkrOptions = {}) {
     return {
         startOcrTask,
         getTaskStatus: useTaskStatus,
+        getTaskStatuses: useTaskStatuses,
         loading: startOcrTaskMutation.isPending,
         error: error || ocrTaskError,
         clearCache: useCallback(
