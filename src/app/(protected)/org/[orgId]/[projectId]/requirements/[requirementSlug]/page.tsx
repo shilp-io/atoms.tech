@@ -398,6 +398,12 @@ export default function RequirementPage() {
         setIsAnalysing(false);
     }, [analysisResponse]);
 
+    const handleAcceptChange = (text: string | undefined) => {
+        if (text) {
+            setReqText(text);
+        }
+    };
+
     if (isReqLoading) {
         return (
             <div className="container mx-auto p-6">
@@ -573,13 +579,26 @@ export default function RequirementPage() {
                     >
                         <div className="text-muted-foreground text-sm">
                             <p>
-                                <strong>Requirement:</strong>{' '}
-                                {analysisData?.earsRequirement}
-                            </p>
-                            <p>
                                 <strong>Pattern:</strong>{' '}
                                 {analysisData?.earsPattern}
                             </p>
+                            <div className="flex justify-between items-center mt-2">
+                                <p>
+                                    <strong>Requirement:</strong>{' '}
+                                    {analysisData?.earsRequirement}
+                                </p>
+                                <Button
+                                    size="sm"
+                                    onClick={() =>
+                                        handleAcceptChange(
+                                            analysisData?.earsRequirement,
+                                        )
+                                    }
+                                    disabled={!analysisData?.earsRequirement}
+                                >
+                                    Accept Pattern
+                                </Button>
+                            </div>
                             <p>
                                 <strong>Template:</strong>{' '}
                                 {analysisData?.earsTemplate}
@@ -595,12 +614,27 @@ export default function RequirementPage() {
                         defaultOpen={false}
                     >
                         <div className="text-muted-foreground text-sm">
-                            <p>
-                                <strong>Format:</strong>
-                            </p>
-                            <ReactMarkdown>
-                                {analysisData?.incoseFormat}
-                            </ReactMarkdown>
+                            <div className="flex justify-between items-start mt-2">
+                                <div>
+                                    <p>
+                                        <strong>Format:</strong>
+                                    </p>
+                                    <ReactMarkdown>
+                                        {analysisData?.incoseFormat}
+                                    </ReactMarkdown>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    onClick={() =>
+                                        handleAcceptChange(
+                                            analysisData?.incoseFormat,
+                                        )
+                                    }
+                                    disabled={!analysisData?.incoseFormat}
+                                >
+                                    Accept Format
+                                </Button>
+                            </div>
                             <p className="mt-2">
                                 <strong>Feedback:</strong>
                             </p>
@@ -632,19 +666,49 @@ export default function RequirementPage() {
                         defaultOpen={false}
                     >
                         <div className="text-muted-foreground text-sm">
-                            <p>
-                                <strong>Enhanced EARS:</strong>
-                            </p>
-                            <ReactMarkdown>
-                                {analysisData?.enhancedReqEars}
-                            </ReactMarkdown>
+                            <div className="flex justify-between items-start mt-2">
+                                <div>
+                                    <p>
+                                        <strong>Enhanced EARS:</strong>
+                                    </p>
+                                    <ReactMarkdown>
+                                        {analysisData?.enhancedReqEars}
+                                    </ReactMarkdown>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    onClick={() =>
+                                        handleAcceptChange(
+                                            analysisData?.enhancedReqEars,
+                                        )
+                                    }
+                                    disabled={!analysisData?.enhancedReqEars}
+                                >
+                                    Accept EARS
+                                </Button>
+                            </div>
 
-                            <p className="mt-2">
-                                <strong>Enhanced INCOSE:</strong>
-                            </p>
-                            <ReactMarkdown>
-                                {analysisData?.enhancedReqIncose}
-                            </ReactMarkdown>
+                            <div className="flex justify-between items-start mt-2">
+                                <div>
+                                    <p>
+                                        <strong>Enhanced INCOSE:</strong>
+                                    </p>
+                                    <ReactMarkdown>
+                                        {analysisData?.enhancedReqIncose}
+                                    </ReactMarkdown>
+                                </div>
+                                <Button
+                                    size="sm"
+                                    onClick={() =>
+                                        handleAcceptChange(
+                                            analysisData?.enhancedReqIncose,
+                                        )
+                                    }
+                                    disabled={!analysisData?.enhancedReqIncose}
+                                >
+                                    Accept INCOSE
+                                </Button>
+                            </div>
 
                             <p className="mt-2">
                                 <strong>General Feedback:</strong>
