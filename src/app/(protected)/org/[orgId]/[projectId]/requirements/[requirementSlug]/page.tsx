@@ -29,6 +29,7 @@ import {
     useUpdateExternalDocumentGumloopName,
     useUploadExternalDocument,
 } from '@/hooks/mutations/useExternalDocumentsMutations';
+import { useUpdateRequirement } from '@/hooks/mutations/useRequirementMutations';
 import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
 import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useChunkr } from '@/hooks/useChunkr';
@@ -302,9 +303,19 @@ export default function RequirementPage() {
         organizationId,
     );
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+    const { mutateAsync: updateRequirement } = useUpdateRequirement();
 
     const handleAnalyze = async () => {
+        if (!requirement) {
+            setMissingReqError("Requirement hasn't loaded yet");
+            return;
+        }
+
         setAnalysisData(null);
+        await updateRequirement({
+            id: requirement.id,
+            description: reqText,
+        });
 
         // check if the requirement is empty
         if (!reqText) {
@@ -398,10 +409,15 @@ export default function RequirementPage() {
         setIsAnalysing(false);
     }, [analysisResponse]);
 
-    const handleAcceptChange = (text: string | undefined) => {
-        if (text) {
-            setReqText(text);
+    const handleAcceptChange = async (text: string | undefined) => {
+        if (!text || !requirement) {
+            return;
         }
+        setReqText(text);
+        await updateRequirement({
+            id: requirement.id,
+            description: text,
+        });
     };
 
     if (isReqLoading) {
