@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 const ExcalidrawWithClientOnly = dynamic(
     async () => (await import("@/components/custom/LandingPage/excalidrawWrapper")).default,
     {
@@ -11,16 +11,43 @@ const ExcalidrawWithClientOnly = dynamic(
 
 export default function Draw() {
     const [prompt, setPrompt] = useState('');
+    const [excalidrawApi, setExcalidrawApi] = useState<{ 
+        addMermaidDiagram: (mermaidSyntax: string) => Promise<void> 
+    } | null>(null);
 
-    const handleGenerate = () => {
-        // TODO: Implement diagram generation
-        console.log('Generating diagram from:', prompt);
+    // Test mermaid diagram - this is just for testing the conversion
+    const testMermaid = `
+        graph TD
+        A[Start] --> B{Is it?}
+        B -- Yes --> C[OK]
+        C --> D[Rethink]
+        D --> B
+        B -- No --> E[End]
+    `;
+
+    const handleGenerate = async () => {
+        try {
+            if (!excalidrawApi) {
+                console.error('Excalidraw API not initialized');
+                return;
+            }
+            // For now, we'll use the test mermaid diagram
+            await excalidrawApi.addMermaidDiagram(testMermaid);
+        } catch (error) {
+            console.error('Error generating diagram:', error);
+        }
     };
+
+    const handleExcalidrawMount = useCallback((api: { 
+        addMermaidDiagram: (mermaidSyntax: string) => Promise<void> 
+    }) => {
+        setExcalidrawApi(api);
+    }, []);
 
     return (
         <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
             <div style={{ flexShrink: 0 }}>
-                <ExcalidrawWithClientOnly />
+                <ExcalidrawWithClientOnly onMounted={handleExcalidrawMount} />
             </div>
             <div style={{ 
                 display: 'flex', 

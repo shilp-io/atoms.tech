@@ -1,19 +1,26 @@
 "use client";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { Excalidraw, exportToCanvas } from "@excalidraw/excalidraw";
 import type { 
   AppState, 
   BinaryFiles, 
   ExcalidrawInitialDataState,
+  ExcalidrawImperativeAPI,
 } from "@excalidraw/excalidraw/types";
 
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types"
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase/supabaseBrowser";
 import "@excalidraw/excalidraw/index.css";
+import { parseMermaidToExcalidraw } from "@excalidraw/mermaid-to-excalidraw";
+import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
 
 const LAST_DIAGRAM_ID_KEY = 'lastExcalidrawDiagramId';
 
-const ExcalidrawWrapper: React.FC = () => {
+interface ExcalidrawWrapperProps {
+  onMounted?: (api: { addMermaidDiagram: (mermaidSyntax: string) => Promise<void> }) => void;
+}
+
+const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
   const [diagramId, setDiagramId] = useState<number | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -21,10 +28,38 @@ const ExcalidrawWrapper: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isExistingDiagram, setIsExistingDiagram] = useState(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const excalidrawApiRef = useRef<ExcalidrawImperativeAPI | null>(null);
   const lastSavedDataRef = useRef<{
     elements: readonly ExcalidrawElement[];
     appState: AppState;
   } | null>(null);
+
+  // Function to add mermaid diagram to canvas
+  const addMermaidDiagram = async (mermaidSyntax: string) => {
+    try {
+      const { elements: skeletonElements, files } = await parseMermaidToExcalidraw(mermaidSyntax);
+      
+      const excalidrawElements = convertToExcalidrawElements(skeletonElements);
+      
+      if (excalidrawApiRef.current) {
+        const currentElements = excalidrawApiRef.current.getSceneElements();
+        // Add new elements to existing ones
+        excalidrawApiRef.current.updateScene({
+          elements: [...currentElements, ...excalidrawElements]
+        });
+      }
+    } catch (error) {
+      console.error('Error converting mermaid to excalidraw:', error);
+      throw error;
+    }
+  };
+
+  // Expose the addMermaidDiagram function to parent
+  useEffect(() => {
+    if (onMounted) {
+      onMounted({ addMermaidDiagram });
+    }
+  }, [onMounted]);
 
   // Initialize diagram ID and load data on mount
   useEffect(() => {
@@ -251,6 +286,9 @@ const ExcalidrawWrapper: React.FC = () => {
       <Excalidraw
         onChange={handleChange}
         initialData={initialData}
+        excalidrawAPI={api => {
+          excalidrawApiRef.current = api;
+        }}
       />
     </div>
   );
