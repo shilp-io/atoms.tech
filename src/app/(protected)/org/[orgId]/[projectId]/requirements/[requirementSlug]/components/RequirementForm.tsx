@@ -52,8 +52,8 @@ interface RequirementFormProps {
     isAnalysing: boolean;
     handleAnalyze: () => void;
     missingReqError: string;
-    missingFilesError: string;
-    setMissingFilesError: Dispatch<SetStateAction<string>>;
+    // missingFilesError: string;
+    // setMissingFilesError: Dispatch<SetStateAction<string>>;
     selectedFiles: { [key: string]: string };
     setSelectedFiles: Dispatch<SetStateAction<{ [key: string]: string }>>;
 }
@@ -72,8 +72,8 @@ export function RequirementForm({
     isAnalysing,
     handleAnalyze,
     missingReqError,
-    missingFilesError,
-    setMissingFilesError,
+    // missingFilesError,
+    // setMissingFilesError,
     selectedFiles,
     setSelectedFiles,
 }: RequirementFormProps) {
@@ -102,7 +102,7 @@ export function RequirementForm({
         try {
             const files = Array.from(e.target.files);
             setIsUploading(true);
-            setMissingFilesError('');
+            // setMissingFilesError('');
 
             // upload to Supabase
             const uploadPromises = files.map((file) =>
@@ -190,7 +190,7 @@ export function RequirementForm({
     const [existingDocsValue, setExistingDocsValue] = useState<string>('');
 
     const handleExistingDocSelect = (docName: string) => {
-        setMissingFilesError('');
+        // setMissingFilesError('');
         setSelectedFiles((prev) => ({
             ...prev,
             [existingDocsNameMap[docName]]: docName,
@@ -288,7 +288,7 @@ export function RequirementForm({
                 setUploadButtonText('Converting...');
             } else setUploadButtonText('Uploading...');
         } else {
-            setUploadButtonText('Upload Files');
+            setUploadButtonText('Upload Regulation Document');
         }
     }, [isUploading, ocrPipelineTaskIds]);
 
@@ -306,9 +306,9 @@ export function RequirementForm({
                 <div>
                     <label
                         htmlFor="systemName"
-                        className="text-sm font-medium block mb-1"
+                        className="text-sm font-medium text-muted-foreground block mb-1"
                     >
-                        System Name
+                        System Name - Optional
                     </label>
                     <input
                         id="systemName"
@@ -322,9 +322,9 @@ export function RequirementForm({
                 <div>
                     <label
                         htmlFor="objective"
-                        className="text-sm font-medium block mb-1"
+                        className="text-sm font-medium text-muted-foreground block mb-1"
                     >
-                        System Objective
+                        System Objective - Optional
                     </label>
                     <input
                         id="objective"
@@ -360,10 +360,16 @@ export function RequirementForm({
                         Analyze with AI
                     </Button>
                 </div>
-                {(missingReqError || missingFilesError) && (
+                {missingReqError && (
+                    // || missingFilesError
                     <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded">
                         <CircleAlert className="h-4 w-4" />
-                        <span>{missingReqError || missingFilesError}</span>
+                        <span>
+                            {
+                                missingReqError
+                                // || missingFilesError
+                            }
+                        </span>
                     </div>
                 )}
                 <input
