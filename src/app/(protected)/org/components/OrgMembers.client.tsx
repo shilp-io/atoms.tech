@@ -20,6 +20,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { getOrganizationMembers } from '@/lib/db/client';
 import { UserRoleType } from '@/types';
+import { useUser } from '@/lib/providers/user.provider';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { useToast } from '@/components/ui/use-toast';
 
 interface OrgMembersProps {
     className?: string;
@@ -27,11 +30,20 @@ interface OrgMembersProps {
 
 export default function OrgMembers({ className }: OrgMembersProps) {
     const params = useParams<{ orgId: string }>();
+    const { user } = useUser();
+    const { toast } = useToast();
 
-    const { data: members, isLoading } = useQuery({
-        queryKey: ['organization-members', params.orgId],
-        queryFn: () => getOrganizationMembers(params.orgId),
-        enabled: !!params.orgId,
+    const { data: members = [], isLoading, refetch } = useQuery({
+        queryKey: ['organization-members', params?.orgId || ''],
+        queryFn: () => params ? getOrganizationMembers(params.orgId) : Promise.resolve([]),
+        enabled: params?.orgId ? true : false,
+    });
+
+    // Sort members to display the owner first
+    const sortedMembers = [...members].sort((a, b) => {
+        if (a.role === 'owner') return -1;
+        if (b.role === 'owner') return 1;
+        return 0;
     });
 
     const getRoleColor = (role: UserRoleType) => {
@@ -46,6 +58,40 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                 return 'bg-red-100 text-red-800';
             default:
                 return 'bg-gray-100 text-gray-800';
+        }
+    };
+
+    // Check if the current user is the owner
+    const isOwner = members.some(
+        (member) => member.id === user?.id && member.role === 'owner'
+    );
+
+    const handleRemoveMember = async (memberId: string) => {
+        if (!user?.id) {
+            toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
+            return;
+        }
+
+        try {
+            // Remove the member from the database
+            const { error } = await supabase
+                .from('organization_members')
+                .delete()
+                .eq('organization_id', params?.orgId || '')
+                .eq('user_id', memberId);
+
+            if (error) {
+                console.error('Error removing member:', error);
+                throw error;
+            }
+
+            toast({ title: 'Success', description: 'Member removed successfully!', variant: 'default' });
+
+            // Refresh the members list
+            refetch();
+        } catch (error) {
+            console.error('Error removing member:', error);
+            toast({ title: 'Error', description: 'Failed to remove member.', variant: 'destructive' });
         }
     };
 
@@ -78,9 +124,9 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                             </div>
                         ))}
                     </div>
-                ) : members && members.length > 0 ? (
+                ) : sortedMembers.length > 0 ? (
                     <div className="space-y-3">
-                        {members.map((member) => (
+                        {sortedMembers.map((member) => (
                             <div
                                 key={member.id}
                                 className="flex items-center justify-between"
@@ -91,11 +137,10 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                     </div>
                                     <div>
                                         <div className="font-medium">
-                                            {member.profiles?.full_name ||
-                                                'User'}
+                                            {member.full_name || 'User'}
                                         </div>
                                         <div className="text-sm text-muted-foreground">
-                                            {member.profiles?.email}
+                                            {member.email}
                                         </div>
                                     </div>
                                 </div>
@@ -105,25 +150,30 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                     >
                                         {member.role}
                                     </span>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 w-8 p-0"
-                                            >
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem>
-                                                Change role
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem className="text-red-600">
-                                                Remove
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    {isOwner && member.id !== user?.id && ( // Allow removal only if the current user is the owner and not removing themselves
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                >
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem>
+                                                    Change role
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => handleRemoveMember(member.id)}
+                                                    className="text-red-600"
+                                                >
+                                                    Remove
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
                                 </div>
                             </div>
                         ))}

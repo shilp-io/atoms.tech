@@ -1,160 +1,144 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useOrgInvitation, useUserSentOrgInvitations } from '@/hooks/queries/useOrganization';
 import { useCreateOrgInvitation } from '@/hooks/mutations/useOrgInvitationMutations';
-import { useCreateOrgMember } from '@/hooks/mutations/useOrgMemberMutation';
+import { useOrgInvitationsByOrgId } from '@/hooks/queries/useOrganization';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge'; // Import Badge
+import { X } from 'lucide-react'; // Import X icon
 import { useUser } from '@/lib/providers/user.provider';
 import { InvitationStatus } from '@/types/base/enums.types';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/constants/queryKeys';
+import { useToast } from '@/components/ui/use-toast';
+
 interface OrgInvitationsProps {
     orgId: string;
 }
 
 export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
-    const [inviteEmail, setInviteEmail] = useState(''); // Email being typed into the text box
-    const { user } = useUser(); // Current logged-in user
-    const { data: invitations, isLoading: invitationsLoading, refetch } = useOrgInvitation(user?.email || ''); // Always use the current user's email for pending invitations
+    const [inviteEmail, setInviteEmail] = useState('');
+    const { user } = useUser();
     const { mutateAsync: createInvitation, isPending } = useCreateOrgInvitation();
-    const { mutateAsync: createOrgMember } = useCreateOrgMember();
-    const [organizations, setOrganizations] = useState<Record<string, { id: string; name: string }>>({});
-    const [orgLoading, setOrgLoading] = useState(false);
-    const { data: sentInvitations, isLoading: sentInvitationsLoading } = useUserSentOrgInvitations(user?.id || '');
-    const queryClient = useQueryClient();
+    const { data: allInvitations, isLoading: outgoingLoading, refetch } = useOrgInvitationsByOrgId(orgId);
+    const { toast } = useToast(); // Initialize toast
 
-    // Fetch organization data for all invitations
-    useEffect(() => {
-        const fetchOrganizations = async () => {
-            if (!invitations || invitations.length === 0) return;
+    // Filter invitations to only include pending ones
+    const outgoingInvitations = allInvitations?.filter(
+        (invitation) => invitation.status === InvitationStatus.pending
+    );
 
-            setOrgLoading(true);
-            const organizationIds = invitations.map((invitation) => invitation.organization_id);
-            const { data, error } = await supabase
-                .from('organizations')
-                .select('id, name')
-                .in('id', organizationIds);
-
-            if (error) {
-                console.error('Error fetching organizations:', error);
-            } else {
-                const orgMap = data.reduce((acc: Record<string, { id: string; name: string }>, org: { id: string; name: string }) => {
-                    acc[org.id] = org;
-                    return acc;
-                }, {});
-                setOrganizations(orgMap);
-            }
-            setOrgLoading(false);
-        };
-
-        fetchOrganizations();
-    }, [invitations]);
-
-    const handleInvite = () => {
-        if (!inviteEmail) return alert('Please enter a valid email.');
-        if (!user?.id) return alert('User not authenticated.');
-
-        // Prevent inviting yourself
-        if (inviteEmail === user.email) {
-            return alert('You cannot send an invitation to yourself.');
+    const handleInvite = async () => {
+        if (!inviteEmail) {
+            toast({ title: 'Error', description: 'Please enter a valid email.', variant: 'destructive' });
+            return;
+        }
+        if (!user?.id) {
+            toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
+            return;
         }
 
-        // Check for duplicate invitations in sent invitations
-        const duplicateInvitation = sentInvitations?.find(
-            (invitation) =>
-                invitation.organization_id === orgId &&
-                invitation.email === inviteEmail &&
-                invitation.status === InvitationStatus.pending
-        );
-
-        if (duplicateInvitation) {
-            return alert('An invitation has already been sent to this email for this organization.');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(inviteEmail.trim())) {
+            toast({ title: 'Error', description: 'Please enter a valid email address.', variant: 'destructive' });
+            return;
         }
 
-        createInvitation(
-            {
-                email: inviteEmail, // Use the email being typed into the text box
-                role: 'member',
-                status: InvitationStatus.pending, // Use the enum type
-                created_by: user.id, // Use the current user's ID
-                organization_id: orgId,
-                updated_by: user.id, // Use the current user's ID
-            },
-            {
-                onSuccess: async () => {
-                    alert('Invitation sent successfully!');
-                    setInviteEmail(''); // Clear the input field
-                    await refetch(); // Refresh the invitation list immediately
-                    //queryClient.invalidateQueries(queryKeys.organizationInvitations.byCreator(user.id)); // Refresh sentInvitations
-                },
-                onError: (error) => {
-                    console.error('Error sending invitation:', error);
-                    alert('Failed to send invitation.');
-                },
-            }
-        );
-    };
-
-    const handleAccept = async (invitation: any) => {
-        if (!user?.id) return alert('User not authenticated.');
+        if (inviteEmail.trim() === user.email) {
+            toast({ title: 'Error', description: 'You cannot send an invitation to yourself.', variant: 'destructive' });
+            return;
+        }
 
         try {
-            // Add the user to the organization_members table
-            await createOrgMember({
-                organization_id: invitation.organization_id,
-                user_id: user.id,
-                role: invitation.role,
-                status: 'active',
-                last_active_at: new Date().toISOString(),
-            });
+            // Check if the email exists in the profiles
+            const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('email', inviteEmail.trim())
+                .single();
 
-            // Update the invitation status to accepted
-            await createInvitation({
-                ...invitation,
-                status: InvitationStatus.accepted,
-                updated_by: user.id,
-            });
+            if (profileError || !profile) {
+                toast({ title: 'Error', description: 'No user found with this email.', variant: 'destructive' });
+                return;
+            }
 
-            alert('Invitation accepted successfully!');
-            refetch(); // Refresh the invitation list
+            // Check for duplicate invitations
+            const { data: duplicateInvitations, error: duplicateError } = await supabase
+                .from('organization_invitations')
+                .select('*')
+                .eq('email', inviteEmail.trim())
+                .eq('organization_id', orgId)
+                .eq('status', InvitationStatus.pending);
+
+            if (duplicateError) {
+                console.error('Error checking for duplicate invitations:', duplicateError);
+                throw duplicateError;
+            }
+
+            if (duplicateInvitations && duplicateInvitations.length > 0) {
+                toast({ title: 'Error', description: 'An invitation has already been sent to this email for this organization.', variant: 'destructive' });
+                return;
+            }
+
+            // Create the invitation
+            await createInvitation(
+                {
+                    email: inviteEmail.trim(),
+                    role: 'member',
+                    status: InvitationStatus.pending,
+                    created_by: user.id,
+                    organization_id: orgId,
+                    updated_by: user.id,
+                },
+                {
+                    onSuccess: () => {
+                        toast({ title: 'Success', description: 'Invitation sent successfully!', variant: 'default' });
+                        setInviteEmail('');
+                        refetch(); // Refresh outgoing invitations
+                    },
+                    onError: (error) => {
+                        console.error('Error sending invitation:', error);
+                        toast({ title: 'Error', description: 'Failed to send invitation.', variant: 'destructive' });
+                    },
+                }
+            );
         } catch (error) {
-            console.error('Error accepting invitation:', error);
-            alert('Failed to accept invitation.');
+            console.error('Error handling invitation:', error);
+            toast({ title: 'Error', description: 'Failed to process the invitation.', variant: 'destructive' });
         }
     };
 
-    const handleReject = async (invitation: any) => {
-        if (!user?.id) return alert('User not authenticated.');
+    const handleRevoke = async (invitationId: string) => {
+        if (!user?.id) {
+            toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
+            return;
+        }
 
         try {
-            // Update the invitation status to rejected directly in Supabase
             const { error } = await supabase
                 .from('organization_invitations')
                 .update({
-                    status: InvitationStatus.rejected,
+                    status: InvitationStatus.revoked,
                     updated_by: user.id,
                 })
-                .eq('id', invitation.id);
+                .eq('id', invitationId);
 
             if (error) {
-                console.error('Error rejecting invitation:', error);
+                console.error('Error revoking invitation:', error);
                 throw error;
             }
 
-            alert('Invitation rejected successfully!');
-            refetch(); // Refresh the invitation list to remove the rejected invitation
+            toast({ title: 'Success', description: 'Invitation revoked successfully!', variant: 'default' });
+            refetch(); // Refresh the list of outgoing invitations
         } catch (error) {
-            console.error('Error rejecting invitation:', error);
-            alert('Failed to reject invitation.');
+            console.error('Error revoking invitation:', error);
+            toast({ title: 'Error', description: 'Failed to revoke invitation.', variant: 'destructive' });
         }
     };
 
     return (
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Invite Users Section */}
             <Card>
                 <CardHeader>
@@ -175,47 +159,42 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
                 </CardContent>
             </Card>
 
-            {/* Pending Invitations Section */}
+            {/* Outgoing Invitations Section */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Pending Invitations</CardTitle>
+                    <CardTitle>Outgoing Invitations</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {invitationsLoading || orgLoading ? (
-                        <p>Loading invitations...</p>
-                    ) : invitations?.length ? (
+                    {outgoingLoading ? (
+                        <p>Loading outgoing invitations...</p>
+                    ) : outgoingInvitations?.length ? (
                         <ul className="space-y-2">
-                            {invitations.map((invitation) => {
-                                const organization = organizations[invitation.organization_id];
-
-                                return (
-                                    <li key={invitation.id} className="flex justify-between items-center">
-                                        <span>
-                                            Invitation from{' '}
-                                            <strong>{organization?.name || 'Unknown Organization'}</strong>
-                                        </span>
-                                        <div className="flex space-x-2">
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                onClick={() => handleAccept(invitation)}
+                            {outgoingInvitations
+                                .map((invitation) => (
+                                    <li
+                                        key={invitation.id}
+                                        className="flex justify-between items-center rounded-md p-3" // Added outline styles
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <span>{invitation.email}</span>
+                                            <Badge
+                                                variant="outline"
+                                                className="border-gray-300 text-gray-500" // Light gray color
                                             >
-                                                Accept
-                                            </Button>
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => handleReject(invitation)}
-                                            >
-                                                Reject
-                                            </Button>
+                                                {invitation.status}
+                                            </Badge>
                                         </div>
+                                        {invitation.status === InvitationStatus.pending && (
+                                            <X
+                                                className="h-5 w-5 text-accent cursor-pointer" // Use accent color
+                                                onClick={() => handleRevoke(invitation.id)}
+                                            />
+                                        )}
                                     </li>
-                                );
-                            })}
+                                ))}
                         </ul>
                     ) : (
-                        <p>No pending invitations.</p>
+                        <p className="text-primary font-small ml-2">No outgoing invitations</p>
                     )}
                 </CardContent>
             </Card>

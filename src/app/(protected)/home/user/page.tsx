@@ -25,6 +25,7 @@ import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { OrganizationType } from '@/types/base/enums.types';
 import { Organization } from '@/types/base/organizations.types';
+import UserInvitations from '@/app/(protected)/user/components/UserInvitations.client'; // Import UserInvitations
 
 export default function UserDashboard() {
     const { user, profile } = useUser();
@@ -393,6 +394,11 @@ export default function UserDashboard() {
                     </div>
                 )}
             </motion.div>
+
+            {/* Add UserInvitations component */}
+            <div className="mt-8">
+                <UserInvitations />
+            </div>
 
             <CreatePanel
                 isOpen={isCreatePanelOpen}

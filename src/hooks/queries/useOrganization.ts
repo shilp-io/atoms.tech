@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { OrganizationType } from '@/types/base/enums.types';
 import { QueryFilters } from '@/types/base/filters.types';
 import { OrganizationSchema } from '@/types/validation/organizations.validation';
+import { OrganizationInvitation } from '@/types/base/organization.types';
 
 export function useOrganization(orgId: string) {
     return useQuery({
@@ -222,23 +223,22 @@ export function useUserSentOrgInvitations(userId: string) {
     });
 }
 
-// export function useOrgsByUser(userId: string) {
-//     return useQuery({
-//         queryKey: queryKeys.organizations.byUser(userId),
-//         queryFn: async () => {
-//             const { data: organizations, error } = await supabase
-//                 .from('organizations')
-//                 .select('*')
-//                 .eq('created_by', userId)
-//                 .eq('is_deleted', false);
+export function useOrgInvitationsByOrgId(orgId: string) {
+    return useQuery({
+        queryKey: queryKeys.organizationInvitations.byOrganization(orgId),
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('organization_invitations')
+                .select('*')
+                .eq('organization_id', orgId);
 
-//             if (error) {
-//                 console.error('Error fetching organizations:', error);
-//                 throw error;
-//             }
+            if (error) {
+                console.error('Error fetching invitations by organization ID:', error);
+                throw error;
+            }
 
-//             return organizations.map((org) => OrganizationSchema.parse(org));
-//         },
-//         enabled: !!userId,
-//     });
-// }
+            return data as OrganizationInvitation[];
+        },
+        enabled: !!orgId,
+    });
+}
