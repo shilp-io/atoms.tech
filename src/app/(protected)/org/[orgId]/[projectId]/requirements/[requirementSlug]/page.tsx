@@ -11,6 +11,7 @@ import {
     ComplianceCard,
     EarsCard,
     EnhancedCard,
+    File,
     IncoseCard,
     OriginalRequirementCard,
     RequirementForm,
@@ -53,7 +54,7 @@ export default function RequirementPage() {
     // const [missingFilesError, setMissingFilesError] = useState<string>('');
 
     const [selectedFiles, setSelectedFiles] = useState<{
-        [key: string]: string;
+        [key: string]: File;
     }>({});
 
     const { startPipeline, getPipelineRun } = useGumloop();

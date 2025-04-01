@@ -3,12 +3,15 @@ import {
     Check,
     CircleAlert,
     FilePlus,
+    Pencil,
     Upload,
     Wand,
+    X,
 } from 'lucide-react';
 import {
     ChangeEvent,
     Dispatch,
+    KeyboardEvent,
     SetStateAction,
     useEffect,
     useMemo,
@@ -27,13 +30,18 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import {
-    useUpdateExternalDocumentGumloopName,
+    useUpdateExternalDocument,
     useUploadExternalDocument,
 } from '@/hooks/mutations/useExternalDocumentsMutations';
 import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
 import { useChunkr } from '@/hooks/useChunkr';
 import { useGumloop } from '@/hooks/useGumloop';
 import { TaskResponse, TaskStatus } from '@/lib/services/chunkr';
+
+export interface File {
+    name: string;
+    supabaseId: string;
+}
 
 interface RequirementFormProps {
     organizationId: string;
@@ -54,8 +62,8 @@ interface RequirementFormProps {
     missingReqError: string;
     // missingFilesError: string;
     // setMissingFilesError: Dispatch<SetStateAction<string>>;
-    selectedFiles: { [key: string]: string };
-    setSelectedFiles: Dispatch<SetStateAction<{ [key: string]: string }>>;
+    selectedFiles: { [key: string]: File };
+    setSelectedFiles: Dispatch<SetStateAction<{ [key: string]: File }>>;
 }
 
 export function RequirementForm({
@@ -84,17 +92,72 @@ export function RequirementForm({
     };
 
     const [isUploading, setIsUploading] = useState(false);
-    const [processingPdfFiles, setProcessingPdfFiles] = useState<
-        { name: string; supabaseId: string }[]
-    >([]);
+    const [processingPdfFiles, setProcessingPdfFiles] = useState<File[]>([]);
+    const [editingFile, setEditingFile] = useState<string | null>(null);
+    const [editingFileName, setEditingFileName] = useState<string>('');
 
     const uploadFileToSupabase = useUploadExternalDocument();
-    const updateGumloopName = useUpdateExternalDocumentGumloopName();
+    const updateGumloopName = useUpdateExternalDocument();
 
     const { uploadFiles } = useGumloop();
     const { startOcrTask, getTaskStatuses } = useChunkr();
     const [ocrPipelineTaskIds, setOcrPipelineTaskIds] = useState<string[]>([]);
     const taskStatusQueries = getTaskStatuses(ocrPipelineTaskIds);
+
+    const handleEditFile = (gumloopName: string) => {
+        setEditingFile(gumloopName);
+        setEditingFileName(selectedFiles[gumloopName].name);
+    };
+
+    const handleSaveFileName = (gumloopName: string) => {
+        if (
+            editingFileName.trim() === '' ||
+            editingFileName === selectedFiles[gumloopName].name
+        ) {
+            setEditingFile(null);
+            setEditingFileName('');
+            return;
+        }
+
+        const fileToUpdate = selectedFiles[gumloopName];
+
+        // Update in Supabase
+        updateGumloopName.mutate({
+            documentId: fileToUpdate.supabaseId,
+            name: editingFileName,
+            orgId: organizationId,
+        });
+        console.log('Updated document name in Supabase');
+
+        // Update in local state
+        setSelectedFiles((prev) => {
+            const updatedFiles = { ...prev };
+            delete updatedFiles[gumloopName];
+            updatedFiles[editingFileName] = {
+                ...fileToUpdate,
+                name: editingFileName,
+            };
+            return updatedFiles;
+        });
+
+        setEditingFile(null);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingFile(null);
+        setEditingFileName('');
+    };
+
+    const handleKeyDown = (
+        e: KeyboardEvent<HTMLInputElement>,
+        originalName: string,
+    ) => {
+        if (e.key === 'Enter') {
+            handleSaveFileName(originalName);
+        } else if (e.key === 'Escape') {
+            handleCancelEdit();
+        }
+    };
 
     const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length) return;
@@ -144,7 +207,10 @@ export function RequirementForm({
                 nonPdfFiles.forEach((file) => {
                     setSelectedFiles((prev) => ({
                         ...prev,
-                        [file.name]: file.name,
+                        [file.name]: {
+                            name: file.name,
+                            supabaseId: file.supabaseId,
+                        },
                     }));
                 });
 
@@ -181,10 +247,13 @@ export function RequirementForm({
         if (!existingDocs) return {};
         return existingDocs.reduce(
             (acc, doc) => {
-                acc[doc.name] = doc.gumloop_name || doc.name;
+                acc[doc.name] = {
+                    name: doc.gumloop_name || doc.name,
+                    supabaseId: doc.id,
+                };
                 return acc;
             },
-            {} as { [key: string]: string },
+            {} as { [key: string]: File },
         );
     }, [existingDocs]);
     const [existingDocsValue, setExistingDocsValue] = useState<string>('');
@@ -193,7 +262,10 @@ export function RequirementForm({
         // setMissingFilesError('');
         setSelectedFiles((prev) => ({
             ...prev,
-            [existingDocsNameMap[docName]]: docName,
+            [existingDocsNameMap[docName].name]: {
+                name: docName,
+                supabaseId: existingDocsNameMap[docName].supabaseId,
+            },
         }));
         setExistingDocsValue('');
     };
@@ -263,7 +335,7 @@ export function RequirementForm({
 
                 setSelectedFiles((prev) => ({
                     ...prev,
-                    [convertedFileName]: currentFile.name,
+                    [convertedFileName]: currentFile,
                 }));
             }
 
@@ -420,15 +492,68 @@ export function RequirementForm({
                             Attached Files
                         </h4>
                         <ul className="space-y-1">
-                            {Object.values(selectedFiles).map((fileName) => (
-                                <li
-                                    key={fileName}
-                                    className="text-sm text-muted-foreground flex items-center"
-                                >
-                                    <Check className="h-3 w-3 mr-1" />
-                                    {fileName}
-                                </li>
-                            ))}
+                            {Object.entries(selectedFiles).map(
+                                ([gumloopName, file]) => (
+                                    <li
+                                        key={gumloopName}
+                                        className="text-sm text-muted-foreground flex items-center justify-between"
+                                    >
+                                        <div className="flex items-center">
+                                            <Check className="h-3 w-3 mr-1" />
+                                            {editingFile === gumloopName ? (
+                                                <input
+                                                    type="text"
+                                                    value={editingFileName}
+                                                    onChange={(e) =>
+                                                        setEditingFileName(
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    onKeyDown={(e) =>
+                                                        handleKeyDown(
+                                                            e,
+                                                            file.name,
+                                                        )
+                                                    }
+                                                    autoFocus
+                                                    className="p-1 border rounded-md text-sm"
+                                                />
+                                            ) : (
+                                                file.name
+                                            )}
+                                        </div>
+                                        {editingFile === gumloopName ? (
+                                            <div className="flex items-center">
+                                                <button
+                                                    onClick={() =>
+                                                        handleSaveFileName(
+                                                            gumloopName,
+                                                        )
+                                                    }
+                                                    className="text-green-500 hover:text-green-700 mr-1"
+                                                >
+                                                    <Check className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelEdit}
+                                                    className="text-red-500 hover:text-red-700"
+                                                >
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() =>
+                                                    handleEditFile(gumloopName)
+                                                }
+                                                className="text-gray-500 hover:text-gray-700"
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </li>
+                                ),
+                            )}
                         </ul>
                     </div>
                 )}
