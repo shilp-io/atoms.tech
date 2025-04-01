@@ -366,10 +366,10 @@ export function RequirementForm({
 
     const handleKeyDown = (
         e: KeyboardEvent<HTMLInputElement>,
-        originalName: string,
+        supabaseId: string,
     ) => {
         if (e.key === 'Enter') {
-            handleSaveFileName(originalName);
+            handleSaveFileName(supabaseId);
         } else if (e.key === 'Escape') {
             handleCancelEdit();
         }
@@ -536,7 +536,7 @@ export function RequirementForm({
                                                     onKeyDown={(e) =>
                                                         handleKeyDown(
                                                             e,
-                                                            file.name,
+                                                            supabaseId,
                                                         )
                                                     }
                                                     autoFocus
