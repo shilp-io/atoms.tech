@@ -1,5 +1,5 @@
 "use client";
-import { Excalidraw, exportToCanvas } from "@excalidraw/excalidraw";
+import { Excalidraw } from "@excalidraw/excalidraw";
 import type { 
   AppState, 
   BinaryFiles, 
@@ -37,7 +37,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
   // Function to add mermaid diagram to canvas
   const addMermaidDiagram = async (mermaidSyntax: string) => {
     try {
-      const { elements: skeletonElements, files } = await parseMermaidToExcalidraw(mermaidSyntax);
+      const { elements: skeletonElements } = await parseMermaidToExcalidraw(mermaidSyntax);
       
       const excalidrawElements = convertToExcalidrawElements(skeletonElements);
       
