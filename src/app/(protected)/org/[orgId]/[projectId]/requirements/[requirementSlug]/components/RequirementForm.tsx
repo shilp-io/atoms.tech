@@ -4,6 +4,7 @@ import {
     CircleAlert,
     FilePlus,
     Pencil,
+    Trash,
     Upload,
     Wand,
     X,
@@ -38,8 +39,9 @@ import { useChunkr } from '@/hooks/useChunkr';
 import { useGumloop } from '@/hooks/useGumloop';
 import { TaskResponse, TaskStatus } from '@/lib/services/chunkr';
 
-export interface File {
+export interface RegulationFile {
     name: string;
+    gumloopName: string;
     supabaseId: string;
 }
 
@@ -62,8 +64,10 @@ interface RequirementFormProps {
     missingReqError: string;
     // missingFilesError: string;
     // setMissingFilesError: Dispatch<SetStateAction<string>>;
-    selectedFiles: { [key: string]: File };
-    setSelectedFiles: Dispatch<SetStateAction<{ [key: string]: File }>>;
+    selectedFiles: { [key: string]: RegulationFile };
+    setSelectedFiles: Dispatch<
+        SetStateAction<{ [key: string]: RegulationFile }>
+    >;
 }
 
 export function RequirementForm({
@@ -92,7 +96,9 @@ export function RequirementForm({
     };
 
     const [isUploading, setIsUploading] = useState(false);
-    const [processingPdfFiles, setProcessingPdfFiles] = useState<File[]>([]);
+    const [processingPdfFiles, setProcessingPdfFiles] = useState<
+        Omit<RegulationFile, 'gumloopName'>[]
+    >([]);
     const [editingFile, setEditingFile] = useState<string | null>(null);
     const [editingFileName, setEditingFileName] = useState<string>('');
 
@@ -103,61 +109,6 @@ export function RequirementForm({
     const { startOcrTask, getTaskStatuses } = useChunkr();
     const [ocrPipelineTaskIds, setOcrPipelineTaskIds] = useState<string[]>([]);
     const taskStatusQueries = getTaskStatuses(ocrPipelineTaskIds);
-
-    const handleEditFile = (gumloopName: string) => {
-        setEditingFile(gumloopName);
-        setEditingFileName(selectedFiles[gumloopName].name);
-    };
-
-    const handleSaveFileName = (gumloopName: string) => {
-        if (
-            editingFileName.trim() === '' ||
-            editingFileName === selectedFiles[gumloopName].name
-        ) {
-            setEditingFile(null);
-            setEditingFileName('');
-            return;
-        }
-
-        const fileToUpdate = selectedFiles[gumloopName];
-
-        // Update in Supabase
-        updateGumloopName.mutate({
-            documentId: fileToUpdate.supabaseId,
-            name: editingFileName,
-            orgId: organizationId,
-        });
-        console.log('Updated document name in Supabase');
-
-        // Update in local state
-        setSelectedFiles((prev) => {
-            const updatedFiles = { ...prev };
-            delete updatedFiles[gumloopName];
-            updatedFiles[editingFileName] = {
-                ...fileToUpdate,
-                name: editingFileName,
-            };
-            return updatedFiles;
-        });
-
-        setEditingFile(null);
-    };
-
-    const handleCancelEdit = () => {
-        setEditingFile(null);
-        setEditingFileName('');
-    };
-
-    const handleKeyDown = (
-        e: KeyboardEvent<HTMLInputElement>,
-        originalName: string,
-    ) => {
-        if (e.key === 'Enter') {
-            handleSaveFileName(originalName);
-        } else if (e.key === 'Escape') {
-            handleCancelEdit();
-        }
-    };
 
     const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length) return;
@@ -207,8 +158,9 @@ export function RequirementForm({
                 nonPdfFiles.forEach((file) => {
                     setSelectedFiles((prev) => ({
                         ...prev,
-                        [file.name]: {
+                        [file.supabaseId]: {
                             name: file.name,
+                            gumloopName: file.name,
                             supabaseId: file.supabaseId,
                         },
                     }));
@@ -240,34 +192,6 @@ export function RequirementForm({
             setIsUploading(false);
             console.error('Failed to upload files:', error);
         }
-    };
-
-    const { data: existingDocs } = useExternalDocumentsByOrg(organizationId);
-    const existingDocsNameMap = useMemo(() => {
-        if (!existingDocs) return {};
-        return existingDocs.reduce(
-            (acc, doc) => {
-                acc[doc.name] = {
-                    name: doc.gumloop_name || doc.name,
-                    supabaseId: doc.id,
-                };
-                return acc;
-            },
-            {} as { [key: string]: File },
-        );
-    }, [existingDocs]);
-    const [existingDocsValue, setExistingDocsValue] = useState<string>('');
-
-    const handleExistingDocSelect = (docName: string) => {
-        // setMissingFilesError('');
-        setSelectedFiles((prev) => ({
-            ...prev,
-            [existingDocsNameMap[docName].name]: {
-                name: docName,
-                supabaseId: existingDocsNameMap[docName].supabaseId,
-            },
-        }));
-        setExistingDocsValue('');
     };
 
     // set the selectedFiles when the pipeline run is completed
@@ -335,7 +259,10 @@ export function RequirementForm({
 
                 setSelectedFiles((prev) => ({
                     ...prev,
-                    [convertedFileName]: currentFile,
+                    [currentFile.supabaseId]: {
+                        ...currentFile,
+                        gumloopName: convertedFileName,
+                    },
                 }));
             }
 
@@ -352,6 +279,35 @@ export function RequirementForm({
         uploadFiles,
     ]);
 
+    const { data: existingDocs } = useExternalDocumentsByOrg(organizationId);
+    const unusedDocsNameMap = useMemo(() => {
+        if (!existingDocs) return {};
+        return existingDocs
+            .filter((doc) => !(doc.id in selectedFiles))
+            .reduce(
+                (acc, doc) => {
+                    if (!doc.gumloop_name) return acc;
+                    acc[doc.id] = {
+                        name: doc.name,
+                        supabaseId: doc.id,
+                        gumloopName: doc.gumloop_name,
+                    };
+                    return acc;
+                },
+                {} as { [key: string]: RegulationFile },
+            );
+    }, [existingDocs, selectedFiles]);
+    const [existingDocsValue, setExistingDocsValue] = useState<string>('');
+
+    const handleExistingDocSelect = (supabaseId: string) => {
+        // setMissingFilesError('');
+        setSelectedFiles((prev) => ({
+            ...prev,
+            [supabaseId]: unusedDocsNameMap[supabaseId],
+        }));
+        setExistingDocsValue('');
+    };
+
     const [uploadButtonText, setUploadButtonText] = useState('Upload Files');
 
     useEffect(() => {
@@ -363,6 +319,70 @@ export function RequirementForm({
             setUploadButtonText('Upload Regulation Document');
         }
     }, [isUploading, ocrPipelineTaskIds]);
+
+    const handleEditFile = (supabaseId: string) => {
+        setEditingFile(supabaseId);
+        setEditingFileName(selectedFiles[supabaseId].name);
+    };
+
+    const handleSaveFileName = (supabaseId: string) => {
+        if (
+            editingFileName.trim() === '' ||
+            editingFileName === selectedFiles[supabaseId].name
+        ) {
+            setEditingFile(null);
+            setEditingFileName('');
+            return;
+        }
+
+        const fileToUpdate = selectedFiles[supabaseId];
+
+        // Update in Supabase
+        updateGumloopName.mutate({
+            documentId: fileToUpdate.supabaseId,
+            name: editingFileName,
+            orgId: organizationId,
+        });
+        console.log('Updated document name in Supabase');
+
+        // Update in local state
+        setSelectedFiles((prev) => {
+            const updatedFiles = { ...prev };
+            delete updatedFiles[supabaseId];
+            updatedFiles[supabaseId] = {
+                ...fileToUpdate,
+                name: editingFileName,
+            };
+            return updatedFiles;
+        });
+
+        setEditingFile(null);
+    };
+
+    const handleCancelEdit = () => {
+        setEditingFile(null);
+        setEditingFileName('');
+    };
+
+    const handleKeyDown = (
+        e: KeyboardEvent<HTMLInputElement>,
+        originalName: string,
+    ) => {
+        if (e.key === 'Enter') {
+            handleSaveFileName(originalName);
+        } else if (e.key === 'Escape') {
+            handleCancelEdit();
+        }
+    };
+
+    const handleRemoveFile = async (supabaseId: string) => {
+        // remove file from selectedFiles
+        setSelectedFiles((prevFiles) => {
+            const newFiles = { ...prevFiles };
+            delete newFiles[supabaseId];
+            return newFiles;
+        });
+    };
 
     return (
         <Card className="p-6">
@@ -465,26 +485,30 @@ export function RequirementForm({
                     {uploadButtonText}
                 </Button>
 
-                {existingDocs && existingDocs.length > 0 && (
-                    <div className="mt-2">
-                        <Select
-                            value={existingDocsValue}
-                            onValueChange={handleExistingDocSelect}
-                        >
-                            <SelectTrigger className="w-full gap-2">
-                                <FilePlus className="h-4 w-4" />
-                                <SelectValue placeholder="Add existing document" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {existingDocs.map((doc) => (
-                                    <SelectItem key={doc.id} value={doc.name}>
-                                        {doc.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                )}
+                {/* {Object.keys(unusedDocsNameMap).length > 0 && ( */}
+                <div className="mt-2">
+                    <Select
+                        value={existingDocsValue}
+                        onValueChange={handleExistingDocSelect}
+                        disabled={Object.keys(unusedDocsNameMap).length === 0}
+                    >
+                        <SelectTrigger className="w-full gap-2">
+                            <FilePlus className="h-4 w-4" />
+                            <SelectValue placeholder="Add existing document" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {Object.values(unusedDocsNameMap).map((doc) => (
+                                <SelectItem
+                                    key={doc.supabaseId}
+                                    value={doc.supabaseId}
+                                >
+                                    {doc.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                {/* )} */}
 
                 {Object.keys(selectedFiles).length > 0 && (
                     <div className="mt-4">
@@ -493,14 +517,14 @@ export function RequirementForm({
                         </h4>
                         <ul className="space-y-1">
                             {Object.entries(selectedFiles).map(
-                                ([gumloopName, file]) => (
+                                ([supabaseId, file]) => (
                                     <li
-                                        key={gumloopName}
+                                        key={supabaseId}
                                         className="text-sm text-muted-foreground flex items-center justify-between"
                                     >
                                         <div className="flex items-center">
                                             <Check className="h-3 w-3 mr-1" />
-                                            {editingFile === gumloopName ? (
+                                            {editingFile === supabaseId ? (
                                                 <input
                                                     type="text"
                                                     value={editingFileName}
@@ -522,35 +546,53 @@ export function RequirementForm({
                                                 file.name
                                             )}
                                         </div>
-                                        {editingFile === gumloopName ? (
-                                            <div className="flex items-center">
-                                                <button
-                                                    onClick={() =>
-                                                        handleSaveFileName(
-                                                            gumloopName,
-                                                        )
-                                                    }
-                                                    className="text-green-500 hover:text-green-700 mr-1"
-                                                >
-                                                    <Check className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={handleCancelEdit}
-                                                    className="text-red-500 hover:text-red-700"
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <button
-                                                onClick={() =>
-                                                    handleEditFile(gumloopName)
-                                                }
-                                                className="text-gray-500 hover:text-gray-700"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </button>
-                                        )}
+                                        <div className="flex items-center">
+                                            {editingFile === supabaseId ? (
+                                                <>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleSaveFileName(
+                                                                supabaseId,
+                                                            )
+                                                        }
+                                                        className="text-green-500 hover:text-green-700 mr-1"
+                                                    >
+                                                        <Check className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={
+                                                            handleCancelEdit
+                                                        }
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleEditFile(
+                                                                supabaseId,
+                                                            )
+                                                        }
+                                                        className="text-gray-500 hover:text-gray-700 mr-1"
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() =>
+                                                            handleRemoveFile(
+                                                                supabaseId,
+                                                            )
+                                                        }
+                                                        className="text-red-500 hover:text-red-700"
+                                                    >
+                                                        <Trash className="h-4 w-4" />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </li>
                                 ),
                             )}
