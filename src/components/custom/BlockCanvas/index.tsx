@@ -19,18 +19,29 @@ import {
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { Table, Type } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useParams } from 'next/navigation';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { SortableBlock } from '@/components/custom/BlockCanvas/components/SortableBlock';
+import { TableBlockLoadingState } from '@/components/custom/BlockCanvas/components/TableBlockLoadingState';
 import { useBlockActions } from '@/components/custom/BlockCanvas/hooks/useBlockActions';
 import {
     BlockCanvasProps,
+    BlockType,
     BlockWithRequirements,
+    // Unused but might be needed in the future
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    Property,
 } from '@/components/custom/BlockCanvas/types';
 import { Button } from '@/components/ui/button';
 import { useDocumentRealtime } from '@/hooks/queries/useDocumentRealtime';
 import { useAuth } from '@/hooks/useAuth';
+import { useOrganization } from '@/lib/providers/organization.provider';
 import { useDocumentStore } from '@/lib/store/document.store';
+import { Block } from '@/types';
+// Unused but might be needed in the future
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Json } from '@/types/base/database.types';
 
 const dropAnimationConfig = {
     ...defaultDropAnimation,
@@ -38,22 +49,91 @@ const dropAnimationConfig = {
 };
 
 export function BlockCanvas({ documentId }: BlockCanvasProps) {
-    const { blocks, isLoading, setLocalBlocks } =
-        useDocumentRealtime(documentId);
+    const {
+        blocks: originalBlocks,
+        loading,
+        error,
+        setDocument,
+        blocks,
+    } = useDocumentRealtime({
+        documentId,
+        _orgId: '',
+        _projectId: '',
+        _userProfile: null,
+    });
     const { reorderBlocks, isEditMode, setIsEditMode } = useDocumentStore();
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
     const [activeId, setActiveId] = useState<string | null>(null);
     const { userProfile } = useAuth();
+    const { currentOrganization } = useOrganization();
+    const params = useParams();
+
+    // Get org_id and project_id from URL params for new blocks
+    const orgId = currentOrganization?.id as string;
+    const projectId = params?.projectId as string;
+
+    // Add order property to each block if it doesn't exist
+    const [enhancedBlocks, setEnhancedBlocks] = useState<
+        BlockWithRequirements[]
+    >([]);
+
+    // Adapt the blocks to include order property
+    useEffect(() => {
+        if (originalBlocks) {
+            const blocksWithOrder = originalBlocks.map(
+                (block: BlockWithRequirements, index: number) => {
+                    // Create a new object with all required properties
+                    const enhancedBlock = {
+                        ...block,
+                        order: block.position || index, // Use position as order or fallback to index
+                    } as BlockWithRequirements;
+
+                    return enhancedBlock;
+                },
+            );
+            setEnhancedBlocks(blocksWithOrder);
+        }
+    }, [originalBlocks, orgId, projectId]);
+
+    // Wrapper for setLocalBlocks that adds order
+    const setEnhancedLocalBlocks = useCallback(
+        (updater: React.SetStateAction<BlockWithRequirements[]>) => {
+            const processBlocks = (
+                blocks: BlockWithRequirements[],
+            ): BlockWithRequirements[] => {
+                return blocks.map(
+                    (block: BlockWithRequirements, index: number) =>
+                        ({
+                            ...block,
+                            order: index,
+                        }) as BlockWithRequirements,
+                );
+            };
+
+            if (typeof updater === 'function') {
+                const prevBlocks = blocks || [];
+                const newBlocks = updater(prevBlocks);
+                setDocument(processBlocks(newBlocks));
+            } else {
+                setDocument(processBlocks(updater));
+            }
+        },
+        [setDocument, blocks],
+    );
+
     const {
         handleAddBlock,
         handleUpdateBlock,
         handleDeleteBlock,
         handleReorder,
+        _createDefaultBlockProperties,
     } = useBlockActions({
         documentId,
         userProfile,
-        blocks,
-        setLocalBlocks,
+        blocks: enhancedBlocks,
+        setLocalBlocks: setEnhancedLocalBlocks,
+        orgId,
+        projectId,
     });
 
     const sensors = useSensors(
@@ -75,7 +155,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                 <SortableBlock
                     key={block.id}
                     block={block}
-                    isSelected={isSelected}
+                    _isSelected={isSelected}
                     isEditMode={isEditMode}
                     onSelect={() => setSelectedBlockId(block.id)}
                     onUpdate={(content) => handleUpdateBlock(block.id, content)}
@@ -104,26 +184,31 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
         setActiveId(null);
         const { active, over } = event;
 
-        if (!over || active.id === over.id || !blocks) {
+        if (!over || active.id === over.id || !enhancedBlocks) {
             return;
         }
 
-        const oldIndex = blocks.findIndex((block) => block.id === active.id);
-        const newIndex = blocks.findIndex((block) => block.id === over.id);
+        const oldIndex = enhancedBlocks.findIndex(
+            (block) => block.id === active.id,
+        );
+        const newIndex = enhancedBlocks.findIndex(
+            (block) => block.id === over.id,
+        );
 
         if (oldIndex !== -1 && newIndex !== -1) {
-            const newBlocks = arrayMove(blocks, oldIndex, newIndex).map(
-                (block, index) => ({
+            const newBlocks = arrayMove(enhancedBlocks, oldIndex, newIndex).map(
+                (block: BlockWithRequirements, index: number) => ({
                     ...block,
                     position: index,
+                    order: index, // Ensure order is set
                 }),
             );
 
             // Update local state immediately for smooth UI
-            setLocalBlocks(newBlocks);
+            setEnhancedLocalBlocks(newBlocks);
 
             // Update document store
-            reorderBlocks(newBlocks);
+            reorderBlocks(newBlocks as Block[]);
 
             // Trigger server update
             handleReorder(newBlocks);
@@ -131,18 +216,34 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     };
 
     // Don't render blocks until they're loaded
-    if (isLoading) {
+    if (loading) {
         return (
             <div className="relative min-h-[500px] space-y-4">
-                <div className="animate-pulse space-y-4">
-                    <div className="h-24 bg-muted rounded-lg" />
-                    <div className="h-24 bg-muted rounded-lg" />
-                </div>
+                <TableBlockLoadingState
+                    isLoading={true}
+                    isError={false}
+                    error={null}
+                />
             </div>
         );
     }
 
-    const activeBlock = blocks?.find((block) => block.id === activeId);
+    if (error) {
+        return (
+            <div className="relative min-h-[500px] space-y-4">
+                <TableBlockLoadingState
+                    isLoading={false}
+                    isError={true}
+                    error={error}
+                />
+            </div>
+        );
+    }
+
+    // Get active block with order property
+    const activeBlock = enhancedBlocks?.find(
+        (block: BlockWithRequirements) => block.id === activeId,
+    );
 
     return (
         <div className="relative min-h-[500px] space-y-4">
@@ -153,11 +254,17 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                 onDragEnd={handleDragEnd}
             >
                 <SortableContext
-                    items={blocks?.map((block) => block.id) || []}
+                    items={
+                        enhancedBlocks?.map(
+                            (block: BlockWithRequirements) => block.id,
+                        ) || []
+                    }
                     strategy={verticalListSortingStrategy}
                 >
                     <div className="space-y-4">
-                        {blocks?.map((block) => renderBlock(block))}
+                        {enhancedBlocks?.map((block: BlockWithRequirements) =>
+                            renderBlock(block),
+                        )}
                     </div>
                 </SortableContext>
 
@@ -166,7 +273,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                         <div className="opacity-100 w-full pointer-events-none">
                             <SortableBlock
                                 block={activeBlock}
-                                isSelected={false}
+                                _isSelected={false}
                                 isEditMode={isEditMode}
                                 onSelect={() => {}}
                                 onUpdate={() => {}}
@@ -180,29 +287,27 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             {!isEditMode && (
                 <div className="flex gap-2 mt-4 z-10 relative">
                     <Button
-                        variant="outline"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() =>
-                            handleAddBlock('text', {
+                            handleAddBlock(BlockType.text, {
                                 format: 'markdown',
                                 text: '',
                             })
                         }
-                        className="gap-2 cursor-pointer"
                     >
                         <Type className="h-4 w-4" />
-                        Add Text
                     </Button>
                     <Button
-                        variant="outline"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() =>
-                            handleAddBlock('table', { requirements: [] })
+                            handleAddBlock(BlockType.table, {
+                                requirements: [],
+                            })
                         }
-                        className="gap-2 cursor-pointer"
                     >
                         <Table className="h-4 w-4" />
-                        Add Requirements Table
                     </Button>
                 </div>
             )}

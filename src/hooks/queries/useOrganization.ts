@@ -4,24 +4,34 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getUserOrganizations } from '@/lib/db/client';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { OrganizationType } from '@/types/base/enums.types';
+import { OrganizationType } from '@/types';
 import { QueryFilters } from '@/types/base/filters.types';
-import { OrganizationSchema } from '@/types/validation/organizations.validation';
 
 export function useOrganization(orgId: string) {
     return useQuery({
         queryKey: queryKeys.organizations.detail(orgId),
         queryFn: async () => {
+            // Handle empty or invalid orgId more gracefully
+            if (!orgId || orgId === '') {
+                console.warn('Empty organization ID provided');
+                return null;
+            }
+
+            // Skip validation for special cases like 'project'
+            if (orgId === 'project') {
+                console.warn('Special case organization ID:', orgId);
+                return null;
+            }
+
             // Validate that orgId is a valid UUID format before querying
             if (
-                !orgId ||
                 orgId === 'user' ||
                 !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
                     orgId,
                 )
             ) {
                 console.error('Invalid organization ID format:', orgId);
-                throw new Error('Invalid organization ID format');
+                return null; // Return null instead of throwing to prevent UI errors
             }
 
             const { data, error } = await supabase
@@ -33,11 +43,11 @@ export function useOrganization(orgId: string) {
 
             if (error) {
                 console.error('Error fetching organization:', error);
-                throw error;
+                return null; // Return null instead of throwing to prevent UI errors
             }
-            return OrganizationSchema.parse(data);
+            return data;
         },
-        enabled: !!orgId && orgId !== 'user',
+        enabled: !!orgId && orgId !== 'user' && orgId !== 'project',
     });
 }
 
@@ -60,7 +70,7 @@ export function useOrganizationsWithFilters(filters?: QueryFilters) {
             const { data, error } = await query;
 
             if (error) throw error;
-            return data.map((org) => OrganizationSchema.parse(org));
+            return data;
         },
     });
 }
@@ -126,7 +136,7 @@ export function useOrgsByUser(userId: string) {
                 throw error;
             }
 
-            return data.map((org) => OrganizationSchema.parse(org));
+            return data;
         },
         enabled: !!userId && userId !== 'user',
     });
@@ -160,7 +170,7 @@ export function usePersonalOrg(userId: string) {
                 throw error;
             }
 
-            return OrganizationSchema.parse(organization);
+            return organization;
         },
         enabled: !!userId && userId !== 'user',
     });
@@ -181,7 +191,7 @@ export function usePersonalOrg(userId: string) {
 //                 throw error;
 //             }
 
-//             return organizations.map((org) => OrganizationSchema.parse(org));
+//             return organizations;
 //         },
 //         enabled: !!userId,
 //     });

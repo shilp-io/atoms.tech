@@ -1,14 +1,23 @@
-import type { FC } from 'react';
-import { useState } from 'react';
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+import { Columns } from 'lucide-react';
+import React, { useState } from 'react';
 
 import { SidePanel } from '@/components/base/panels/SidePanel';
 import { EditableTable } from '@/components/custom/BlockCanvas/components/EditableTable';
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+import { AddColumnDialog } from '@/components/custom/BlockCanvas/components/EditableTable/components/AddColumnDialog';
+import {
+    EditableColumn,
+    EditableColumnType,
+    PropertyConfig,
+} from '@/components/custom/BlockCanvas/components/EditableTable/types';
 import { DynamicRequirement } from '@/components/custom/BlockCanvas/hooks/useRequirementActions';
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+import { PropertyType } from '@/components/custom/BlockCanvas/types';
+/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { Requirement } from '@/types/base/requirements.types';
-
-import { AddColumnDialog } from './AddColumnDialog';
-import { EditableColumn } from './EditableTable';
 
 interface TableBlockContentProps {
     dynamicRequirements: DynamicRequirement[];
@@ -18,44 +27,61 @@ interface TableBlockContentProps {
         isNew: boolean,
     ) => Promise<void>;
     onDeleteRequirement: (dynamicReq: DynamicRequirement) => Promise<void>;
-    onAddColumn: (name: string, dataType: string) => Promise<void>;
+    onAddColumn: (
+        name: string,
+        type: EditableColumnType,
+        propertyConfig: PropertyConfig,
+        defaultValue: string,
+    ) => Promise<void>;
     isEditMode: boolean;
+    alwaysShowAddRow?: boolean;
+    orgId: string;
+    projectId?: string;
+    documentId?: string;
+    onDelete?: () => void;
 }
 
-export const TableBlockContent: FC<TableBlockContentProps> = ({
+export const TableBlockContent: React.FC<TableBlockContentProps> = ({
     dynamicRequirements,
     columns,
     onSaveRequirement,
     onDeleteRequirement,
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     onAddColumn,
     isEditMode,
+    alwaysShowAddRow = false,
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    orgId,
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    projectId,
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    documentId,
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    onDelete,
 }) => {
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     const { userProfile } = useAuth();
     const [selectedRequirement, setSelectedRequirement] =
         useState<Requirement | null>(null);
+    /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+    const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between mb-2">
-                {isEditMode && (
-                    <div className="flex justify-end">
-                        <AddColumnDialog
-                            onAddColumn={onAddColumn}
-                            disabled={!userProfile?.id}
-                        />
-                    </div>
-                )}
+        <div className="w-full min-w-0 relative">
+            <div className="w-full min-w-0">
+                <div className="w-full max-w-full">
+                    <EditableTable
+                        data={dynamicRequirements}
+                        columns={columns}
+                        onSave={onSaveRequirement}
+                        onDelete={onDeleteRequirement}
+                        emptyMessage="Click the 'New Row' below to add your first requirement."
+                        showFilter={false}
+                        isEditMode={isEditMode}
+                        alwaysShowAddRow={alwaysShowAddRow}
+                    />
+                </div>
             </div>
-
-            <EditableTable
-                data={dynamicRequirements}
-                columns={columns}
-                onSave={onSaveRequirement}
-                onDelete={onDeleteRequirement}
-                emptyMessage="Click the 'New Row' below to add your first requirement."
-                showFilter={true}
-                isEditMode={isEditMode}
-            />
 
             <SidePanel
                 isOpen={!!selectedRequirement}

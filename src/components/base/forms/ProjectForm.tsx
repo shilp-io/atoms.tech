@@ -26,7 +26,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useCreateProject } from '@/hooks/mutations/useProjectMutations';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/lib/store/project.store';
-import { ProjectStatus, Visibility } from '@/types/base/enums.types';
+import { ProjectStatus, Visibility } from '@/types';
 
 const projectFormSchema = z.object({
     name: z.string().min(1, 'Project name is required'),
@@ -45,9 +45,13 @@ const defaultValues: Partial<ProjectFormValues> = {
 
 interface ProjectFormProps {
     onSuccess: () => void;
+    organizationId?: string;
 }
 
-export default function ProjectForm({ onSuccess }: ProjectFormProps) {
+export default function ProjectForm({
+    onSuccess,
+    organizationId,
+}: ProjectFormProps) {
     const { userProfile } = useAuth();
     const { mutateAsync: createProject, isPending } = useCreateProject();
     const { toast } = useToast();
@@ -74,6 +78,7 @@ export default function ProjectForm({ onSuccess }: ProjectFormProps) {
                 description: data.description || null,
                 visibility: data.visibility,
                 organization_id:
+                    organizationId ||
                     userProfile.current_organization_id ||
                     userProfile.personal_organization_id ||
                     '',
