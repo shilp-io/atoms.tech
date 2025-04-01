@@ -90,6 +90,8 @@ export const useBlockActions = ({
             content: null, // Use content instead of data
             position: getNewBlockOrder(), // Use position as required by Block type
             requirements: [], // Initialize with empty requirements array
+            org_id: orgId, // Add the required org_id field
+            name: 'Table Block', // Add the required name property
             created_at: null,
             updated_at: null,
             deleted_at: null,
@@ -113,6 +115,8 @@ export const useBlockActions = ({
             content: { text: content || '<p></p>', format: 'default' } as Json,
             position: getNewBlockOrder(), // Use position as required by Block type
             requirements: [], // Initialize with empty requirements array
+            org_id: orgId, // Add the required org_id field
+            name: 'Text Block', // Add the required name property
             created_at: null,
             updated_at: null,
             deleted_at: null,
@@ -229,6 +233,8 @@ export const useBlockActions = ({
                 document_id: documentId,
                 created_by: userProfile.id,
                 updated_by: userProfile.id,
+                org_id: orgId,
+                name: `${type.toString().charAt(0).toUpperCase() + type.toString().slice(1)} Block`,
             });
             console.log('✅ Block created successfully', createdBlock);
 

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Columns, Filter, Plus } from 'lucide-react';
+import { Columns, FilterIcon, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -81,7 +81,7 @@ export function TableControls<T extends Record<string, unknown>>({
                                             size="sm"
                                             className="h-8 w-8 p-0 rounded-none"
                                         >
-                                            <Filter className="h-3.5 w-3.5" />
+                                            <FilterIcon className="h-3.5 w-3.5" />
                                         </Button>
                                     </TooltipTrigger>
                                     <TooltipContent side="left" sideOffset={5}>

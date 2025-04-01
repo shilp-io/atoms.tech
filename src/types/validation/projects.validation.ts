@@ -1,14 +1,6 @@
 import { z } from 'zod';
 
-import {
-    Block,
-    BlockPropertySchema,
-    DocumentPropertySchema,
-    Json,
-    Project,
-    ProjectStatus,
-    Visibility,
-} from '@/types';
+import { Block, EProjectStatus, EVisibility, Json, Project } from '@/types';
 
 export const ProjectSchema = z.object({
     id: z.string(),
@@ -30,7 +22,7 @@ export const ProjectSchema = z.object({
         'archived',
         'draft',
         'deleted',
-    ]) as z.ZodType<ProjectStatus>,
+    ]) as z.ZodType<EProjectStatus>,
     tags: z.array(z.string()).nullable(),
     updated_at: z.string().nullable(),
     updated_by: z.string(),
@@ -40,25 +32,8 @@ export const ProjectSchema = z.object({
         'team',
         'organization',
         'public',
-    ]) as z.ZodType<Visibility>,
+    ]) as z.ZodType<EVisibility>,
 }) satisfies z.ZodType<Project>;
-
-export const DocumentPropertyZodSchema = z.object({
-    id: z.string(),
-    created_at: z.string().nullable(),
-    created_by: z.string(),
-    deleted_at: z.string().nullable(),
-    deleted_by: z.string().nullable(),
-    document_id: z.string(),
-    is_deleted: z.boolean().nullable(),
-    updated_at: z.string().nullable(),
-    updated_by: z.string().nullable(),
-    version: z.number(),
-    name: z.string(),
-    data_type: z.string(),
-    is_base: z.boolean().optional(),
-    org_id: z.string().optional(),
-}) satisfies z.ZodType<DocumentPropertySchema>;
 
 export const BlockSchema = z.object({
     id: z.string(),
@@ -69,23 +44,11 @@ export const BlockSchema = z.object({
     deleted_by: z.string().nullable(),
     document_id: z.string(),
     is_deleted: z.boolean().nullable(),
+    name: z.string(),
     position: z.number(),
     type: z.string(),
     updated_at: z.string().nullable(),
     updated_by: z.string().nullable(),
     version: z.number(),
+    org_id: z.string().nullable(),
 }) satisfies z.ZodType<Block>;
-
-export const BlockPropertyZodSchema = z.object({
-    id: z.string(),
-    block_id: z.string(),
-    property_id: z.string(),
-    created_at: z.string().nullable(),
-    created_by: z.string().nullable(),
-    deleted_at: z.string().nullable(),
-    deleted_by: z.string().nullable(),
-    is_deleted: z.boolean().nullable(),
-    updated_at: z.string().nullable(),
-    updated_by: z.string().nullable(),
-    version: z.number(),
-}) satisfies z.ZodType<BlockPropertySchema>;

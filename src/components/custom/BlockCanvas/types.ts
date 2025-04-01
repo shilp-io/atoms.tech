@@ -46,7 +46,7 @@ export interface BlockWithRequirements extends Block {
     project_id?: string;
     height?: number;
     columns?: Column[];
-    name?: string;
+    name: string;
 }
 
 export enum BlockType {

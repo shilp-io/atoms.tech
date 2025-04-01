@@ -14,10 +14,12 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { ExternalDocument, Organization, Project } from '@/types';
+import { ExternalDocument } from '@/types/base/documents.types';
+import { Organization } from '@/types/base/organizations.types';
+import { Project } from '@/types/base/projects.types';
 
 interface OrgDashboardProps {
-    organization: Organization | undefined;
+    organization: Organization | null | undefined;
     orgLoading: boolean;
     projects: Project[] | undefined;
     projectsLoading: boolean;

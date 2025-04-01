@@ -8,9 +8,10 @@ import {
     useUpdateRequirement,
 } from '@/hooks/mutations/useRequirementMutations';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { Json } from '@/types/base/database.types';
 import {
-    RequirementPriority,
-    RequirementStatus,
+    ERequirementPriority,
+    ERequirementStatus,
     RequirementFormat as _RequirementFormat,
     RequirementLevel as _RequirementLevel,
 } from '@/types/base/enums.types';
@@ -203,7 +204,7 @@ export const useRequirementActions = ({
             const requirementData = {
                 block_id: blockId,
                 document_id: documentId,
-                properties: propertiesObj,
+                properties: propertiesObj as unknown as Json, // Ensure properties is treated as Json
                 updated_by: userId,
                 // Use natural fields from properties if they exist
                 ...(naturalFields?.name && { name: naturalFields.name }),
@@ -214,10 +215,10 @@ export const useRequirementActions = ({
                     external_id: naturalFields.external_id,
                 }),
                 ...(naturalFields?.status && {
-                    status: naturalFields.status as RequirementStatus,
+                    status: naturalFields.status as ERequirementStatus,
                 }),
                 ...(naturalFields?.priority && {
-                    priority: naturalFields.priority as RequirementPriority,
+                    priority: naturalFields.priority as ERequirementPriority,
                 }),
             };
 
@@ -231,7 +232,7 @@ export const useRequirementActions = ({
 
                 const { data, error } = await supabase
                     .from('requirements')
-                    .insert([newRequirementData])
+                    .insert(newRequirementData)
                     .select()
                     .single();
 

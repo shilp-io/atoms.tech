@@ -1,6 +1,6 @@
 'use client';
 
-import { Filter, GripVertical, MoreVertical, Plus } from 'lucide-react';
+import { FilterIcon, GripVertical, MoreVertical, Plus } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
 
@@ -26,7 +26,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useDocumentStore } from '@/lib/store/document.store';
 import { cn } from '@/lib/utils';
-import { Json } from '@/types/base/database.types';
 import { Requirement } from '@/types/base/requirements.types';
 
 import { AddColumnDialog } from './EditableTable/components/AddColumnDialog';
@@ -182,7 +181,7 @@ const TableHeader: React.FC<{
                     )}
                 >
                     <Button variant="ghost" size="sm" className="h-7 px-2">
-                        <Filter className="w-4 h-4" />
+                        <FilterIcon className="w-4 h-4" />
                         <span className="ml-1 hidden sm:inline">Filter</span>
                     </Button>
                     <Button
@@ -348,7 +347,7 @@ export const TableBlock: React.FC<BlockProps> = ({
 
         try {
             // Create property and column in the database
-            const { property: _property, column } = await createColumn(
+            await createColumn(
                 name,
                 type,
                 propertyConfig,
@@ -357,23 +356,14 @@ export const TableBlock: React.FC<BlockProps> = ({
                 userProfile.id,
             );
 
-            // Update local block state
-            const updatedBlock = {
-                ...block,
-                columns: [...(block.columns || []), column],
-                requirements: block.requirements?.map((req) => ({
-                    ...req,
-                    properties: {
-                        ...req.properties,
-                        [column.id]: defaultValue,
-                    },
-                })),
-            };
+            // No need to update block directly as createColumn handles everything:
+            // 1. Creates property
+            // 2. Creates column
+            // 3. Updates requirements with new property
+            // 4. Invalidates queries to refresh data
 
-            // Update block through the provided callback
-            if (onUpdate) {
-                await onUpdate(updatedBlock as unknown as Json);
-            }
+            // After column creation, we just need to refresh requirements
+            await refreshRequirements();
         } catch (error) {
             console.error('Error adding column:', error);
         }

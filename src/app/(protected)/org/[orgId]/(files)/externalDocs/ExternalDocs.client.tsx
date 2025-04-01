@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { File, Filter, Grid, List, Trash, Upload } from 'lucide-react';
+import { File, FilterIcon, Grid, List, Trash, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -203,7 +203,7 @@ export default function ExternalDocsPage() {
                             className="w-9 h-9"
                             onClick={() => setShowSortOptions(!showSortOptions)}
                         >
-                            <Filter className="w-4 h-4" />
+                            <FilterIcon className="w-4 h-4" />
                         </Button>
                         <motion.select
                             initial={{ width: 0, opacity: 0 }}

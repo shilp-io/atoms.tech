@@ -7,7 +7,7 @@ import AppSidebar from '@/components/base/AppSidebar';
 import { EditModeFloatingToggle } from '@/components/custom/BlockCanvas/components/EditModeToggle';
 import HorizontalToolbar from '@/components/custom/HorizontalToolbar';
 import VerticalToolbar from '@/components/custom/VerticalToolbar';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { Sidebar } from '@/components/ui/sidebar';
 import { LayoutProvider, useLayout } from '@/lib/providers/layout.provider';
 import { cn } from '@/lib/utils';
 
@@ -20,8 +20,14 @@ interface LayoutManagerProps {
  * while preserving the original UI appearance
  */
 const LayoutManagerInternal = ({ children }: LayoutManagerProps) => {
-    const { sidebarState, isMobile, isTablet, isDocumentPage, setCurrentPath } =
-        useLayout();
+    const {
+        sidebarState,
+        isMobile,
+        isTablet,
+        isDocumentPage,
+        setCurrentPath,
+        toggleSidebar,
+    } = useLayout();
 
     const pathname = usePathname();
     const _isSidebarExpanded = sidebarState === 'expanded';
@@ -40,7 +46,15 @@ const LayoutManagerInternal = ({ children }: LayoutManagerProps) => {
     const showHorizontalToolbar = isMobile || isTablet;
 
     return (
-        <SidebarProvider>
+        <Sidebar
+            defaultOpen={_isSidebarExpanded}
+            open={_isSidebarExpanded}
+            onOpenChange={(open) => {
+                if (open !== _isSidebarExpanded) {
+                    toggleSidebar();
+                }
+            }}
+        >
             {/* Sidebar */}
             <AppSidebar />
 
@@ -63,7 +77,7 @@ const LayoutManagerInternal = ({ children }: LayoutManagerProps) => {
 
             {/* Horizontal toolbar - only on mobile/tablet */}
             {showHorizontalToolbar && <HorizontalToolbar />}
-        </SidebarProvider>
+        </Sidebar>
     );
 };
 

@@ -4,7 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { Property } from '@/components/custom/BlockCanvas/types';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { Document, DocumentPropertySchema } from '@/types/base/documents.types';
+import { TablesInsert } from '@/types/base/database.types';
+import { Document } from '@/types/base/documents.types';
 
 // Define PropertyCreateData based on how it's used
 interface PropertyCreateData {
@@ -33,16 +34,30 @@ export function useCreateDocument() {
 
     return useMutation({
         mutationFn: async (document: Partial<Document>) => {
+            if (!document.name || !document.project_id || !document.slug) {
+                throw new Error(
+                    'Missing required fields: name, project_id, or slug',
+                );
+            }
+
+            const insertData: TablesInsert<'documents'> = {
+                name: document.name,
+                project_id: document.project_id,
+                slug: document.slug,
+                description: document.description,
+                tags: document.tags,
+                created_by: document.created_by,
+                updated_by: document.updated_by,
+                id: document.id || uuidv4(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                is_deleted: false,
+                version: 1,
+            };
+
             const { data, error } = await supabase
                 .from('documents')
-                .insert({
-                    ...document,
-                    id: document.id || uuidv4(),
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    is_deleted: false,
-                    version: 1,
-                })
+                .insert(insertData)
                 .select()
                 .single();
 
@@ -62,6 +77,10 @@ export function useUpdateDocument() {
 
     return useMutation({
         mutationFn: async (document: Partial<Document>) => {
+            if (!document.id) {
+                throw new Error('Document ID is required for update');
+            }
+
             const { data, error } = await supabase
                 .from('documents')
                 .update({
@@ -117,36 +136,6 @@ export function useDeleteDocument() {
     });
 }
 
-export function useCreateDocumentPropertySchema() {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async (schema: Partial<DocumentPropertySchema>) => {
-            const { data, error } = await supabase
-                .from('document_property_schemas')
-                .insert({
-                    ...schema,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                    is_deleted: false,
-                    version: 1,
-                })
-                .select()
-                .single();
-
-            if (error) throw error;
-            return data as DocumentPropertySchema;
-        },
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({
-                queryKey: queryKeys.documentPropertySchemas.byDocument(
-                    data.document_id,
-                ),
-            });
-        },
-    });
-}
-
 export function useCreateBaseOrgProperties() {
     const queryClient = useQueryClient();
 
@@ -164,7 +153,9 @@ export function useCreateBaseOrgProperties() {
                     .from('properties')
                     .select('*')
                     .eq('org_id', orgId)
-                    .eq('is_base', true);
+                    .eq('is_base', true)
+                    .is('document_id', null)
+                    .is('project_id', null);
 
             if (fetchError) throw fetchError;
 
@@ -270,8 +261,8 @@ export function useCreateDocumentProperties() {
                 .select('*')
                 .eq('org_id', orgId)
                 .eq('is_base', true)
-                .eq('document_id', null)
-                .eq('project_id', null);
+                .is('document_id', null)
+                .is('project_id', null);
 
             if (fetchError) throw fetchError;
 

@@ -128,9 +128,19 @@ export const useColumnActions = ({
 
                 // Update each requirement's properties to include the new column
                 const updatePromises = requirements.map(async (req) => {
+                    // Create or update properties object
+                    const currentProperties = (req.properties || {}) as Record<
+                        string,
+                        unknown
+                    >;
+
+                    // Update properties using both:
+                    // 1. The column ID (for backwards compatibility with how we access properties)
+                    // 2. The property name (for consistency with how requirements are displayed)
                     const updatedProperties = {
-                        ...req.properties,
+                        ...currentProperties,
                         [column.id]: defaultValue,
+                        [property.name]: defaultValue,
                     };
 
                     return supabase

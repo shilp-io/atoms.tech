@@ -5,9 +5,12 @@ import {
     Column,
 } from '@/components/custom/BlockCanvas/types';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { Database } from '@/types/base/database.types';
 import { Block } from '@/types/base/documents.types';
 import { Profile } from '@/types/base/profiles.types';
 import { Requirement } from '@/types/base/requirements.types';
+
+type ColumnRow = Database['public']['Tables']['columns']['Row'];
 
 // This interface is currently unused but kept for future use
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -94,12 +97,15 @@ export const useDocumentRealtime = ({
             );
 
             // Group columns by block_id
-            const columnsByBlock = columnsData.reduce(
-                (acc: { [key: string]: Column[] }, col: Column) => {
-                    if (!acc[col.block_id!]) {
-                        acc[col.block_id!] = [];
+            const columnsByBlock = (columnsData as ColumnRow[]).reduce(
+                (acc: { [key: string]: Column[] }, col) => {
+                    const blockId = col.block_id;
+                    if (blockId && !acc[blockId]) {
+                        acc[blockId] = [];
                     }
-                    acc[col.block_id!].push(col);
+                    if (blockId) {
+                        acc[blockId].push(col as unknown as Column);
+                    }
                     return acc;
                 },
                 {},

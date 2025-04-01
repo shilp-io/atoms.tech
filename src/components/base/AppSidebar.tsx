@@ -16,7 +16,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-    Sidebar,
+    SidebarContainer,
     SidebarContent,
     SidebarFooter,
     SidebarGroup,
@@ -50,7 +50,6 @@ function AppSidebar() {
     const pathname = usePathname();
     const [isLoading, setIsLoading] = useState(false);
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
-    const [isSidebarHidden, setIsSidebarHidden] = useState(false);
     const [createPanelType, setCreatePanelType] = useState<
         'project' | 'requirement' | 'document' | 'organization'
     >('project');
@@ -140,9 +139,6 @@ function AppSidebar() {
                 if (firstFocusableElement) {
                     (firstFocusableElement as HTMLElement).focus();
                 }
-                setIsSidebarHidden(true);
-            } else {
-                setIsSidebarHidden(false);
             }
         };
 
@@ -151,7 +147,7 @@ function AppSidebar() {
     }, []);
 
     return (
-        <Sidebar inert={isSidebarHidden}>
+        <SidebarContainer variant="sidebar" collapsible="offcanvas">
             <SidebarContent className="px-3 py-2">
                 <SidebarGroup>
                     <SidebarGroupLabel className="flex items-center gap-2 px-1 mb-4">
@@ -305,7 +301,7 @@ function AppSidebar() {
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarFooter>
-        </Sidebar>
+        </SidebarContainer>
     );
 }
 

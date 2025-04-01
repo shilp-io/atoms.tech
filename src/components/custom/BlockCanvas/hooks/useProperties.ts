@@ -4,22 +4,38 @@ import { useCallback, useState } from 'react';
 import { Property, PropertyType } from '@/components/custom/BlockCanvas/types';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { Database } from '@/types/base/database.types';
+
+type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
+type PropertyUpdate = Database['public']['Tables']['properties']['Update'] & {
+    is_deleted?: boolean;
+    deleted_by?: string | null;
+    deleted_at?: string | null;
+};
 
 // Extended Property type for internal use, including extra fields used in the component
-interface ExtendedProperty extends Property {
+interface ExtendedProperty
+    extends Omit<
+        Property,
+        'document_id' | 'property_type' | 'project_id' | 'options'
+    > {
     key?: string;
     position?: number;
     type?: PropertyType;
-    block_id?: string;
+    document_id?: string | null;
     is_required?: boolean;
     is_hidden?: boolean;
     is_deleted?: boolean;
     is_schema?: boolean;
     description?: string;
-    created_by?: string;
-    updated_by?: string;
+    created_by?: string | null;
+    updated_by?: string | null;
     deleted_by?: string | null;
     deleted_at?: string | null;
+    org_id: string;
+    project_id: string | null;
+    property_type?: PropertyType;
+    options?: Record<string, unknown>;
 }
 
 export interface UsePropertiesProps {
@@ -27,7 +43,7 @@ export interface UsePropertiesProps {
     blockId?: string;
 }
 
-export const useProperties = ({ documentId, blockId }: UsePropertiesProps) => {
+export const useProperties = (documentId: string) => {
     const [isLoading, setIsLoading] = useState(true);
     const [properties, setProperties] = useState<ExtendedProperty[]>([]);
     const queryClient = useQueryClient();
@@ -36,16 +52,11 @@ export const useProperties = ({ documentId, blockId }: UsePropertiesProps) => {
     const fetchProperties = useCallback(async () => {
         setIsLoading(true);
         try {
-            let query = supabase
+            const query = supabase
                 .from('properties')
                 .select('*')
                 .eq('document_id', documentId)
                 .eq('is_deleted', false);
-
-            // If blockId is provided, filter by block
-            if (blockId) {
-                query = query.eq('block_id', blockId);
-            }
 
             const { data, error } = await query;
 
@@ -63,12 +74,6 @@ export const useProperties = ({ documentId, blockId }: UsePropertiesProps) => {
                 queryKey: queryKeys.properties.byDocument(documentId),
             });
 
-            if (blockId) {
-                queryClient.invalidateQueries({
-                    queryKey: queryKeys.properties.byBlock(blockId),
-                });
-            }
-
             return fetchedProperties;
         } catch (error) {
             console.error('Error in fetchProperties:', error);
@@ -76,65 +81,64 @@ export const useProperties = ({ documentId, blockId }: UsePropertiesProps) => {
         } finally {
             setIsLoading(false);
         }
-    }, [documentId, blockId, queryClient]);
+    }, [documentId, queryClient]);
 
     // Create a new property
     const createProperty = useCallback(
-        async (propertyData: Omit<ExtendedProperty, 'id'>) => {
+        async (propertyData: ExtendedProperty) => {
             try {
-                // To fix block_id error, we need to separate it from the Property fields
-                const { block_id, ...standardPropertyData } = propertyData;
+                const standardPropertyData = {
+                    project_id: propertyData.project_id,
+                    document_id: propertyData.document_id,
+                    org_id: propertyData.org_id,
+                    name: propertyData.name,
+                    property_type: propertyData.type || PropertyType.text,
+                    created_by: propertyData.created_by,
+                    updated_by: propertyData.updated_by,
+                    options: propertyData.options,
+                };
 
-                // Using a mapping in the database query instead
+                const insertData: PropertyInsert = {
+                    ...standardPropertyData,
+                    name:
+                        propertyData.key ||
+                        propertyData.name.toLowerCase().replace(/\s+/g, '_'),
+                    options: standardPropertyData.options
+                        ? JSON.stringify(standardPropertyData.options)
+                        : null,
+                };
+
                 const { data, error } = await supabase
                     .from('properties')
-                    .insert({
-                        ...standardPropertyData,
-                        name:
-                            propertyData.key ||
-                            propertyData.name
-                                .toLowerCase()
-                                .replace(/\s+/g, '_'),
-                        ...(block_id ? { block_id } : {}),
-                    })
-                    .select();
+                    .insert(insertData)
+                    .select()
+                    .single();
 
-                if (error) {
-                    console.error('Error creating property:', error);
-                    throw error;
-                }
-
-                // Update local state and invalidate queries
-                const newProperty = data[0] as ExtendedProperty;
-                setProperties((prev) => [...prev, newProperty]);
-
-                // Invalidate related queries
-                queryClient.invalidateQueries({
-                    queryKey: queryKeys.properties.byDocument(documentId),
-                });
-
-                if (blockId) {
-                    queryClient.invalidateQueries({
-                        queryKey: queryKeys.properties.byBlock(blockId),
-                    });
-                }
-
-                return newProperty;
+                if (error) throw error;
+                return data;
             } catch (error) {
-                console.error('Error in createProperty:', error);
+                console.error('Error creating property:', error);
                 throw error;
             }
         },
-        [documentId, blockId, queryClient],
+        [],
     );
 
     // Update a property
     const updateProperty = useCallback(
         async (propertyId: string, updates: Partial<ExtendedProperty>) => {
             try {
+                // Convert updates to match the database schema
+                const updateData: PropertyUpdate = {
+                    ...updates,
+                    options: updates.options
+                        ? JSON.stringify(updates.options)
+                        : undefined,
+                };
+
                 const { data, error } = await supabase
                     .from('properties')
-                    .update(updates)
+                    .update(updateData)
                     .eq('id', propertyId)
                     .select();
 
@@ -156,32 +160,28 @@ export const useProperties = ({ documentId, blockId }: UsePropertiesProps) => {
                     queryKey: queryKeys.properties.byDocument(documentId),
                 });
 
-                if (blockId) {
-                    queryClient.invalidateQueries({
-                        queryKey: queryKeys.properties.byBlock(blockId),
-                    });
-                }
-
                 return updatedProperty;
             } catch (error) {
                 console.error('Error in updateProperty:', error);
                 throw error;
             }
         },
-        [documentId, blockId, queryClient],
+        [documentId, queryClient],
     );
 
     // Delete a property (soft delete)
     const deleteProperty = useCallback(
         async (propertyId: string, userId: string) => {
             try {
+                const updateData: PropertyUpdate = {
+                    is_deleted: true,
+                    deleted_by: userId,
+                    deleted_at: new Date().toISOString(),
+                };
+
                 const { error } = await supabase
                     .from('properties')
-                    .update({
-                        is_deleted: true,
-                        deleted_by: userId,
-                        deleted_at: new Date().toISOString(),
-                    })
+                    .update(updateData)
                     .eq('id', propertyId);
 
                 if (error) {
@@ -199,142 +199,75 @@ export const useProperties = ({ documentId, blockId }: UsePropertiesProps) => {
                     queryKey: queryKeys.properties.byDocument(documentId),
                 });
 
-                if (blockId) {
-                    queryClient.invalidateQueries({
-                        queryKey: queryKeys.properties.byBlock(blockId),
-                    });
-                }
-
                 return true;
             } catch (error) {
                 console.error('Error in deleteProperty:', error);
                 throw error;
             }
         },
-        [documentId, blockId, queryClient],
+        [documentId, queryClient],
     );
 
     // Create default properties for a block
     const createDefaultProperties = useCallback(
-        async (
-            blockId: string,
-            orgId: string,
-            projectId: string,
-            userId: string,
-        ) => {
+        async ({
+            projectId,
+            documentId,
+            orgId,
+            userId,
+        }: {
+            projectId: string;
+            documentId: string;
+            orgId: string;
+            userId: string;
+        }) => {
             try {
-                // Define default properties (name, description, req_id)
-                const defaultProperties: Omit<ExtendedProperty, 'id'>[] = [
+                const defaultProperties = [
                     {
-                        org_id: orgId,
                         project_id: projectId,
                         document_id: documentId,
+                        org_id: orgId,
                         name: 'Name',
                         key: 'name',
-                        type: PropertyType.text,
                         property_type: PropertyType.text,
-                        is_base: true,
-                        options: null,
-                        scope: 'document',
-                        created_at: null,
-                        updated_at: null,
-                        description: 'Requirement name',
-                        position: 10,
-                        is_required: true,
-                        is_hidden: false,
                         created_by: userId,
                         updated_by: userId,
-                        is_deleted: false,
-                        is_schema: true,
                     },
                     {
-                        org_id: orgId,
                         project_id: projectId,
                         document_id: documentId,
+                        org_id: orgId,
                         name: 'Description',
                         key: 'description',
-                        type: PropertyType.text,
                         property_type: PropertyType.text,
-                        is_base: true,
-                        options: null,
-                        scope: 'document',
-                        created_at: null,
-                        updated_at: null,
-                        description: 'Requirement description',
-                        position: 20,
-                        is_required: false,
-                        is_hidden: false,
                         created_by: userId,
                         updated_by: userId,
-                        is_deleted: false,
-                        is_schema: true,
                     },
                     {
-                        org_id: orgId,
                         project_id: projectId,
                         document_id: documentId,
+                        org_id: orgId,
                         name: 'ID',
                         key: 'id',
-                        type: PropertyType.text,
                         property_type: PropertyType.text,
-                        is_base: true,
-                        options: null,
-                        scope: 'document',
-                        created_at: null,
-                        updated_at: null,
-                        description: 'Requirement ID',
-                        position: 30,
-                        is_required: false,
-                        is_hidden: false,
                         created_by: userId,
                         updated_by: userId,
-                        is_deleted: false,
-                        is_schema: true,
                     },
                 ];
 
-                // Insert all properties in a single batch
                 const { data, error } = await supabase
                     .from('properties')
-                    .insert(
-                        defaultProperties.map((prop) => ({
-                            ...prop,
-                            block_id: blockId,
-                        })),
-                    )
+                    .insert(defaultProperties)
                     .select();
 
-                if (error) {
-                    console.error('Error creating default properties:', error);
-                    throw error;
-                }
-
-                // Update local state and invalidate queries
-                const newProperties = data as ExtendedProperty[];
-                setProperties((prev) =>
-                    [...prev, ...newProperties].sort((a, b) => {
-                        const posA = a.position ?? 0;
-                        const posB = b.position ?? 0;
-                        return posA - posB;
-                    }),
-                );
-
-                // Invalidate related queries
-                queryClient.invalidateQueries({
-                    queryKey: queryKeys.properties.byDocument(documentId),
-                });
-
-                queryClient.invalidateQueries({
-                    queryKey: queryKeys.properties.byBlock(blockId),
-                });
-
-                return newProperties;
+                if (error) throw error;
+                return data;
             } catch (error) {
-                console.error('Error in createDefaultProperties:', error);
+                console.error('Error creating default properties:', error);
                 throw error;
             }
         },
-        [documentId, queryClient],
+        [],
     );
 
     // Reorder properties
@@ -350,7 +283,7 @@ export const useProperties = ({ documentId, blockId }: UsePropertiesProps) => {
                                 position: (index + 1) * 10, // Use 10, 20, 30... for positions to allow inserting in between
                                 updated_by: userId,
                                 updated_at: new Date().toISOString(),
-                            })
+                            } as PropertyUpdate)
                             .eq('id', property.id),
                     ),
                 );
@@ -368,19 +301,13 @@ export const useProperties = ({ documentId, blockId }: UsePropertiesProps) => {
                     queryKey: queryKeys.properties.byDocument(documentId),
                 });
 
-                if (blockId) {
-                    queryClient.invalidateQueries({
-                        queryKey: queryKeys.properties.byBlock(blockId),
-                    });
-                }
-
                 return true;
             } catch (error) {
                 console.error('Error in reorderProperties:', error);
                 throw error;
             }
         },
-        [documentId, blockId, queryClient],
+        [documentId, queryClient],
     );
 
     return {

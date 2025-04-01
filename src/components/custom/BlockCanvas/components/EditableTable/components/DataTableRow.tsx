@@ -1,6 +1,5 @@
 import { ArrowUpRight, Trash2 } from 'lucide-react';
-import { useParams } from 'next/navigation';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import React from 'react';
 
 import { CellRenderer } from '@/components/custom/BlockCanvas/components/EditableTable/CellRenderer';

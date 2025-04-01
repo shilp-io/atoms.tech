@@ -38,6 +38,7 @@ import { useDocumentRealtime } from '@/hooks/queries/useDocumentRealtime';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useDocumentStore } from '@/lib/store/document.store';
+import { Block } from '@/types';
 // Unused but might be needed in the future
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Json } from '@/types/base/database.types';
@@ -207,7 +208,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             setEnhancedLocalBlocks(newBlocks);
 
             // Update document store
-            reorderBlocks(newBlocks);
+            reorderBlocks(newBlocks as Block[]);
 
             // Trigger server update
             handleReorder(newBlocks);

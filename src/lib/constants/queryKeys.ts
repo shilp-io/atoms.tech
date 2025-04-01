@@ -35,25 +35,6 @@ export const queryKeys = {
             [...queryKeys.documents.detail(documentId), 'blocks'] as const,
     },
 
-    documentPropertySchemas: {
-        root: ['documentPropertySchemas'] as const,
-        list: (filters?: QueryFilters) =>
-            [
-                ...queryKeys.documentPropertySchemas.root,
-                'list',
-                filters,
-            ] as const,
-        detail: (id: string) =>
-            [...queryKeys.documentPropertySchemas.root, 'detail', id] as const,
-        byDocument: (documentId: string) =>
-            [
-                ...queryKeys.documents.detail(documentId),
-                'propertySchemas',
-            ] as const,
-        byOrg: (orgId: string) =>
-            [...queryKeys.documentPropertySchemas.root, 'org', orgId] as const,
-    },
-
     requirements: {
         root: ['requirements'] as const,
         list: (filters?: QueryFilters) =>
@@ -160,24 +141,6 @@ export const queryKeys = {
                 ...queryKeys.notifications.byUser(userId),
                 'unread',
                 'count',
-            ] as const,
-    },
-
-    requirementPropertyKVs: {
-        root: ['requirement_property_kvs'] as const,
-        list: (filters?: QueryFilters) =>
-            [
-                ...queryKeys.requirementPropertyKVs.root,
-                'list',
-                filters,
-            ] as const,
-        detail: (id: string) =>
-            [...queryKeys.requirementPropertyKVs.root, 'detail', id] as const,
-        byRequirement: (requirementId: string) =>
-            [
-                ...queryKeys.requirementPropertyKVs.root,
-                'requirement',
-                requirementId,
             ] as const,
     },
 } as const;
