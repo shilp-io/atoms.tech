@@ -1,4 +1,3 @@
-// src/app/(protected)/org/project/[projectId]/layout.tsx
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -7,7 +6,6 @@ import { getQueryClient } from '@/lib/constants/queryClient';
 import { fetchProjectData } from '@/lib/db/utils/prefetchData';
 import { ProjectProvider } from '@/lib/providers/project.provider';
 import { Project } from '@/types';
-import { Document } from '@/types/base/documents.types';
 
 interface ProjectLayoutProps {
     children: React.ReactNode;
@@ -29,26 +27,20 @@ export default async function ProjectLayout({
 
     try {
         // Fetch project data, documents, etc.
-        const preferredOrgId = orgId;
-
         const { project, documents } = await fetchProjectData(
-            preferredOrgId,
+            orgId,
             projectId,
             queryClient,
         );
+        console.log('documents', documents);
 
         if (!project) notFound();
 
         return (
-            <ProjectProvider
-                initialProject={project as Project}
-                initialDocuments={documents as Document[]}
-            >
-                <div className="relative flex-1">
-                    <Suspense fallback={<ProjectPageSkeleton />}>
-                        {children}
-                    </Suspense>
-                </div>
+            <ProjectProvider initialProject={project as Project}>
+                <Suspense fallback={<ProjectPageSkeleton />}>
+                    {children}
+                </Suspense>
             </ProjectProvider>
         );
     } catch (error) {

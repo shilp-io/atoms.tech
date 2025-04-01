@@ -1,24 +1,21 @@
 'use client';
 
-import {
-    Brain,
-    Check,
-    CircleAlert,
-    Scale,
-    Target,
-    Upload,
-    Wand,
-} from 'lucide-react';
 import { useParams, usePathname } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { useEffect, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { FoldingCard } from '@/components/ui/folding-card';
+import { useUpdateRequirement } from '@/hooks/mutations/useRequirementMutations';
 import { useRequirement } from '@/hooks/queries/useRequirement';
 import { useGumloop } from '@/hooks/useGumloop';
+
+import {
+    ComplianceCard,
+    EarsCard,
+    EnhancedCard,
+    IncoseCard,
+    OriginalRequirementCard,
+    RegulationFile,
+    RequirementForm,
+} from './components';
 
 interface AnalysisData {
     reqId: string;
@@ -32,6 +29,7 @@ interface AnalysisData {
     enhancedReqEars: string;
     enhancedReqIncose: string;
     enhancedGeneralFeedback: string;
+    relevantRegulations: string;
 }
 
 export default function RequirementPage() {
@@ -41,7 +39,9 @@ export default function RequirementPage() {
     }>();
     const { data: requirement, isLoading: isReqLoading } =
         useRequirement(requirementSlug);
-    const [reqText, setReqText] = useState<string>();
+    const [reqText, setReqText] = useState<string>('');
+    const [systemName, setSystemName] = useState<string>('');
+    const [objective, setObjective] = useState<string>('');
 
     // Set requirement description when loaded
     useEffect(() => {
@@ -51,111 +51,13 @@ export default function RequirementPage() {
     }, [requirement]);
 
     const [missingReqError, setMissingReqError] = useState<string>('');
-    const [missingFilesError, setMissingFilesError] = useState<string>('');
+    // const [missingFilesError, setMissingFilesError] = useState<string>('');
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setReqText(e.target.value);
-        if (missingReqError) {
-            setMissingReqError('');
-        }
-    };
-
-    const [currentFile, setCurrentFile] = useState<string>('');
-    // uploaded files maps processed file name to original file name
-    const [uploadedFiles, setUploadedFiles] = useState<{
-        [key: string]: string;
+    const [selectedFiles, setSelectedFiles] = useState<{
+        [key: string]: RegulationFile;
     }>({});
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [isUploading, setIsUploading] = useState(false);
 
-    const { startPipeline, getPipelineRun, uploadFiles } = useGumloop();
-    const [convertPipelineRunId, setConvertPipelineRunId] =
-        useState<string>('');
-    const { data: convertResponse } = getPipelineRun(
-        convertPipelineRunId,
-        organizationId,
-    );
-
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files?.length) return;
-
-        try {
-            const files = Array.from(e.target.files);
-            setCurrentFile(files[0].name);
-            setIsUploading(true);
-
-            if (missingFilesError) {
-                setMissingFilesError('');
-            }
-
-            const uploadedFileNames = await uploadFiles(files);
-            console.log('Files uploaded successfully:', uploadedFileNames);
-
-            const { run_id } = await startPipeline({
-                fileNames: uploadedFileNames,
-                pipelineType: 'file-processing',
-            });
-            setConvertPipelineRunId(run_id);
-        } catch (error) {
-            setIsUploading(false);
-            console.error('Failed to upload files:', error);
-        }
-    };
-
-    // set the uploadedFiles when the pipeline run is completed
-    useEffect(() => {
-        switch (convertResponse?.state) {
-            case 'DONE': {
-                // check that the response has the expected outputs
-                const convertedFileNames =
-                    convertResponse.outputs?.convertedFileNames;
-
-                console.log('Converted file names:', convertedFileNames);
-
-                // append the converted file name to the uploaded files
-                if (!convertedFileNames) {
-                    console.error('No converted file names found in response');
-                    break;
-                }
-
-                // assert that it is an array
-                if (!Array.isArray(convertedFileNames)) {
-                    console.error('Converted file names is not an array');
-                    break;
-                }
-
-                for (const fileName of convertedFileNames) {
-                    setUploadedFiles((prevFiles) => ({
-                        ...prevFiles,
-                        [fileName]: currentFile,
-                    }));
-                }
-
-                break;
-            }
-            case 'FAILED': {
-                console.error('File processing pipeline failed');
-                break;
-            }
-            default:
-                return;
-        }
-        setIsUploading(false);
-        setConvertPipelineRunId('');
-        setCurrentFile('');
-    }, [convertResponse, currentFile]);
-
-    const [uploadButtonText, setUploadButtonText] = useState('Upload Files');
-
-    useEffect(() => {
-        if (isUploading) {
-            if (convertPipelineRunId) {
-                setUploadButtonText('Converting...');
-            } else setUploadButtonText('Uploading...');
-        } else {
-            setUploadButtonText('Upload Files');
-        }
-    }, [isUploading, convertPipelineRunId]);
+    const { startPipeline, getPipelineRun } = useGumloop();
 
     const [isReasoning, setIsReasoning] = useState(false);
     const [isAnalysing, setIsAnalysing] = useState(false);
@@ -166,9 +68,19 @@ export default function RequirementPage() {
         organizationId,
     );
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
+    const { mutateAsync: updateRequirement } = useUpdateRequirement();
 
     const handleAnalyze = async () => {
+        if (!requirement) {
+            setMissingReqError("Requirement hasn't loaded yet");
+            return;
+        }
+
         setAnalysisData(null);
+        await updateRequirement({
+            id: requirement.id,
+            description: reqText,
+        });
 
         // check if the requirement is empty
         if (!reqText) {
@@ -176,13 +88,13 @@ export default function RequirementPage() {
             return;
         }
         // or if no files are uploaded
-        if (Object.keys(uploadedFiles).length === 0) {
-            setMissingFilesError('At least one file is required');
-            return;
-        }
+        // if (Object.keys(selectedFiles).length === 0) {
+        //     setMissingFilesError('At least one file is required');
+        //     return;
+        // }
         console.log('Starting analysis pipeline...');
         setMissingReqError('');
-        setMissingFilesError('');
+        // setMissingFilesError('');
         setIsAnalysing(true);
 
         try {
@@ -191,8 +103,11 @@ export default function RequirementPage() {
                     ? 'reasoning-requirement-analysis'
                     : 'requirement-analysis',
                 requirement: reqText,
-                systemName: 'Backup Camera',
-                fileNames: Object.keys(uploadedFiles),
+                systemName: systemName,
+                objective: objective,
+                fileNames: Object.values(selectedFiles).map(
+                    (file) => file.gumloopName,
+                ),
             });
             setAnalysisPipelineRunId(run_id);
         } catch (error) {
@@ -245,6 +160,7 @@ export default function RequirementPage() {
                             parsedData['ENHANCED_REQUIREMENT_INCOSE'],
                         enhancedGeneralFeedback:
                             parsedData['ENHANCED_GENERAL_FEEDBACK'],
+                        relevantRegulations: parsedData['RELEVANT_REGULATIONS'],
                     });
                 } catch (error) {
                     console.error('Failed to parse analysis JSON:', error);
@@ -261,6 +177,17 @@ export default function RequirementPage() {
         setAnalysisPipelineRunId('');
         setIsAnalysing(false);
     }, [analysisResponse]);
+
+    const handleAcceptChange = async (text: string | undefined) => {
+        if (!text || !requirement) {
+            return;
+        }
+        setReqText(text);
+        await updateRequirement({
+            id: requirement.id,
+            description: text,
+        });
+    };
 
     if (isReqLoading) {
         return (
@@ -282,217 +209,68 @@ export default function RequirementPage() {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <div className="space-y-4">
                     <h2 className="text-2xl font-bold mb-4">Requirement</h2>
-                    <Card className="p-6">
-                        <h3 className="font-semibold mb-2">
-                            {requirement?.name}
-                        </h3>
-                        <textarea
-                            className="w-full h-32 p-2 border rounded-md text-muted-foreground"
-                            value={reqText}
-                            onChange={handleInputChange}
-                        />
-                        <div className="mt-4 space-y-2">
-                            <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 sm:gap-0">
-                                <div className="flex items-center gap-2">
-                                    <Brain className="h-5 w-5" />
-                                    <Checkbox
-                                        checked={isReasoning}
-                                        onChange={() =>
-                                            setIsReasoning(!isReasoning)
-                                        }
-                                        label="Reasoning"
-                                        labelClassName="hidden md:block"
-                                    />
-                                </div>
-                                <Button
-                                    className="gap-2"
-                                    onClick={handleAnalyze}
-                                    disabled={isAnalysing}
-                                >
-                                    {isAnalysing ? (
-                                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                                    ) : (
-                                        <Wand className="h-4 w-4" />
-                                    )}
-                                    Analyze with AI
-                                </Button>
-                            </div>
-                            {(missingReqError || missingFilesError) && (
-                                <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded">
-                                    <CircleAlert className="h-4 w-4" />
-                                    <span>
-                                        {missingReqError || missingFilesError}
-                                    </span>
-                                </div>
-                            )}
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileUpload}
-                                accept=".pdf"
-                                multiple
-                                className="hidden"
-                            />
-                            <Button
-                                onClick={() => fileInputRef.current?.click()}
-                                className="gap-2 w-full"
-                                disabled={isUploading}
-                            >
-                                {isUploading ? (
-                                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                                ) : (
-                                    <Upload className="h-4 w-4" />
-                                )}
-                                {uploadButtonText}
-                            </Button>
-                            {Object.keys(uploadedFiles).length > 0 && (
-                                <div className="mt-4">
-                                    <h4 className="text-sm font-medium mb-2">
-                                        Attached Files
-                                    </h4>
-                                    <ul className="space-y-1">
-                                        {Object.values(uploadedFiles).map(
-                                            (fileName) => (
-                                                <li
-                                                    key={fileName}
-                                                    className="text-sm text-muted-foreground flex items-center"
-                                                >
-                                                    <Check className="h-3 w-3 mr-1" />
-                                                    {fileName}
-                                                </li>
-                                            ),
-                                        )}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    </Card>
+                    <RequirementForm
+                        organizationId={organizationId}
+                        requirement={requirement || { id: '' }}
+                        reqText={reqText || ''}
+                        setReqText={setReqText}
+                        systemName={systemName}
+                        setSystemName={setSystemName}
+                        objective={objective}
+                        setObjective={setObjective}
+                        isReasoning={isReasoning}
+                        setIsReasoning={setIsReasoning}
+                        isAnalysing={isAnalysing}
+                        handleAnalyze={handleAnalyze}
+                        missingReqError={missingReqError}
+                        // missingFilesError={missingFilesError}
+                        // setMissingFilesError={setMissingFilesError}
+                        // isUploading={isUploading}
+                        // uploadButtonText={uploadButtonText}
+                        // handleFileUpload={handleFileUpload}
+                        // existingDocs={existingDocs}
+                        // existingDocsValue={existingDocsValue}
+                        // handleExistingDocSelect={handleExistingDocSelect}
+                        selectedFiles={selectedFiles}
+                        setSelectedFiles={setSelectedFiles}
+                    />
                 </div>
 
                 {/* Right Column - Analysis Blocks */}
                 <div className="space-y-4">
                     <h2 className="text-2xl font-bold mb-4">AI Analysis</h2>
 
-                    {/* Original Requirement */}
-                    <Card className="p-6">
-                        <div className="flex items-start gap-4">
-                            <div className="rounded-full bg-primary/10 p-3">
-                                <Brain className="h-6 w-6 text-primary" />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold mb-1">
-                                    Original Requirement
-                                </h3>
-                                {analysisData ? (
-                                    <div className="text-muted-foreground text-sm">
-                                        <p>
-                                            <strong>ID:</strong>{' '}
-                                            {analysisData.reqId}
-                                        </p>
-                                        <p>
-                                            {analysisData.originalRequirement}
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <p className="text-muted-foreground text-sm">
-                                        Upload files and analyze the requirement
-                                        to get AI feedback
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    </Card>
+                    <OriginalRequirementCard
+                        reqId={analysisData?.reqId}
+                        originalRequirement={analysisData?.originalRequirement}
+                    />
 
-                    {/* EARS */}
-                    <FoldingCard
-                        icon={<Target />}
-                        title="EARS"
-                        disabled={!analysisData}
-                        defaultOpen={false}
-                    >
-                        <div className="text-muted-foreground text-sm">
-                            <p>
-                                <strong>Requirement:</strong>{' '}
-                                {analysisData?.earsRequirement}
-                            </p>
-                            <p>
-                                <strong>Pattern:</strong>{' '}
-                                {analysisData?.earsPattern}
-                            </p>
-                            <p>
-                                <strong>Template:</strong>{' '}
-                                {analysisData?.earsTemplate}
-                            </p>
-                        </div>
-                    </FoldingCard>
+                    <EarsCard
+                        earsPattern={analysisData?.earsPattern}
+                        earsRequirement={analysisData?.earsRequirement}
+                        earsTemplate={analysisData?.earsTemplate}
+                        onAccept={handleAcceptChange}
+                    />
 
-                    {/* INCOSE */}
-                    <FoldingCard
-                        icon={<Check />}
-                        title="INCOSE"
-                        disabled={!analysisData}
-                        defaultOpen={false}
-                    >
-                        <div className="text-muted-foreground text-sm">
-                            <p>
-                                <strong>Format:</strong>
-                            </p>
-                            <ReactMarkdown>
-                                {analysisData?.incoseFormat}
-                            </ReactMarkdown>
-                            <p className="mt-2">
-                                <strong>Feedback:</strong>
-                            </p>
-                            <ReactMarkdown>
-                                {analysisData?.incoseFeedback}
-                            </ReactMarkdown>
-                        </div>
-                    </FoldingCard>
+                    <IncoseCard
+                        incoseFormat={analysisData?.incoseFormat}
+                        incoseFeedback={analysisData?.incoseFeedback}
+                        onAccept={handleAcceptChange}
+                    />
 
-                    {/* Compliance */}
-                    <FoldingCard
-                        icon={<Scale />}
-                        title="Compliance"
-                        disabled={!analysisData}
-                        defaultOpen={false}
-                    >
-                        <div className="text-muted-foreground text-sm">
-                            <ReactMarkdown>
-                                {analysisData?.complianceFeedback}
-                            </ReactMarkdown>
-                        </div>
-                    </FoldingCard>
+                    <ComplianceCard
+                        complianceFeedback={analysisData?.complianceFeedback}
+                        relevantRegulations={analysisData?.relevantRegulations}
+                    />
 
-                    {/* Enhanced */}
-                    <FoldingCard
-                        icon={<Wand />}
-                        title="Enhanced"
-                        disabled={!analysisData}
-                        defaultOpen={false}
-                    >
-                        <div className="text-muted-foreground text-sm">
-                            <p>
-                                <strong>Enhanced EARS:</strong>
-                            </p>
-                            <ReactMarkdown>
-                                {analysisData?.enhancedReqEars}
-                            </ReactMarkdown>
-
-                            <p className="mt-2">
-                                <strong>Enhanced INCOSE:</strong>
-                            </p>
-                            <ReactMarkdown>
-                                {analysisData?.enhancedReqIncose}
-                            </ReactMarkdown>
-
-                            <p className="mt-2">
-                                <strong>General Feedback:</strong>
-                            </p>
-                            <ReactMarkdown>
-                                {analysisData?.enhancedGeneralFeedback}
-                            </ReactMarkdown>
-                        </div>
-                    </FoldingCard>
+                    <EnhancedCard
+                        enhancedReqEars={analysisData?.enhancedReqEars}
+                        enhancedReqIncose={analysisData?.enhancedReqIncose}
+                        enhancedGeneralFeedback={
+                            analysisData?.enhancedGeneralFeedback
+                        }
+                        onAccept={handleAcceptChange}
+                    />
                 </div>
             </div>
         </div>

@@ -7,6 +7,31 @@ export type Json =
     | Json[];
 
 export type Database = {
+    graphql_public: {
+        Tables: {
+            [_ in never]: never;
+        };
+        Views: {
+            [_ in never]: never;
+        };
+        Functions: {
+            graphql: {
+                Args: {
+                    operationName?: string;
+                    query?: string;
+                    variables?: Json;
+                    extensions?: Json;
+                };
+                Returns: Json;
+            };
+        };
+        Enums: {
+            [_ in never]: never;
+        };
+        CompositeTypes: {
+            [_ in never]: never;
+        };
+    };
     public: {
         Tables: {
             assignments: {
@@ -150,7 +175,6 @@ export type Database = {
                     document_id: string;
                     id: string;
                     is_deleted: boolean | null;
-                    name: string;
                     org_id: string | null;
                     position: number;
                     type: string;
@@ -167,7 +191,6 @@ export type Database = {
                     document_id: string;
                     id?: string;
                     is_deleted?: boolean | null;
-                    name?: string;
                     org_id?: string | null;
                     position: number;
                     type: string;
@@ -184,7 +207,6 @@ export type Database = {
                     document_id?: string;
                     id?: string;
                     is_deleted?: boolean | null;
-                    name?: string;
                     org_id?: string | null;
                     position?: number;
                     type?: string;
@@ -220,43 +242,34 @@ export type Database = {
                 Row: {
                     block_id: string | null;
                     created_at: string | null;
-                    created_by: string | null;
-                    default_value: string | null;
                     id: string;
                     is_hidden: boolean | null;
                     is_pinned: boolean | null;
                     position: number;
                     property_id: string;
                     updated_at: string | null;
-                    updated_by: string | null;
                     width: number | null;
                 };
                 Insert: {
                     block_id?: string | null;
                     created_at?: string | null;
-                    created_by?: string | null;
-                    default_value?: string | null;
                     id?: string;
                     is_hidden?: boolean | null;
                     is_pinned?: boolean | null;
                     position: number;
                     property_id: string;
                     updated_at?: string | null;
-                    updated_by?: string | null;
                     width?: number | null;
                 };
                 Update: {
                     block_id?: string | null;
                     created_at?: string | null;
-                    created_by?: string | null;
-                    default_value?: string | null;
                     id?: string;
                     is_hidden?: boolean | null;
                     is_pinned?: boolean | null;
                     position?: number;
                     property_id?: string;
                     updated_at?: string | null;
-                    updated_by?: string | null;
                     width?: number | null;
                 };
                 Relationships: [
@@ -335,7 +348,7 @@ export type Database = {
                     },
                 ];
             };
-            excalidraw_diagrams: {
+            'excalidraw-diagrams': {
                 Row: {
                     created_at: string;
                     diagram_data: Json | null;

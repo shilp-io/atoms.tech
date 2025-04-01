@@ -2,10 +2,9 @@
 
 import { useTheme } from 'next-themes';
 import { useParams, useRouter } from 'next/navigation';
-import { Suspense } from 'react';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 
-import OrgDashboard from '@/app/(protected)/org/[orgId]/OrgDashboard.client';
+import OrgDashboard from '@/app/(protected)/org/components/OrgDashboard.client';
 import { OrgDashboardSkeleton } from '@/components/custom/skeletons/OrgDashboardSkeleton';
 import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
 import { useOrganization } from '@/hooks/queries/useOrganization';
@@ -43,12 +42,12 @@ export default function OrgPage() {
         orgId,
     );
 
-    const { data: documents, isLoading: documentsLoading } =
-        useExternalDocumentsByOrg(orgId);
+    const { data: externalDocuments, isLoading: documentsLoading } =
+        useExternalDocumentsByOrg(params?.orgId || '');
 
     const handleProjectClick = (project: Project) => {
         setCurrentProjectId(project.id);
-        router.push(`/org/${orgId}/project/${project.id}`);
+        router.push(`/org/${orgId}/${project.id}`);
     };
 
     const handleExternalDocsClick = () => {
@@ -58,11 +57,11 @@ export default function OrgPage() {
     return (
         <Suspense fallback={<OrgDashboardSkeleton />}>
             <OrgDashboard
-                organization={organization as Organization}
+                organization={organization}
                 orgLoading={orgLoading}
                 projects={projects}
                 projectsLoading={projectsLoading}
-                documents={documents}
+                externalDocuments={externalDocuments}
                 documentsLoading={documentsLoading}
                 theme={theme}
                 onProjectClick={handleProjectClick}

@@ -1,7 +1,6 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { v4 as _uuidv4 } from 'uuid';
 import * as z from 'zod';

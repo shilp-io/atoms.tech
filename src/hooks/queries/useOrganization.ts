@@ -4,9 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getUserOrganizations } from '@/lib/db/client';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { OrganizationType } from '@/types/base/enums.types';
+import { OrganizationType } from '@/types';
 import { QueryFilters } from '@/types/base/filters.types';
-import { OrganizationSchema } from '@/types/validation/organizations.validation';
 
 export function useOrganization(orgId: string) {
     return useQuery({
@@ -46,7 +45,7 @@ export function useOrganization(orgId: string) {
                 console.error('Error fetching organization:', error);
                 return null; // Return null instead of throwing to prevent UI errors
             }
-            return OrganizationSchema.parse(data);
+            return data;
         },
         enabled: !!orgId && orgId !== 'user' && orgId !== 'project',
     });
@@ -71,7 +70,7 @@ export function useOrganizationsWithFilters(filters?: QueryFilters) {
             const { data, error } = await query;
 
             if (error) throw error;
-            return data.map((org) => OrganizationSchema.parse(org));
+            return data;
         },
     });
 }
@@ -137,7 +136,7 @@ export function useOrgsByUser(userId: string) {
                 throw error;
             }
 
-            return data.map((org) => OrganizationSchema.parse(org));
+            return data;
         },
         enabled: !!userId && userId !== 'user',
     });
@@ -171,7 +170,7 @@ export function usePersonalOrg(userId: string) {
                 throw error;
             }
 
-            return OrganizationSchema.parse(organization);
+            return organization;
         },
         enabled: !!userId && userId !== 'user',
     });
@@ -192,7 +191,7 @@ export function usePersonalOrg(userId: string) {
 //                 throw error;
 //             }
 
-//             return organizations.map((org) => OrganizationSchema.parse(org));
+//             return organizations;
 //         },
 //         enabled: !!userId,
 //     });
