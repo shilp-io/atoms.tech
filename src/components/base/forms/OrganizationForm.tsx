@@ -26,6 +26,7 @@ import {
     OrganizationType,
     PricingPlanInterval,
 } from '@/types/base/enums.types';
+import { useCreateBaseOrgProperties } from '@/hooks/mutations/useDocumentMutations';
 
 const formSchema = z.object({
     name: z.string().min(2, {
@@ -54,6 +55,7 @@ export default function OrganizationForm({ onSuccess }: OrganizationFormProps) {
     const router = useRouter();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { user } = useUser();
+    const createBaseOrgProperties = useCreateBaseOrgProperties();
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
@@ -96,6 +98,12 @@ export default function OrganizationForm({ onSuccess }: OrganizationFormProps) {
                 .single();
 
             if (orgError) throw orgError;
+
+            // Create base organization properties
+            await createBaseOrgProperties.mutateAsync({
+                orgId: orgData.id,
+                userId: user.id,
+            });
 
             // Add the creator as an owner of the organization
             const { error: memberError } = await supabase

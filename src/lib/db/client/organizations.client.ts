@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { BillingPlan, OrganizationType, PricingPlanInterval } from '@/types';
+import { useCreateBaseOrgProperties } from '@/hooks/mutations/useDocumentMutations';
 
 export const getUserOrganizations = async (userId: string) => {
     if (!userId) {
