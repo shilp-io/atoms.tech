@@ -13,7 +13,12 @@ interface PropertyCreateData {
     property_type: string;
     org_id: string;
     is_base?: boolean;
-    scope?: 'org' | 'document' | 'project' | 'document,project' | 'org,document,project';
+    scope?:
+        | 'org'
+        | 'document'
+        | 'project'
+        | 'document,project'
+        | 'org,document,project';
     document_id?: string;
     project_id?: string;
     options?: {

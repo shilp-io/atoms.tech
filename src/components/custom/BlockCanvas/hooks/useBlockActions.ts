@@ -158,7 +158,7 @@ export const useBlockActions = ({
                     .is('project_id', null)
                     .eq('scope', 'org');
 
-            if (basePropertiesError) {  
+            if (basePropertiesError) {
                 console.error(
                     'Error fetching base properties:',
                     basePropertiesError,
@@ -267,7 +267,10 @@ export const useBlockActions = ({
                     await createDefaultBlockProperties(createdBlock.id);
                     console.log('Successfully created columns for table block');
                 } catch (error) {
-                    console.error('Failed to create columns for table block:', error);
+                    console.error(
+                        'Failed to create columns for table block:',
+                        error,
+                    );
                     throw error;
                 }
             }

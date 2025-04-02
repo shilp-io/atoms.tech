@@ -19,6 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import { useCreateBaseOrgProperties } from '@/hooks/mutations/useDocumentMutations';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import {
@@ -26,7 +27,6 @@ import {
     OrganizationType,
     PricingPlanInterval,
 } from '@/types/base/enums.types';
-import { useCreateBaseOrgProperties } from '@/hooks/mutations/useDocumentMutations';
 
 const formSchema = z.object({
     name: z.string().min(2, {
