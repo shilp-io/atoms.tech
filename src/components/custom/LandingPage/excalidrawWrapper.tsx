@@ -37,7 +37,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
     appState: AppState;
   } | null>(null);
 
-  const { user, profile } = useUser();
+  const { user } = useUser();
   const organizationId = usePathname().split('/')[2];
   const projectId = usePathname().split('/')[3];
 
