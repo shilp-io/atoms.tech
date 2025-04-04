@@ -10,7 +10,6 @@ import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments'
 import { useOrganization as useOrgQuery } from '@/hooks/queries/useOrganization';
 import { useOrganizationProjects } from '@/hooks/queries/useProject';
 import { useOrganization } from '@/lib/providers/organization.provider';
-import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { Project } from '@/types/base/projects.types';
 
