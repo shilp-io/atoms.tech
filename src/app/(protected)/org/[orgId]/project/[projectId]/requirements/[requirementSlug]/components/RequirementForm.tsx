@@ -62,8 +62,8 @@ interface RequirementFormProps {
     isAnalysing: boolean;
     handleAnalyze: () => void;
     missingReqError: string;
-    // missingFilesError: string;
-    // setMissingFilesError: Dispatch<SetStateAction<string>>;
+    missingFilesError: string;
+    setMissingFilesError: Dispatch<SetStateAction<string>>;
     selectedFiles: { [key: string]: RegulationFile };
     setSelectedFiles: Dispatch<
         SetStateAction<{ [key: string]: RegulationFile }>
@@ -84,8 +84,8 @@ export function RequirementForm({
     isAnalysing,
     handleAnalyze,
     missingReqError,
-    // missingFilesError,
-    // setMissingFilesError,
+    missingFilesError,
+    setMissingFilesError,
     selectedFiles,
     setSelectedFiles,
 }: RequirementFormProps) {
@@ -116,7 +116,7 @@ export function RequirementForm({
         try {
             const files = Array.from(e.target.files);
             setIsUploading(true);
-            // setMissingFilesError('');
+            setMissingFilesError('');
 
             // upload to Supabase
             const uploadPromises = files.map((file) =>
@@ -300,7 +300,7 @@ export function RequirementForm({
     const [existingDocsValue, setExistingDocsValue] = useState<string>('');
 
     const handleExistingDocSelect = (supabaseId: string) => {
-        // setMissingFilesError('');
+        setMissingFilesError('');
         setSelectedFiles((prev) => ({
             ...prev,
             [supabaseId]: unusedDocsNameMap[supabaseId],
@@ -452,18 +452,13 @@ export function RequirementForm({
                         Analyze with AI
                     </Button>
                 </div>
-                {missingReqError && (
-                    // || missingFilesError
-                    <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded">
-                        <CircleAlert className="h-4 w-4" />
-                        <span>
-                            {
-                                missingReqError
-                                // || missingFilesError
-                            }
-                        </span>
-                    </div>
-                )}
+                {missingReqError ||
+                    (missingFilesError && (
+                        <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded">
+                            <CircleAlert className="h-4 w-4" />
+                            <span>{missingReqError || missingFilesError}</span>
+                        </div>
+                    ))}
                 <input
                     type="file"
                     ref={fileInputRef}
