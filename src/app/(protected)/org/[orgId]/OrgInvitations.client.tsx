@@ -1,18 +1,19 @@
 'use client';
 
+import { X } from 'lucide-react'; // Import X icon
 import { useState } from 'react';
-import { useCreateOrgInvitation } from '@/hooks/mutations/useOrgInvitationMutations';
-import { useOrgInvitationsByOrgId } from '@/hooks/queries/useOrganization';
-import { Input } from '@/components/ui/input';
+
+import { Badge } from '@/components/ui/badge'; // Import Badge
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge'; // Import Badge
-import { X } from 'lucide-react'; // Import X icon
-import { useUser } from '@/lib/providers/user.provider';
-import { InvitationStatus } from '@/types/base/enums.types';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { useCreateOrgInvitation } from '@/hooks/mutations/useOrgInvitationMutations';
+import { useOrgInvitationsByOrgId } from '@/hooks/queries/useOrganization';
 import { getOrganizationMembers } from '@/lib/db/client';
+import { useUser } from '@/lib/providers/user.provider';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { InvitationStatus } from '@/types/base/enums.types';
 
 interface OrgInvitationsProps {
     orgId: string;
@@ -23,13 +24,18 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
     const [, setUserExists] = useState<boolean | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null); // Track error messages
     const { user } = useUser();
-    const { mutateAsync: createInvitation, isPending } = useCreateOrgInvitation();
-    const { data: allInvitations, isLoading: outgoingLoading, refetch } = useOrgInvitationsByOrgId(orgId);
+    const { mutateAsync: createInvitation, isPending } =
+        useCreateOrgInvitation();
+    const {
+        data: allInvitations,
+        isLoading: outgoingLoading,
+        refetch,
+    } = useOrgInvitationsByOrgId(orgId);
     const { toast } = useToast(); // Initialize toast
 
     // Filter invitations to only include pending ones
     const outgoingInvitations = allInvitations?.filter(
-        (invitation) => invitation.status === InvitationStatus.pending
+        (invitation) => invitation.status === InvitationStatus.pending,
     );
 
     const handleInvite = async () => {
@@ -37,36 +43,61 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
 
         if (!inviteEmail) {
             setErrorMessage('Please enter a valid email.');
-            toast({ title: 'Error', description: 'Please enter a valid email.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'Please enter a valid email.',
+                variant: 'destructive',
+            });
             return;
         }
         if (!user?.id) {
             setErrorMessage('User not authenticated.');
-            toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'User not authenticated.',
+                variant: 'destructive',
+            });
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(inviteEmail.trim())) {
             setErrorMessage('Please enter a valid email address.');
-            toast({ title: 'Error', description: 'Please enter a valid email address.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'Please enter a valid email address.',
+                variant: 'destructive',
+            });
             return;
         }
 
         if (inviteEmail.trim() === user.email) {
             setErrorMessage('You cannot send an invitation to yourself.');
-            toast({ title: 'Error', description: 'You cannot send an invitation to yourself.', variant: 'default' });
+            toast({
+                title: 'Error',
+                description: 'You cannot send an invitation to yourself.',
+                variant: 'default',
+            });
             return;
         }
 
         try {
             // Check if the user is already a member of the organization
             const members = await getOrganizationMembers(orgId);
-            const isAlreadyMember = members.some((member) => member.email === inviteEmail.trim());
+            const isAlreadyMember = members.some(
+                (member) => member.email === inviteEmail.trim(),
+            );
 
             if (isAlreadyMember) {
-                setErrorMessage('This user is already a member of the organization.');
-                toast({ title: 'Error', description: 'This user is already a member of the organization.', variant: 'default' });
+                setErrorMessage(
+                    'This user is already a member of the organization.',
+                );
+                toast({
+                    title: 'Error',
+                    description:
+                        'This user is already a member of the organization.',
+                    variant: 'default',
+                });
                 return;
             }
 
@@ -79,32 +110,48 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
 
             if (profileError) {
                 if (profileError.code === 'PGRST116') {
-                    setErrorMessage('This email does not belong to any user. Please ask the user to sign up first.');
+                    setErrorMessage(
+                        'This email does not belong to any user. Please ask the user to sign up first.',
+                    );
                     setUserExists(false); // User does not exist
                     return;
                 }
-                console.error('Error checking email in profiles:', profileError);
+                console.error(
+                    'Error checking email in profiles:',
+                    profileError,
+                );
                 throw profileError;
             }
 
             setUserExists(true); // User exists
 
             // Check for duplicate invitations
-            const { data: duplicateInvitations, error: duplicateError } = await supabase
-                .from('organization_invitations')
-                .select('*')
-                .eq('email', inviteEmail.trim())
-                .eq('organization_id', orgId)
-                .eq('status', InvitationStatus.pending);
+            const { data: duplicateInvitations, error: duplicateError } =
+                await supabase
+                    .from('organization_invitations')
+                    .select('*')
+                    .eq('email', inviteEmail.trim())
+                    .eq('organization_id', orgId)
+                    .eq('status', InvitationStatus.pending);
 
             if (duplicateError) {
-                console.error('Error checking for duplicate invitations:', duplicateError);
+                console.error(
+                    'Error checking for duplicate invitations:',
+                    duplicateError,
+                );
                 throw duplicateError;
             }
 
             if (duplicateInvitations && duplicateInvitations.length > 0) {
-                setErrorMessage('An invitation has already been sent to this email for this organization.');
-                toast({ title: 'Error', description: 'An invitation has already been sent to this email for this organization.', variant: 'destructive' });
+                setErrorMessage(
+                    'An invitation has already been sent to this email for this organization.',
+                );
+                toast({
+                    title: 'Error',
+                    description:
+                        'An invitation has already been sent to this email for this organization.',
+                    variant: 'destructive',
+                });
                 return;
             }
 
@@ -120,7 +167,11 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
                 },
                 {
                     onSuccess: () => {
-                        toast({ title: 'Success', description: 'Invitation sent successfully!', variant: 'default' });
+                        toast({
+                            title: 'Success',
+                            description: 'Invitation sent successfully!',
+                            variant: 'default',
+                        });
                         setInviteEmail('');
                         setErrorMessage(null); // Reset error message
                         setUserExists(null); // Reset user existence state
@@ -129,20 +180,32 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
                     onError: (error) => {
                         console.error('Error sending invitation:', error);
                         setErrorMessage('Failed to send invitation.');
-                        toast({ title: 'Error', description: 'Failed to send invitation.', variant: 'destructive' });
+                        toast({
+                            title: 'Error',
+                            description: 'Failed to send invitation.',
+                            variant: 'destructive',
+                        });
                     },
-                }
+                },
             );
         } catch (error) {
             console.error('Error handling invitation:', error);
             setErrorMessage('Failed to process the invitation.');
-            toast({ title: 'Error', description: 'Failed to process the invitation.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'Failed to process the invitation.',
+                variant: 'destructive',
+            });
         }
     };
 
     const handleRevoke = async (invitationId: string) => {
         if (!user?.id) {
-            toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'User not authenticated.',
+                variant: 'destructive',
+            });
             return;
         }
 
@@ -160,11 +223,19 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
                 throw error;
             }
 
-            toast({ title: 'Success', description: 'Invitation revoked successfully!', variant: 'default' });
+            toast({
+                title: 'Success',
+                description: 'Invitation revoked successfully!',
+                variant: 'default',
+            });
             refetch(); // Refresh the list of outgoing invitations
         } catch (error) {
             console.error('Error revoking invitation:', error);
-            toast({ title: 'Error', description: 'Failed to revoke invitation.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'Failed to revoke invitation.',
+                variant: 'destructive',
+            });
         }
     };
 
@@ -189,13 +260,18 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
                                         setUserExists(null); // Reset user existence state on input change
                                     }}
                                 />
-                                <Button onClick={handleInvite} disabled={isPending}>
+                                <Button
+                                    onClick={handleInvite}
+                                    disabled={isPending}
+                                >
                                     Invite
                                 </Button>
                             </div>
                             <div>
                                 {errorMessage && (
-                                    <p className="text-primary text-sm">{errorMessage}</p>
+                                    <p className="text-primary text-sm">
+                                        {errorMessage}
+                                    </p>
                                 )}
                             </div>
                         </div>
@@ -228,17 +304,22 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
                                                 {invitation.status}
                                             </Badge>
                                         </div>
-                                        {invitation.status === InvitationStatus.pending && (
+                                        {invitation.status ===
+                                            InvitationStatus.pending && (
                                             <X
                                                 className="h-5 w-5 text-accent cursor-pointer"
-                                                onClick={() => handleRevoke(invitation.id)}
+                                                onClick={() =>
+                                                    handleRevoke(invitation.id)
+                                                }
                                             />
                                         )}
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-primary font-small ml-2">No outgoing invitations</p>
+                            <p className="text-primary font-small ml-2">
+                                No outgoing invitations
+                            </p>
                         )}
                     </CardContent>
                 </Card>

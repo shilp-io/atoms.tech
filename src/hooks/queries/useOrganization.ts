@@ -193,7 +193,10 @@ export function useOrgInvitation(email: string) {
                 .neq('status', 'rejected'); // Exclude rejected invitations
 
             if (error) {
-                console.error('Error fetching organization invitations by email:', error);
+                console.error(
+                    'Error fetching organization invitations by email:',
+                    error,
+                );
                 throw error;
             }
 
@@ -210,7 +213,9 @@ export function useUserSentOrgInvitations(userId: string) {
             // Validate userId
             if (
                 !userId ||
-                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)
+                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                    userId,
+                )
             ) {
                 console.error('Invalid user ID format:', userId);
                 throw new Error('Invalid user ID format');
@@ -242,7 +247,10 @@ export function useOrgInvitationsByOrgId(orgId: string) {
                 .eq('organization_id', orgId);
 
             if (error) {
-                console.error('Error fetching invitations by organization ID:', error);
+                console.error(
+                    'Error fetching invitations by organization ID:',
+                    error,
+                );
                 throw error;
             }
 

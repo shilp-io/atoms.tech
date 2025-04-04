@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { ExternalDocument } from '@/types/base/documents.types';
 import { Organization } from '@/types/base/organizations.types';
 import { Project } from '@/types/base/projects.types';
+
 import OrgInvitations from './OrgInvitations.client';
 
 interface OrgDashboardProps {
@@ -91,7 +92,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
             >
                 <TabsList
                     className={`grid ${
-                        props.organization?.type === 'enterprise' ? 'grid-cols-6' : 'grid-cols-5'
+                        props.organization?.type === 'enterprise'
+                            ? 'grid-cols-6'
+                            : 'grid-cols-5'
                     } w-full`}
                 >
                     <TabsTrigger
@@ -426,7 +429,6 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                     </div>
                 </TabsContent>
 
-                
                 {/* Tasks Tab */}
                 <TabsContent value="tasks" className="space-y-6">
                     <div className="flex justify-between items-center">
@@ -449,7 +451,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                         </button>
                     </div>
                 </TabsContent>
-                
+
                 <TabsContent value="invitations" className="space-y-6">
                     {props.organization?.type === 'enterprise' ? (
                         <OrgInvitations orgId={props.orgId} />

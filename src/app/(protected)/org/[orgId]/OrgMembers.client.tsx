@@ -18,10 +18,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/components/ui/use-toast';
 import { getOrganizationMembers } from '@/lib/db/client';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { useToast } from '@/components/ui/use-toast';
 import { EUserRoleType } from '@/types';
 
 interface OrgMembersProps {
@@ -33,9 +33,14 @@ export default function OrgMembers({ className }: OrgMembersProps) {
     const { user } = useUser();
     const { toast } = useToast();
 
-    const { data: members = [], isLoading, refetch } = useQuery({
+    const {
+        data: members = [],
+        isLoading,
+        refetch,
+    } = useQuery({
         queryKey: ['organization-members', params?.orgId || ''],
-        queryFn: () => params ? getOrganizationMembers(params.orgId) : Promise.resolve([]),
+        queryFn: () =>
+            params ? getOrganizationMembers(params.orgId) : Promise.resolve([]),
         enabled: params?.orgId ? true : false,
     });
 
@@ -44,7 +49,12 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         if (a.role === 'owner') return -1;
         if (b.role === 'owner') return 1;
         return 0;
-    }) as { id: string; role: EUserRoleType; full_name?: string; email?: string }[];
+    }) as {
+        id: string;
+        role: EUserRoleType;
+        full_name?: string;
+        email?: string;
+    }[];
 
     const getRoleColor = (role: EUserRoleType) => {
         switch (role) {
@@ -63,12 +73,16 @@ export default function OrgMembers({ className }: OrgMembersProps) {
 
     // Check if the current user is the owner
     const isOwner = members.some(
-        (member) => member.id === user?.id && member.role === 'owner'
+        (member) => member.id === user?.id && member.role === 'owner',
     );
 
     const handleRemoveMember = async (memberId: string) => {
         if (!user?.id) {
-            toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'User not authenticated.',
+                variant: 'destructive',
+            });
             return;
         }
 
@@ -85,13 +99,21 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                 throw error;
             }
 
-            toast({ title: 'Success', description: 'Member removed successfully!', variant: 'default' });
+            toast({
+                title: 'Success',
+                description: 'Member removed successfully!',
+                variant: 'default',
+            });
 
             // Refresh the members list
             refetch();
         } catch (error) {
             console.error('Error removing member:', error);
-            toast({ title: 'Error', description: 'Failed to remove member.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'Failed to remove member.',
+                variant: 'destructive',
+            });
         }
     };
 
@@ -137,7 +159,6 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                     </div>
                                     <div>
                                         <div className="font-medium">
-
                                             {member.full_name || 'User'}
                                         </div>
                                         <div className="text-sm text-muted-foreground">
@@ -160,30 +181,35 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                     >
                                         {member.role}
                                     </span>
-                                    {isOwner && member.id !== user?.id && ( // Allow removal only if the current user is the owner and not removing themselves
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0"
-                                                >
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem>
-                                                    Change role
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => handleRemoveMember(member.id)}
-                                                    className="text-red-600"
-                                                >
-                                                    Remove
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    )}
+                                    {isOwner &&
+                                        member.id !== user?.id && ( // Allow removal only if the current user is the owner and not removing themselves
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem>
+                                                        Change role
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() =>
+                                                            handleRemoveMember(
+                                                                member.id,
+                                                            )
+                                                        }
+                                                        className="text-red-600"
+                                                    >
+                                                        Remove
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
                                 </div>
                             </div>
                         ))}

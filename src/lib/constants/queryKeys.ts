@@ -80,7 +80,7 @@ export const queryKeys = {
         detail: (id: string) =>
             [...queryKeys.profiles.root, 'detail', id] as const,
         byEmail: (email: string) =>
-            [...queryKeys.profiles.root, 'byEmail', email] as const, 
+            [...queryKeys.profiles.root, 'byEmail', email] as const,
     },
 
     organizations: {
@@ -102,10 +102,22 @@ export const queryKeys = {
         byOrg: (orgId: string) =>
             [...queryKeys.organizationInvitations.root, 'org', orgId] as const,
         byEmail: (email: string) =>
-            [...queryKeys.organizationInvitations.root, 'email', email] as const,
-        byCreator: (userId: string) => ['organizationInvitations', 'byCreator', userId],
+            [
+                ...queryKeys.organizationInvitations.root,
+                'email',
+                email,
+            ] as const,
+        byCreator: (userId: string) => [
+            'organizationInvitations',
+            'byCreator',
+            userId,
+        ],
         byOrganization: (orgId: string) =>
-            [...queryKeys.organizationInvitations.root, 'byOrganization', orgId] as const, // New query key
+            [
+                ...queryKeys.organizationInvitations.root,
+                'byOrganization',
+                orgId,
+            ] as const, // New query key
     },
 
     traceLinks: {

@@ -1,11 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
+
 import { queryKeys } from '@/lib/constants/queryKeys';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Database } from '@/types/base/database.types';
 
 export type OrganizationInvitationInput = Omit<
     Database['public']['Tables']['organization_invitations']['Insert'],
-    'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'deleted_by' | 'is_deleted'
+    | 'id'
+    | 'created_at'
+    | 'updated_at'
+    | 'deleted_at'
+    | 'deleted_by'
+    | 'is_deleted'
 >;
 
 export function useCreateOrgInvitation() {
@@ -20,7 +26,10 @@ export function useCreateOrgInvitation() {
                 .single();
 
             if (error) {
-                console.error('Failed to create organization invitation', error);
+                console.error(
+                    'Failed to create organization invitation',
+                    error,
+                );
                 throw error;
             }
 
@@ -33,7 +42,9 @@ export function useCreateOrgInvitation() {
         onSuccess: (data) => {
             // Invalidate relevant queries
             queryClient.invalidateQueries({
-                queryKey: queryKeys.organizationInvitations.byOrg(data.organization_id),
+                queryKey: queryKeys.organizationInvitations.byOrg(
+                    data.organization_id,
+                ),
             });
         },
     });

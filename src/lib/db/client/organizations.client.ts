@@ -57,10 +57,13 @@ export const getOrganizationMembers = async (organizationId: string) => {
 
     // Extract user IDs and roles from the members
     const userIds = members.map((member) => member.user_id);
-    const userRoles = members.reduce((acc, member) => {
-        acc[member.user_id] = member.role;
-        return acc;
-    }, {} as Record<string, string>);
+    const userRoles = members.reduce(
+        (acc, member) => {
+            acc[member.user_id] = member.role;
+            return acc;
+        },
+        {} as Record<string, string>,
+    );
 
     // Fetch profiles for the extracted user IDs
     const { data: profiles, error: profilesError } = await supabase

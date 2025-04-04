@@ -1,30 +1,37 @@
 'use client';
 
-import { useOrgInvitation } from '@/hooks/queries/useOrganization';
-import { useCreateOrgMember } from '@/hooks/mutations/useOrgMemberMutation';
 import { useQuery, useQueryClient } from '@tanstack/react-query'; // Import useQuery and useQueryClient
+
+import { Check, X } from 'lucide-react';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { X, Check } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useCreateOrgMember } from '@/hooks/mutations/useOrgMemberMutation';
+import { useOrgInvitation } from '@/hooks/queries/useOrganization';
+import { queryKeys } from '@/lib/constants/queryKeys';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { InvitationStatus } from '@/types/base/enums.types';
-import { queryKeys } from '@/lib/constants/queryKeys';
-import { useToast } from '@/components/ui/use-toast';
 
 export default function UserInvitations() {
     const { user } = useUser();
     const queryClient = useQueryClient(); // Initialize queryClient
-    const { data: allInvitations, isLoading, refetch } = useOrgInvitation(user?.email || '');
+    const {
+        data: allInvitations,
+        isLoading,
+        refetch,
+    } = useOrgInvitation(user?.email || '');
     const { mutateAsync: addOrgMember } = useCreateOrgMember();
     const { toast } = useToast();
 
     // Filter invitations to only include pending ones
     const invitations = allInvitations?.filter(
-        (invitation) => invitation.status === InvitationStatus.pending
+        (invitation) => invitation.status === InvitationStatus.pending,
     );
 
     // Prefetch organization data for all invitations
-    const organizationIds = invitations?.map((invitation) => invitation.organization_id) || [];
+    const organizationIds =
+        invitations?.map((invitation) => invitation.organization_id) || [];
     const { data: organizations } = useQuery({
         queryKey: queryKeys.organizations.list(),
         queryFn: async () => {
@@ -38,17 +45,24 @@ export default function UserInvitations() {
                 throw error;
             }
 
-            return data.reduce((acc, org) => {
-                acc[org.id] = org.name;
-                return acc;
-            }, {} as Record<string, string>);
+            return data.reduce(
+                (acc, org) => {
+                    acc[org.id] = org.name;
+                    return acc;
+                },
+                {} as Record<string, string>,
+            );
         },
         enabled: organizationIds.length > 0,
     });
 
     const handleAccept = async (invitation: any) => {
         if (!user?.id) {
-            toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'User not authenticated.',
+                variant: 'destructive',
+            });
             return;
         }
 
@@ -76,20 +90,34 @@ export default function UserInvitations() {
                 throw error;
             }
 
-            toast({ title: 'Success', description: 'Invitation accepted successfully!', variant: 'default' });
+            toast({
+                title: 'Success',
+                description: 'Invitation accepted successfully!',
+                variant: 'default',
+            });
 
             // Refresh the invitations and organizations list
             refetch();
-            queryClient.invalidateQueries({ queryKey: queryKeys.organizations.byMembership(user.id) }); // Refresh organizations
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.organizations.byMembership(user.id),
+            }); // Refresh organizations
         } catch (error) {
             console.error('Error accepting invitation:', error);
-            toast({ title: 'Error', description: 'Failed to accept invitation.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'Failed to accept invitation.',
+                variant: 'destructive',
+            });
         }
     };
 
     const handleReject = async (invitation: any) => {
         if (!user?.id) {
-            toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'User not authenticated.',
+                variant: 'destructive',
+            });
             return;
         }
 
@@ -107,11 +135,19 @@ export default function UserInvitations() {
                 throw error;
             }
 
-            toast({ title: 'Success', description: 'Invitation rejected successfully!', variant: 'default' });
+            toast({
+                title: 'Success',
+                description: 'Invitation rejected successfully!',
+                variant: 'default',
+            });
             refetch();
         } catch (error) {
             console.error('Error rejecting invitation:', error);
-            toast({ title: 'Error', description: 'Failed to reject invitation.', variant: 'destructive' });
+            toast({
+                title: 'Error',
+                description: 'Failed to reject invitation.',
+                variant: 'destructive',
+            });
         }
     };
 
@@ -126,10 +162,17 @@ export default function UserInvitations() {
                 ) : invitations?.length ? (
                     <ul className="space-y-2">
                         {invitations.map((invitation) => (
-                            <li key={invitation.id} className="flex justify-between items-center">
-                                <span className='font-small'>
+                            <li
+                                key={invitation.id}
+                                className="flex justify-between items-center"
+                            >
+                                <span className="font-small">
                                     Invitation to join{' '}
-                                    <span className='text-primary'>{organizations?.[invitation.organization_id] || 'Unknown Organization'}</span>
+                                    <span className="text-primary">
+                                        {organizations?.[
+                                            invitation.organization_id
+                                        ] || 'Unknown Organization'}
+                                    </span>
                                 </span>
                                 <div className="flex space-x-2">
                                     <Check
@@ -145,7 +188,9 @@ export default function UserInvitations() {
                         ))}
                     </ul>
                 ) : (
-                    <p className="text-primary font-small ml-2">No pending invitations.</p>
+                    <p className="text-primary font-small ml-2">
+                        No pending invitations.
+                    </p>
                 )}
             </CardContent>
         </Card>

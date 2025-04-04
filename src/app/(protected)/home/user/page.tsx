@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import UserInvitations from '@/app/(protected)/user/components/UserInvitations.client'; // Import UserInvitations
 import { CreatePanel } from '@/components/base/panels/CreatePanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,27 +27,25 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useOrgInvitation } from '@/hooks/queries/useOrganization';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
-import { OrganizationType } from '@/types/base/enums.types';
-import { useOrgInvitation } from '@/hooks/queries/useOrganization';
-import { InvitationStatus } from '@/types/base/enums.types';
+import { InvitationStatus, OrganizationType } from '@/types/base/enums.types';
 import { Organization } from '@/types/base/organizations.types';
-import UserInvitations from '@/app/(protected)/user/components/UserInvitations.client'; // Import UserInvitations
 
 export default function UserDashboard() {
     const { user, profile } = useUser();
     const router = useRouter();
     const { setCurrentUserId } = useContextStore();
     const { setCurrentOrganization } = useOrganization();
-    const { data: allInvitations} = useOrgInvitation(user?.email || '');
+    const { data: allInvitations } = useOrgInvitation(user?.email || '');
     const queryClient = useQueryClient();
 
     // Filter the invitations to only include pending ones
     const invitations = allInvitations?.filter(
-        (invitation) => invitation.status === InvitationStatus.pending
+        (invitation) => invitation.status === InvitationStatus.pending,
     );
 
     // Ensure organizations is always an array and use memo to prevent re-renders
@@ -398,7 +397,8 @@ export default function UserDashboard() {
                                             {org.status}
                                         </Badge>
                                         <Badge variant="secondary">
-                                            {org.type === OrganizationType.personal
+                                            {org.type ===
+                                            OrganizationType.personal
                                                 ? 'Playground'
                                                 : org.type ===
                                                     OrganizationType.enterprise
