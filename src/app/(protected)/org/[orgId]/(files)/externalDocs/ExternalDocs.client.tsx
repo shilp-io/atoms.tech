@@ -23,7 +23,8 @@ export default function ExternalDocsPage() {
     const { theme } = useTheme();
     const uploadDocument = useUploadExternalDocument();
     const deleteDocument = useDeleteExternalDocument();
-    const { organization } = useOrganization();
+    const organizationContext = useOrganization();
+    const organization = organizationContext?.currentOrganization || null;
     const pathname = usePathname();
     const { toast } = useToast();
     
