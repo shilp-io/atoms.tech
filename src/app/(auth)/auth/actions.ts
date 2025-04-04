@@ -1,13 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { getUserOrganizationsServer } from '@/lib/db/server';
 import { createClient } from '@/lib/supabase/supabaseServer';
-import { OrganizationType } from '@/types/base/enums.types';
+import { OrganizationType } from '@/types';
 
 export async function login(formData: FormData) {
     const supabase = await createClient();
+    const cookieStore = await cookies();
 
     const data = {
         email: formData.get('email') as string,
@@ -18,60 +21,53 @@ export async function login(formData: FormData) {
         const { error, data: authData } =
             await supabase.auth.signInWithPassword(data);
 
-        if (error) {
+        if (error || !authData.user) {
             return {
-                error: error.message || 'Invalid credentials',
+                error: error?.message || 'Invalid credentials',
                 success: false,
             };
         }
 
-        if (authData.user) {
-            // Prefetch user profile
-            const { data: _profile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', authData.user.id)
-                .single();
+        const organizations = await getUserOrganizationsServer(
+            authData.user.id,
+        );
 
-            // Prefetch organizations
-            const { data: organizations } = await supabase
-                .from('organizations')
-                .select('*')
-                .eq('user_id', authData.user.id);
+        let redirectUrl = '/home/user'; // Default fallback
 
-            // Determine where to redirect based on organizations
-            if (organizations && organizations.length > 0) {
-                // Find enterprise organization
-                const enterpriseOrg = organizations.find(
-                    (org) => org.type === OrganizationType.enterprise,
-                );
+        // Find enterprise organization first
+        const enterpriseOrg = organizations.find(
+            (org) => org.type === OrganizationType.enterprise,
+        );
 
-                // Find personal organization
-                const personalOrg = organizations.find(
-                    (org) => org.type === OrganizationType.personal,
-                );
+        // Only set cookie if enterprise org exists or if no preferred_org_id is set yet
+        const existingPreferredOrgId =
+            cookieStore.get('preferred_org_id')?.value;
 
-                if (enterpriseOrg) {
-                    // Prefetch enterprise org data
-                    await supabase
-                        .from('organization_members')
-                        .select('*')
-                        .eq('organization_id', enterpriseOrg.id)
-                        .eq('user_id', authData.user.id);
+        if (enterpriseOrg) {
+            // If enterprise org exists, always set it as preferred and redirect there
+            redirectUrl = `/org/${enterpriseOrg.id}`;
+            cookieStore.set('preferred_org_id', enterpriseOrg.id);
+        } else if (!existingPreferredOrgId && organizations.length > 0) {
+            // Only set a new preferred org if none exists and we have orgs
+            const personalOrg = organizations.find(
+                (org) => org.type === OrganizationType.personal,
+            );
 
-                    revalidatePath('/', 'layout');
-                    redirect(`/org/${enterpriseOrg.id}`);
-                } else if (personalOrg) {
-                    revalidatePath('/', 'layout');
-                    redirect(`/org/${personalOrg.id}`);
-                }
+            if (personalOrg) {
+                redirectUrl = `/org/${personalOrg.id}`;
+                cookieStore.set('preferred_org_id', personalOrg.id);
             }
         }
 
-        // Default redirect if no specific org found
+        cookieStore.set('user_id', authData.user.id);
+
         revalidatePath('/', 'layout');
-        redirect('/home');
+        return {
+            success: true,
+            redirectTo: redirectUrl,
+        };
     } catch (error) {
+        console.error('Error logging in:', error);
         return {
             error: 'An unexpected error occurred. Please try again.',
             success: false,
@@ -148,11 +144,26 @@ export async function signOut() {
             throw error;
         }
 
+        // Clear auth cookies on server side
+        const cookieStore = await cookies();
+        [
+            'preferred_org_id',
+            'user_id',
+            'sb-access-token',
+            'sb-refresh-token',
+        ].forEach((name) => {
+            cookieStore.set(name, '', {
+                expires: new Date(0),
+                path: '/',
+            });
+        });
+
         revalidatePath('/', 'layout');
-        redirect('/login');
+
+        // Send a properly formatted JSON response
+        return Response.json({ success: true });
     } catch (error) {
         console.error('Error signing out:', error);
-        // Still redirect even if there's an error
-        redirect('/login');
+        return Response.json({ success: false, error: 'Failed to sign out' });
     }
 }

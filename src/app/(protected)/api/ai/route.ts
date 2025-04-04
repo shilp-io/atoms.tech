@@ -1,63 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
-    GetPipelineRunParams,
-    PipelineRunState,
+    // PipelineRunState,
     StartPipelineParams,
     gumloopService,
 } from '@/lib/services/gumloop';
-import { createClient } from '@/lib/supabase/supabaseServer';
-import { BillingCacheSchema } from '@/types/validation';
 
-// import { rateLimit } from '@/lib/middleware/rateLimit';
-
-type ActionType = 'startPipeline' | 'getPipelineStatus';
-
-interface BaseRequest {
-    action: ActionType;
-}
-
-interface StartPipelineRequest extends BaseRequest, StartPipelineParams {
-    action: 'startPipeline';
-}
-
-interface GetPipelineStatusRequest extends BaseRequest, GetPipelineRunParams {
-    action: 'getPipelineStatus';
-}
-
-type ApiRequest = StartPipelineRequest | GetPipelineStatusRequest;
+// import { createClient } from '@/lib/supabase/supabaseServer';
 
 export async function POST(request: NextRequest) {
     try {
         // Parse and validate request body
-        const body = (await request.json()) as ApiRequest;
+        const body = (await request.json()) as StartPipelineParams;
 
-        if (!body.action) {
-            return NextResponse.json(
-                { error: 'Action is required' },
-                { status: 400 },
-            );
-        }
+        const pipelineResponse = await gumloopService.startPipeline(body);
 
-        switch (body.action) {
-            case 'startPipeline': {
-                const pipelineResponse =
-                    await gumloopService.startPipeline(body);
-
-                return NextResponse.json(pipelineResponse);
-            }
-
-            case 'getPipelineStatus': {
-                const status = await gumloopService.getPipelineRun(body);
-                return NextResponse.json(status);
-            }
-
-            default:
-                return NextResponse.json(
-                    { error: 'Invalid action' },
-                    { status: 400 },
-                );
-        }
+        return NextResponse.json(pipelineResponse);
     } catch (error) {
         console.error('API error:', error);
         return NextResponse.json(
@@ -94,46 +52,41 @@ export async function GET(request: NextRequest) {
 
         const status = await gumloopService.getPipelineRun({ runId });
 
-        console.log('Pipeline status:', status.state);
+        // if (status.state == PipelineRunState.DONE) {
+        //     console.log(
+        //         `Adding ${status.credit_cost} cost to the billing cache`,
+        //     );
 
-        if (status.state == PipelineRunState.DONE) {
-            console.log(
-                `Adding ${status.credit_cost} cost to the billing cache`,
-            );
+        //     // increment the API usage counter
+        //     const supabase = await createClient();
+        //     const { data: billingRecord, error } = await supabase
+        //         .from('billing_cache')
+        //         .select('*')
+        //         .eq('organization_id', organizationId)
+        //         .single();
 
-            // increment the API usage counter
-            const supabase = await createClient();
-            const { data, error } = await supabase
-                .from('billing_cache')
-                .select('*')
-                .eq('organization_id', organizationId);
+        //     if (error) throw error;
 
-            if (error) throw error;
+        //     // @ts-expect-error The property exists
+        //     billingRecord.current_period_usage.api_calls += status.credit_cost;
+        //     if (!billingRecord.current_period_usage) {
+        //         throw new Error('No billing record found');
+        //     }
 
-            const billingRecord = BillingCacheSchema.parse(data[0]);
+        //     // Update the record in database
+        //     const { error: updateError } = await supabase
+        //         .from('billing_cache')
+        //         .update({
+        //             current_period_usage: {
+        //                 // @ts-expect-error The property exists
+        //                 ...billingRecord.current_period_usage,
+        //             },
+        //         })
+        //         .eq('organization_id', organizationId)
+        //         .select();
 
-            // @ts-expect-error The property exists
-            billingRecord.current_period_usage.api_calls += status.credit_cost;
-            if (!billingRecord.current_period_usage) {
-                throw new Error('No billing record found');
-            }
-
-            // Update the record in database
-            const { data: updateData, error: updateError } = await supabase
-                .from('billing_cache')
-                .update({
-                    current_period_usage: {
-                        // @ts-expect-error The property exists
-                        ...billingRecord.current_period_usage,
-                    },
-                })
-                .eq('organization_id', organizationId)
-                .select();
-
-            if (updateError) throw updateError;
-
-            console.log('updateData', updateData);
-        }
+        //     if (updateError) throw updateError;
+        // }
 
         return NextResponse.json(status);
     } catch (error) {

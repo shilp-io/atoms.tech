@@ -1,7 +1,6 @@
 'use client';
 
 import BulletList from '@tiptap/extension-bullet-list';
-import Heading from '@tiptap/extension-heading';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import ListItem from '@tiptap/extension-list-item';
@@ -10,6 +9,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { GripVertical, Trash2 } from 'lucide-react';
 import React from 'react';
 
 import { BlockProps } from '@/components/custom/BlockCanvas/types';
@@ -22,21 +22,30 @@ const customStyles = `
   .ProseMirror {
     background: transparent;
     outline: none !important;
+    min-height: 1.5em;
   }
 
   .ProseMirror-focused {
     outline: none !important;
   }
 
+  .ProseMirror p.is-empty::before {
+    color: #9ca3af;
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
   .ProseMirror .arrow-list {
     list-style: none;
     padding-left: 1.5em;
   }
-  
+
   .ProseMirror .arrow-list li {
     position: relative;
   }
-  
+
   .ProseMirror .arrow-list li::before {
     content: "→";
     position: absolute;
@@ -102,38 +111,67 @@ const customStyles = `
   }
 
   .ProseMirror *::selection {
-    background: rgba(255, 0, 0, 0.1);
+    background: rgba(59, 130, 246, 0.2);
     border-radius: 0;
   }
 
   .ProseMirror:not(.ProseMirror-focused) *::selection {
-    background: transparent;
+    background: rgba(59, 130, 246, 0.1);
   }
 `;
 
 export const TextBlock: React.FC<BlockProps> = ({
     block,
     onUpdate,
-    isSelected,
+    _isSelected,
     onSelect,
     isEditMode,
+    onDelete,
+    onDoubleClick,
+    dragActivators,
 }) => {
     const content = block.content as { text?: string; format?: string };
+    const [localContent, setLocalContent] = React.useState(
+        content?.text || '<p></p>',
+    );
+    const [showToolbar, setShowToolbar] = React.useState(false);
+    const [toolbarPosition, setToolbarPosition] = React.useState({
+        top: 0,
+        left: 0,
+    });
+    const editorRef = React.useRef<HTMLDivElement>(null);
+    const lastSavedContent = React.useRef(content?.text || '<p></p>');
+
+    // Add click outside handler
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                editorRef.current &&
+                !editorRef.current.contains(event.target as Node)
+            ) {
+                setShowToolbar(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
-                heading: false,
+                heading: {
+                    levels: [1, 2, 3, 4, 5],
+                },
                 bulletList: false,
                 orderedList: false,
                 listItem: false,
             }),
-            Heading.configure({
-                levels: [1, 2, 3, 4, 5],
-            }),
             BulletList.configure({
                 HTMLAttributes: {
-                    class: 'bullet-list',
+                    class: '',
                 },
             }),
             OrderedList.configure({
@@ -154,55 +192,134 @@ export const TextBlock: React.FC<BlockProps> = ({
                 allowBase64: true,
             }),
         ],
-        content: content?.text || '',
-        editable: isEditMode,
-        immediatelyRender: false,
-        onBlur: ({ editor }) => {
-            const html = editor.getHTML();
-            if (html !== content?.text) {
-                onUpdate({ text: html, format: 'html' } as Json);
-            }
-        },
-        onFocus: onSelect,
-    });
+        content: content?.text || '<p></p>',
+        editable: Boolean(isEditMode),
+        onSelectionUpdate: ({ editor }) => {
+            if (!isEditMode) return;
 
-    // Update editor content when block content changes externally
-    React.useEffect(() => {
-        if (editor && content?.text && editor.getHTML() !== content.text) {
-            editor.commands.setContent(content.text);
-        }
-    }, [content?.text, editor]);
+            const { from, to } = editor.state.selection;
+            if (from === to) {
+                setShowToolbar(false);
+                return;
+            }
+
+            const editorElement = editorRef.current;
+            if (!editorElement) return;
+
+            const view = editor.view;
+            const start = view.coordsAtPos(from);
+            const editorRect = editorElement.getBoundingClientRect();
+
+            setToolbarPosition({
+                top: start.top - editorRect.top - 10,
+                left: start.left - editorRect.left,
+            });
+            setShowToolbar(true);
+        },
+        onUpdate: ({ editor }) => {
+            if (!isEditMode) return;
+            const newContent = editor.getHTML();
+            setLocalContent(newContent);
+        },
+    });
 
     // Update editor's editable state when isEditMode changes
     React.useEffect(() => {
         if (editor) {
-            editor.setEditable(isEditMode || false);
-            if (!isEditMode) {
-                // Clear any text selection when exiting edit mode
-                window.getSelection()?.removeAllRanges();
-            }
+            editor.setEditable(Boolean(isEditMode));
         }
     }, [isEditMode, editor]);
 
+    // Save content when exiting edit mode
+    React.useEffect(() => {
+        if (!isEditMode && localContent !== lastSavedContent.current) {
+            lastSavedContent.current = localContent;
+            onUpdate({
+                text: localContent,
+                format: content?.format || 'default',
+            } as Json);
+        }
+    }, [isEditMode, localContent, content?.format, onUpdate]);
+
+    // Sync external content changes only when not in edit mode
+    React.useEffect(() => {
+        if (!editor || !content?.text || isEditMode) return;
+
+        if (content.text !== lastSavedContent.current) {
+            lastSavedContent.current = content.text;
+            setLocalContent(content.text);
+            editor.commands.setContent(content.text);
+        }
+    }, [content?.text, editor, isEditMode]);
+
     return (
-        <div className="relative">
-            <style>{customStyles}</style>
-            {isSelected && isEditMode && (
-                <Toolbar editor={editor} className="sticky top-0 z-10" />
+        <div className="group flex items-start gap-2">
+            {isEditMode && (
+                <div className="flex flex-col gap-2 -mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div
+                        {...dragActivators}
+                        className="cursor-grab active:cursor-grabbing"
+                    >
+                        <GripVertical className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+                    </div>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete?.();
+                        }}
+                        className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </button>
+                </div>
             )}
-            <EditorContent
-                editor={editor}
+            <div
+                ref={editorRef}
                 className={cn(
-                    'min-h-[2em]',
-                    'prose prose-sm max-w-none',
-                    'focus:outline-none',
-                    'bg-transparent',
-                    !editor?.getText() &&
-                        'before:text-gray-400 before:content-[attr(data-placeholder)]',
-                    !isEditMode && 'pointer-events-none',
+                    'relative w-full',
+                    isEditMode && 'ring-1 ring-purple-300/50 ring-offset-0',
                 )}
-                data-placeholder="Enter Text"
-            />
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect?.(block.id);
+                    if (isEditMode && editor && editor.state.selection.empty) {
+                        editor.commands.focus();
+                    }
+                }}
+                onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    onDoubleClick?.();
+                }}
+            >
+                {isEditMode && showToolbar && (
+                    <div
+                        className="absolute z-50 format-toolbar"
+                        style={{
+                            top: `${toolbarPosition.top}px`,
+                            left: `${toolbarPosition.left}px`,
+                        }}
+                        onMouseDown={(e) => {
+                            // Prevent toolbar interactions from stealing focus
+                            e.preventDefault();
+                        }}
+                    >
+                        <Toolbar
+                            editor={editor}
+                            className="bg-background/95 backdrop-blur-sm rounded-lg shadow-lg border border-border p-1 transform -translate-y-full transition-all duration-200"
+                        />
+                    </div>
+                )}
+                <style>{customStyles}</style>
+                <EditorContent
+                    editor={editor}
+                    className="prose prose-sm dark:prose-invert max-w-none w-full focus:outline-none"
+                    onClick={() => {
+                        if (editor?.state.selection.empty) {
+                            setShowToolbar(false);
+                        }
+                    }}
+                />
+            </div>
         </div>
     );
 };

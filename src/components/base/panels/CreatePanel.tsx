@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 
 import DocumentForm from '@/components/base/forms/DocumentForm';
 import OrganizationForm from '@/components/base/forms/OrganizationForm';
@@ -22,6 +22,7 @@ export interface CreatePanelProps {
     initialTab?: 'project' | 'requirement' | 'document' | 'organization';
     projectId?: string; // For creating requirements under a project
     showTabs?: 'show' | 'project' | 'requirement' | 'document' | 'organization';
+    organizationId?: string;
 }
 
 export function CreatePanel({
@@ -30,8 +31,9 @@ export function CreatePanel({
     initialTab = 'project',
     projectId,
     showTabs = 'show',
+    organizationId,
 }: CreatePanelProps) {
-    const [activeTab, setActiveTab] = React.useState(initialTab);
+    const [activeTab, setActiveTab] = useState(initialTab);
 
     const handleClose = () => {
         onClose();
@@ -56,7 +58,10 @@ export function CreatePanel({
                     </SheetHeader>
                     <div className="space-y-6">
                         {showTabs === 'project' && (
-                            <ProjectForm onSuccess={handleClose} />
+                            <ProjectForm
+                                onSuccess={handleClose}
+                                organizationId={organizationId}
+                            />
                         )}
                         {showTabs === 'requirement' && (
                             // <RequirementForm
@@ -114,7 +119,10 @@ export function CreatePanel({
                         </TabsList>
 
                         <TabsContent value="project" className="mt-6">
-                            <ProjectForm onSuccess={handleClose} />
+                            <ProjectForm
+                                onSuccess={handleClose}
+                                organizationId={organizationId}
+                            />
                         </TabsContent>
 
                         <TabsContent value="requirement" className="mt-6">

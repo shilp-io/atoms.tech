@@ -4,24 +4,34 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { getUserOrganizations } from '@/lib/db/client';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { OrganizationType } from '@/types/base/enums.types';
+import { OrganizationType } from '@/types';
 import { QueryFilters } from '@/types/base/filters.types';
-import { OrganizationSchema } from '@/types/validation/organizations.validation';
 
 export function useOrganization(orgId: string) {
     return useQuery({
         queryKey: queryKeys.organizations.detail(orgId),
         queryFn: async () => {
+            // Handle empty or invalid orgId more gracefully
+            if (!orgId || orgId === '') {
+                console.warn('Empty organization ID provided');
+                return null;
+            }
+
+            // Skip validation for special cases like 'project'
+            if (orgId === 'project') {
+                console.warn('Special case organization ID:', orgId);
+                return null;
+            }
+
             // Validate that orgId is a valid UUID format before querying
             if (
-                !orgId ||
                 orgId === 'user' ||
                 !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
                     orgId,
                 )
             ) {
                 console.error('Invalid organization ID format:', orgId);
-                throw new Error('Invalid organization ID format');
+                return null; // Return null instead of throwing to prevent UI errors
             }
 
             const { data, error } = await supabase
@@ -33,11 +43,11 @@ export function useOrganization(orgId: string) {
 
             if (error) {
                 console.error('Error fetching organization:', error);
-                throw error;
+                return null; // Return null instead of throwing to prevent UI errors
             }
-            return OrganizationSchema.parse(data);
+            return data;
         },
-        enabled: !!orgId && orgId !== 'user',
+        enabled: !!orgId && orgId !== 'user' && orgId !== 'project',
     });
 }
 
@@ -60,7 +70,7 @@ export function useOrganizationsWithFilters(filters?: QueryFilters) {
             const { data, error } = await query;
 
             if (error) throw error;
-            return data.map((org) => OrganizationSchema.parse(org));
+            return data;
         },
     });
 }
@@ -126,7 +136,7 @@ export function useOrgsByUser(userId: string) {
                 throw error;
             }
 
-            return data.map((org) => OrganizationSchema.parse(org));
+            return data;
         },
         enabled: !!userId && userId !== 'user',
     });
@@ -160,28 +170,96 @@ export function usePersonalOrg(userId: string) {
                 throw error;
             }
 
-            return OrganizationSchema.parse(organization);
+            return organization;
         },
         enabled: !!userId && userId !== 'user',
     });
 }
 
-// export function useOrgsByUser(userId: string) {
-//     return useQuery({
-//         queryKey: queryKeys.organizations.byUser(userId),
-//         queryFn: async () => {
-//             const { data: organizations, error } = await supabase
-//                 .from('organizations')
-//                 .select('*')
-//                 .eq('created_by', userId)
-//                 .eq('is_deleted', false);
+export function useOrgInvitation(email: string) {
+    return useQuery({
+        queryKey: queryKeys.organizationInvitations.byEmail(email),
+        queryFn: async () => {
+            // Validate email
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                console.error('Invalid email format:', email);
+                throw new Error('Invalid email format');
+            }
 
-//             if (error) {
-//                 console.error('Error fetching organizations:', error);
-//                 throw error;
-//             }
+            const { data, error } = await supabase
+                .from('organization_invitations')
+                .select('*')
+                .eq('email', email)
+                .neq('status', 'rejected'); // Exclude rejected invitations
 
-//             return organizations.map((org) => OrganizationSchema.parse(org));
+            if (error) {
+                console.error(
+                    'Error fetching organization invitations by email:',
+                    error,
+                );
+                throw error;
+            }
+
+            return data;
+        },
+        enabled: !!email,
+    });
+}
+
+export function useUserSentOrgInvitations(userId: string) {
+    return useQuery({
+        queryKey: queryKeys.organizationInvitations.byCreator(userId),
+        queryFn: async () => {
+            // Validate userId
+            if (
+                !userId ||
+                !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                    userId,
+                )
+            ) {
+                console.error('Invalid user ID format:', userId);
+                throw new Error('Invalid user ID format');
+            }
+
+            const { data, error } = await supabase
+                .from('organization_invitations')
+                .select('*')
+                .eq('created_by', userId);
+
+            if (error) {
+                console.error('Error fetching user sent invitations:', error);
+                throw error;
+            }
+
+            return data;
+        },
+        enabled: !!userId,
+    });
+}
+
+export function useOrgInvitationsByOrgId(orgId: string) {
+    return useQuery({
+        queryKey: queryKeys.organizationInvitations.byOrganization(orgId),
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('organization_invitations')
+                .select('*')
+                .eq('organization_id', orgId);
+
+            if (error) {
+                console.error(
+                    'Error fetching invitations by organization ID:',
+                    error,
+                );
+                throw error;
+            }
+
+            return data;
+        },
+        enabled: !!orgId,
+    });
+}
+//             return organizations;
 //         },
 //         enabled: !!userId,
 //     });

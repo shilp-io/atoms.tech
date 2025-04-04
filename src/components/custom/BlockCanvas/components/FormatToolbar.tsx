@@ -1,4 +1,5 @@
 import { Editor } from '@tiptap/react';
+import debounce from 'lodash/debounce';
 import {
     AlignCenter,
     AlignLeft,
@@ -18,7 +19,7 @@ import {
     ListOrdered,
     Underline,
 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ import { cn } from '@/lib/utils';
 interface ToolbarProps {
     className?: string;
     editor: Editor | null;
+    dragActivators?: React.ComponentProps<typeof React.Fragment>;
 }
 
 type HeadingLevel = 1 | 2 | 3 | 4 | 5;
@@ -51,39 +53,61 @@ const ListIcon = ({ type }: { type: ListType }) => {
             return <ListOrdered size={16} />;
         case 'arrow':
             return <ArrowRight size={16} />;
+        default:
+            return <List size={16} />;
     }
 };
 
-export function Toolbar({ className, editor }: ToolbarProps) {
-    const iconSize = 16;
-    const [currentHeadingLevel, setCurrentHeadingLevel] =
-        useState<HeadingLevel>(1);
-    const [currentListType, setCurrentListType] = useState<ListType>('bullet');
+export function Toolbar({
+    className,
+    editor,
+    dragActivators: _dragActivators,
+}: ToolbarProps) {
+    const _iconSize = 16;
+    const [toolbarState, setToolbarState] = useState({
+        headingLevel: 1 as HeadingLevel,
+        listType: 'bullet' as ListType,
+    });
 
-    // Combined effect for updating both heading level and list type
+    const updateState = useMemo(
+        () =>
+            debounce(() => {
+                if (!editor) return;
+
+                setToolbarState((prev) => {
+                    const newState = { ...prev };
+
+                    // Update heading level
+                    for (let level = 1; level <= 5; level++) {
+                        if (editor.isActive('heading', { level })) {
+                            newState.headingLevel = level as HeadingLevel;
+                            break;
+                        }
+                    }
+
+                    // Update list type
+                    if (editor.isActive('bulletList')) {
+                        if (
+                            editor.isActive('bulletList', {
+                                class: 'arrow-list',
+                            })
+                        ) {
+                            newState.listType = 'arrow';
+                        } else {
+                            newState.listType = 'bullet';
+                        }
+                    } else if (editor.isActive('orderedList')) {
+                        newState.listType = 'ordered';
+                    }
+
+                    return newState;
+                });
+            }, 100),
+        [editor],
+    );
+
     useEffect(() => {
         if (!editor) return;
-
-        const updateState = () => {
-            // Update heading level
-            for (let level = 1; level <= 5; level++) {
-                if (editor.isActive('heading', { level })) {
-                    setCurrentHeadingLevel(level as HeadingLevel);
-                    break;
-                }
-            }
-
-            // Update list type
-            if (editor.isActive('bulletList')) {
-                if (editor.isActive('bulletList', { class: 'arrow-list' })) {
-                    setCurrentListType('arrow');
-                } else {
-                    setCurrentListType('bullet');
-                }
-            } else if (editor.isActive('orderedList')) {
-                setCurrentListType('ordered');
-            }
-        };
 
         editor.on('selectionUpdate', updateState);
         editor.on('update', updateState);
@@ -91,16 +115,17 @@ export function Toolbar({ className, editor }: ToolbarProps) {
         return () => {
             editor.off('selectionUpdate', updateState);
             editor.off('update', updateState);
+            updateState.cancel();
         };
-    }, [editor]);
+    }, [editor, updateState]);
 
     if (!editor) {
         return null;
     }
 
     const toggleHeading = () => {
-        const nextLevel = ((currentHeadingLevel % 5) + 1) as HeadingLevel;
-        setCurrentHeadingLevel(nextLevel);
+        const nextLevel = ((toolbarState.headingLevel % 5) + 1) as HeadingLevel;
+        setToolbarState((prev) => ({ ...prev, headingLevel: nextLevel }));
 
         // First clear any existing heading
         for (let level = 1; level <= 5; level++) {
@@ -116,9 +141,9 @@ export function Toolbar({ className, editor }: ToolbarProps) {
 
     const toggleList = () => {
         const listTypes: ListType[] = ['bullet', 'ordered', 'arrow'];
-        const currentIndex = listTypes.indexOf(currentListType);
+        const currentIndex = listTypes.indexOf(toolbarState.listType);
         const nextType = listTypes[(currentIndex + 1) % listTypes.length];
-        setCurrentListType(nextType);
+        setToolbarState((prev) => ({ ...prev, listType: nextType }));
 
         // Clear any existing list format
         editor.chain().focus().toggleBulletList().toggleOrderedList().run();
@@ -157,46 +182,117 @@ export function Toolbar({ className, editor }: ToolbarProps) {
     };
 
     return (
-        <div
-            className={cn(
-                'w-full bg-background border-b border-border px-4 py-2 flex items-center gap-2 font-mono text-sm',
-                className,
-            )}
-        >
-            {/* Format Group */}
-            <div className="flex items-center gap-1 pr-3 border-r border-border">
+        <div className={cn('flex items-center gap-0.5', className)}>
+            {/* Basic Formatting */}
+            <div className="flex items-center gap-0.5">
                 <Button
                     variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() => editor.chain().focus().toggleBold().run()}
                 >
-                    <Bold size={iconSize} />
+                    <Bold size={14} />
                 </Button>
                 <Button
                     variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() => editor.chain().focus().toggleItalic().run()}
                 >
-                    <Italic size={iconSize} />
+                    <Italic size={14} />
                 </Button>
                 <Button
                     variant={
                         editor.isActive('underline') ? 'secondary' : 'ghost'
                     }
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() =>
                         editor.chain().focus().toggleUnderline().run()
                     }
                 >
-                    <Underline size={iconSize} />
+                    <Underline size={14} />
+                </Button>
+                <Button
+                    variant={editor.isActive('code') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => editor.chain().focus().toggleCode().run()}
+                >
+                    <Code size={14} />
                 </Button>
             </div>
 
-            {/* Alignment Group */}
-            <div className="flex items-center gap-1 px-3 border-r border-border">
+            {/* Divider */}
+            <div className="w-px h-4 bg-border mx-0.5" />
+
+            {/* Links */}
+            <div className="flex items-center gap-0.5">
+                <Button
+                    variant={editor.isActive('link') ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={addLink}
+                >
+                    <LinkIcon size={14} />
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={addImage}
+                >
+                    <ImageIcon size={14} />
+                </Button>
+            </div>
+
+            {/* Divider */}
+            <div className="w-px h-4 bg-border mx-0.5" />
+
+            {/* Structure */}
+            <div className="flex items-center gap-0.5">
+                <Button
+                    variant={
+                        editor.isActive('heading', {
+                            level: toolbarState.headingLevel,
+                        })
+                            ? 'secondary'
+                            : 'ghost'
+                    }
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={toggleHeading}
+                    title={`Heading ${toolbarState.headingLevel}`}
+                >
+                    <HeadingIcon level={toolbarState.headingLevel} />
+                </Button>
+                <Button
+                    variant={
+                        (toolbarState.listType === 'bullet' &&
+                            editor.isActive('bulletList')) ||
+                        (toolbarState.listType === 'ordered' &&
+                            editor.isActive('orderedList')) ||
+                        (toolbarState.listType === 'arrow' &&
+                            editor.isActive('bulletList', {
+                                class: 'arrow-list',
+                            }))
+                            ? 'secondary'
+                            : 'ghost'
+                    }
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={toggleList}
+                    title={`${toolbarState.listType.charAt(0).toUpperCase() + toolbarState.listType.slice(1)} List`}
+                >
+                    <ListIcon type={toolbarState.listType} />
+                </Button>
+            </div>
+
+            {/* Divider */}
+            <div className="w-px h-4 bg-border mx-0.5" />
+
+            {/* Alignment */}
+            <div className="flex items-center gap-0.5">
                 <Button
                     variant={
                         editor.isActive({ textAlign: 'left' })
@@ -204,12 +300,12 @@ export function Toolbar({ className, editor }: ToolbarProps) {
                             : 'ghost'
                     }
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() =>
                         editor.chain().focus().setTextAlign('left').run()
                     }
                 >
-                    <AlignLeft size={iconSize} />
+                    <AlignLeft size={14} />
                 </Button>
                 <Button
                     variant={
@@ -218,12 +314,12 @@ export function Toolbar({ className, editor }: ToolbarProps) {
                             : 'ghost'
                     }
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() =>
                         editor.chain().focus().setTextAlign('center').run()
                     }
                 >
-                    <AlignCenter size={iconSize} />
+                    <AlignCenter size={14} />
                 </Button>
                 <Button
                     variant={
@@ -232,83 +328,12 @@ export function Toolbar({ className, editor }: ToolbarProps) {
                             : 'ghost'
                     }
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-7 w-7"
                     onClick={() =>
                         editor.chain().focus().setTextAlign('right').run()
                     }
                 >
-                    <AlignRight size={iconSize} />
-                </Button>
-            </div>
-
-            {/* Structure Group */}
-            <div className="flex items-center gap-1 px-3 border-r border-border">
-                <Button
-                    variant={
-                        editor.isActive('heading', {
-                            level: currentHeadingLevel,
-                        })
-                            ? 'secondary'
-                            : 'ghost'
-                    }
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={toggleHeading}
-                    title={`Heading ${currentHeadingLevel}`}
-                >
-                    <HeadingIcon level={currentHeadingLevel} />
-                </Button>
-                <Button
-                    variant={
-                        (currentListType === 'bullet' &&
-                            editor.isActive('bulletList')) ||
-                        (currentListType === 'ordered' &&
-                            editor.isActive('orderedList')) ||
-                        (currentListType === 'arrow' &&
-                            editor.isActive('bulletList', {
-                                class: 'arrow-list',
-                            }))
-                            ? 'secondary'
-                            : 'ghost'
-                    }
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={toggleList}
-                    title={`${currentListType.charAt(0).toUpperCase() + currentListType.slice(1)} List`}
-                >
-                    <ListIcon type={currentListType} />
-                </Button>
-                <Button
-                    variant={
-                        editor.isActive('codeBlock') ? 'secondary' : 'ghost'
-                    }
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() =>
-                        editor.chain().focus().toggleCodeBlock().run()
-                    }
-                >
-                    <Code size={iconSize} />
-                </Button>
-            </div>
-
-            {/* Insert Group */}
-            <div className="flex items-center gap-1 pl-3">
-                <Button
-                    variant={editor.isActive('link') ? 'secondary' : 'ghost'}
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={addLink}
-                >
-                    <LinkIcon size={iconSize} />
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={addImage}
-                >
-                    <ImageIcon size={iconSize} />
+                    <AlignRight size={14} />
                 </Button>
             </div>
         </div>

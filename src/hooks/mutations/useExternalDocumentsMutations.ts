@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { ExternalDocument } from '@/types';
 
 export function useUploadExternalDocument() {
     const queryClient = useQueryClient();
@@ -17,7 +18,7 @@ export function useUploadExternalDocument() {
                     organization_id: orgId,
                     size: file.size,
                 })
-                .select('id')
+                .select('*')
                 .single();
 
             if (documentError) throw documentError;
@@ -45,7 +46,7 @@ export function useUploadExternalDocument() {
         onSuccess: (data, variables) => {
             // Invalidate both all documents and organization-specific documents
             queryClient.invalidateQueries({
-                queryKey: queryKeys.externalDocuments.all,
+                queryKey: queryKeys.externalDocuments.root,
             });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.externalDocuments.byOrg(variables.orgId),
@@ -95,7 +96,50 @@ export function useDeleteExternalDocument() {
         onSuccess: (_, variables) => {
             // Invalidate both all documents and organization-specific documents
             queryClient.invalidateQueries({
-                queryKey: queryKeys.externalDocuments.all,
+                queryKey: queryKeys.externalDocuments.root,
+            });
+            if (variables.orgId) {
+                queryClient.invalidateQueries({
+                    queryKey: queryKeys.externalDocuments.byOrg(
+                        variables.orgId,
+                    ),
+                });
+            }
+        },
+    });
+}
+
+export function useUpdateExternalDocument() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            documentId,
+            gumloopName,
+            name,
+        }: {
+            documentId: string;
+            gumloopName?: string;
+            name?: string;
+            orgId: string;
+        }) => {
+            const updateDict: Partial<ExternalDocument> = {};
+            if (gumloopName) updateDict.gumloop_name = gumloopName;
+            if (name) updateDict.name = name;
+            const { data, error } = await supabase
+                .from('external_documents')
+                .update(updateDict)
+                .eq('id', documentId)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (_, variables) => {
+            // Invalidate both all documents and organization-specific documents
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.externalDocuments.root,
             });
             if (variables.orgId) {
                 queryClient.invalidateQueries({

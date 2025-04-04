@@ -5,7 +5,6 @@ import { getUserProjects } from '@/lib/db/client';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { QueryFilters } from '@/types/base/filters.types';
 import { Project } from '@/types/base/projects.types';
-import { ProjectSchema } from '@/types/validation/projects.validation';
 
 export function useProject(projectId: string) {
     return useQuery({
@@ -48,7 +47,7 @@ export function useProjects(filters?: QueryFilters) {
 
 export function useOrganizationProjects(organizationId: string) {
     return useQuery({
-        queryKey: queryKeys.projects.byOrganization(organizationId),
+        queryKey: queryKeys.projects.byOrg(organizationId),
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('projects')
@@ -65,7 +64,7 @@ export function useOrganizationProjects(organizationId: string) {
 
 export function useUserProjects(userId: string, orgId: string) {
     return useQuery({
-        queryKey: queryKeys.projects.byOrganization(orgId),
+        queryKey: queryKeys.projects.byOrg(orgId),
         queryFn: async () => getUserProjects(userId, orgId),
         enabled: !!userId && !!orgId,
     });
@@ -73,7 +72,7 @@ export function useUserProjects(userId: string, orgId: string) {
 
 export function useProjectsByMembershipForOrg(orgId: string, userId: string) {
     return useQuery({
-        queryKey: queryKeys.projects.byOrganization(orgId),
+        queryKey: queryKeys.projects.byOrg(orgId),
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('project_members')
@@ -91,7 +90,7 @@ export function useProjectsByMembershipForOrg(orgId: string, userId: string) {
                 .in('id', projectIds)
                 .eq('is_deleted', false);
             if (projectError) throw projectError;
-            return projects.map((project) => ProjectSchema.parse(project));
+            return projects;
         },
         enabled: !!orgId && !!userId,
     });
