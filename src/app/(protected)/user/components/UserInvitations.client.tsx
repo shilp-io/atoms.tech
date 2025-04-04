@@ -8,7 +8,6 @@ import { X, Check } from 'lucide-react';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { InvitationStatus } from '@/types/base/enums.types';
-import { Invitation } from '@/types/base/invitations.types';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -47,7 +46,7 @@ export default function UserInvitations() {
         enabled: organizationIds.length > 0,
     });
 
-    const handleAccept = async (invitation: Invitation) => {
+    const handleAccept = async (invitation: any) => {
         if (!user?.id) {
             toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
             return;
@@ -58,7 +57,7 @@ export default function UserInvitations() {
             await addOrgMember({
                 organization_id: invitation.organization_id,
                 user_id: user.id,
-                role: invitation.role as 'member' | 'admin' | 'owner' | 'super_admin',
+                role: invitation.user_role_type,
                 status: 'active',
                 last_active_at: new Date().toISOString(),
             });
@@ -81,14 +80,14 @@ export default function UserInvitations() {
 
             // Refresh the invitations and organizations list
             refetch();
-            queryClient.invalidateQueries({ queryKey: queryKeys.organizations.byMembership(user.id) }); // Refresh organizations
+            queryClient.invalidateQueries(queryKeys.organizations.byMembership(user.id)); // Refresh organizations
         } catch (error) {
             console.error('Error accepting invitation:', error);
             toast({ title: 'Error', description: 'Failed to accept invitation.', variant: 'destructive' });
         }
     };
 
-    const handleReject = async (invitation: Invitation) => {
+    const handleReject = async (invitation: any) => {
         if (!user?.id) {
             toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
             return;

@@ -6,8 +6,6 @@ import { getUserOrganizations } from '@/lib/db/client';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { OrganizationType } from '@/types';
 import { QueryFilters } from '@/types/base/filters.types';
-import { OrganizationSchema } from '@/types/validation/organizations.validation';
-import { OrganizationInvitation } from '@/types/base/organization.types';
 
 export function useOrganization(orgId: string) {
     return useQuery({
@@ -248,7 +246,7 @@ export function useOrgInvitationsByOrgId(orgId: string) {
                 throw error;
             }
 
-            return data as OrganizationInvitation[];
+            return data;
         },
         enabled: !!orgId,
     });
