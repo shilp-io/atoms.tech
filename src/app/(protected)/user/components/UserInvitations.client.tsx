@@ -12,6 +12,7 @@ import { queryKeys } from '@/lib/constants/queryKeys';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { InvitationStatus } from '@/types/base/enums.types';
+import { Invitation } from '@/types/base/invitations.types';
 
 export default function UserInvitations() {
     const { user } = useUser();
@@ -56,7 +57,7 @@ export default function UserInvitations() {
         enabled: organizationIds.length > 0,
     });
 
-    const handleAccept = async (invitation: any) => {
+    const handleAccept = async (invitation: Invitation) => {
         if (!user?.id) {
             toast({
                 title: 'Error',
@@ -71,7 +72,7 @@ export default function UserInvitations() {
             await addOrgMember({
                 organization_id: invitation.organization_id,
                 user_id: user.id,
-                role: invitation.user_role_type,
+                role: invitation.role as 'member' | 'admin' | 'owner' | 'super_admin' | undefined,
                 status: 'active',
                 last_active_at: new Date().toISOString(),
             });
@@ -111,7 +112,7 @@ export default function UserInvitations() {
         }
     };
 
-    const handleReject = async (invitation: any) => {
+    const handleReject = async (invitation: Invitation) => {
         if (!user?.id) {
             toast({
                 title: 'Error',

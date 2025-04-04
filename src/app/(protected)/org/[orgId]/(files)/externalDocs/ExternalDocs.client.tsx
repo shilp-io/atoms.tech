@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import {
     File,
     Filter,
-    Filter as FilterIcon,
     Grid,
     List,
     Trash,
@@ -12,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
