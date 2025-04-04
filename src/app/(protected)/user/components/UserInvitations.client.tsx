@@ -80,7 +80,7 @@ export default function UserInvitations() {
 
             // Refresh the invitations and organizations list
             refetch();
-            queryClient.invalidateQueries(queryKeys.organizations.byMembership(user.id)); // Refresh organizations
+            queryClient.invalidateQueries({ queryKey: queryKeys.organizations.byMembership(user.id) }); // Refresh organizations
         } catch (error) {
             console.error('Error accepting invitation:', error);
             toast({ title: 'Error', description: 'Failed to accept invitation.', variant: 'destructive' });
