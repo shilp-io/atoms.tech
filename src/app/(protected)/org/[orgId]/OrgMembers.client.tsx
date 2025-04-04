@@ -163,15 +163,6 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                         </div>
                                         <div className="text-sm text-muted-foreground">
                                             {member.email}
-                                            {/* TODO: Implement user name display, profiles does not exist
-                                              {member.profiles?.full_name ||
-                                                'User'} */}
-                                            User
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">
-                                            {/* TODO: Implement user email display, profiles does not exist
-                                            {member.profiles?.email */}
-                                            Email
                                         </div>
                                     </div>
                                 </div>

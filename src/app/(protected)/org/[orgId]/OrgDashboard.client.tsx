@@ -38,6 +38,8 @@ export default function OrgDashboard(props: OrgDashboardProps) {
     const [activeTab, setActiveTab] = useState('projects');
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
 
+    console.log('projects: ', props.projects);
+
     const handleCreateProject = () => {
         setIsCreatePanelOpen(true);
     };
