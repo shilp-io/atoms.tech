@@ -1,14 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import {
-    File,
-    Filter,
-    Grid,
-    List,
-    Trash,
-    Upload,
-} from 'lucide-react';
+import { File, Filter, Grid, List, Trash, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';

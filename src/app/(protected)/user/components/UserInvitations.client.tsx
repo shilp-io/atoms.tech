@@ -72,7 +72,12 @@ export default function UserInvitations() {
             await addOrgMember({
                 organization_id: invitation.organization_id,
                 user_id: user.id,
-                role: invitation.role as 'member' | 'admin' | 'owner' | 'super_admin' | undefined,
+                role: invitation.role as
+                    | 'member'
+                    | 'admin'
+                    | 'owner'
+                    | 'super_admin'
+                    | undefined,
                 status: 'active',
                 last_active_at: new Date().toISOString(),
             });
