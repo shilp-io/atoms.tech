@@ -480,7 +480,6 @@ export function RequirementForm({
                     {uploadButtonText}
                 </Button>
 
-                {/* {Object.keys(unusedDocsNameMap).length > 0 && ( */}
                 <div className="mt-2">
                     <Select
                         value={existingDocsValue}
@@ -503,7 +502,6 @@ export function RequirementForm({
                         </SelectContent>
                     </Select>
                 </div>
-                {/* )} */}
 
                 {Object.keys(selectedFiles).length > 0 && (
                     <div className="mt-4">
