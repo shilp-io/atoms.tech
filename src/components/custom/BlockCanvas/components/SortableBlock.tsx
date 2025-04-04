@@ -2,23 +2,23 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { FC } from 'react';
+import React from 'react';
 
 import { BlockProps } from '@/components/custom/BlockCanvas/types';
 import { cn } from '@/lib/utils';
 
-import { BlockActions } from './BlockActions';
 import { TableBlock } from './TableBlock';
 import { TextBlock } from './TextBlock';
 
-export const SortableBlock: FC<BlockProps> = ({
+export const SortableBlock: React.FC<BlockProps> = ({
     block,
-    isSelected,
+    _isSelected,
     onSelect,
     onUpdate,
     onDelete,
     isEditMode,
     onDoubleClick,
+    properties,
 }) => {
     const {
         attributes,
@@ -50,7 +50,7 @@ export const SortableBlock: FC<BlockProps> = ({
             style={style}
             {...attributes}
             className={cn(
-                'relative group bg-background',
+                'relative group bg-background w-full max-w-full min-w-0',
                 'rounded-lg',
                 'border border-transparent',
                 'transition-all duration-200 ease-out',
@@ -65,31 +65,29 @@ export const SortableBlock: FC<BlockProps> = ({
             )}
             onDoubleClick={onDoubleClick}
         >
-            <BlockActions
-                onDelete={() => onDelete?.()}
-                isEditMode={isEditMode ?? false}
-                dragActivators={listeners}
-            />
             {block.type === 'text' && (
                 <TextBlock
                     block={block}
                     onUpdate={onUpdate}
-                    isSelected={isSelected}
+                    _isSelected={_isSelected}
                     onSelect={onSelect}
                     isEditMode={isEditMode}
                     onDelete={onDelete}
                     onDoubleClick={onDoubleClick}
+                    dragActivators={listeners}
                 />
             )}
             {block.type === 'table' && (
                 <TableBlock
                     block={block}
                     onUpdate={onUpdate}
-                    isSelected={isSelected}
+                    _isSelected={_isSelected}
                     onSelect={onSelect}
                     isEditMode={isEditMode}
                     onDelete={onDelete}
                     onDoubleClick={onDoubleClick}
+                    properties={properties}
+                    dragActivators={listeners}
                 />
             )}
         </div>

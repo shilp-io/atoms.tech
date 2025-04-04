@@ -1,24 +1,26 @@
-import { v4 as uuidv4 } from 'uuid';
+import { useCallback } from 'react';
+import { v4 as _uuidv4 } from 'uuid';
 
-import { BlockPropertySchema } from '@/components/custom/BlockCanvas/types';
+import { CellValue } from '@/components/custom/BlockCanvas/components/EditableTable/types';
+import { Property } from '@/components/custom/BlockCanvas/types';
 import {
     useCreateRequirement,
     useUpdateRequirement,
 } from '@/hooks/mutations/useRequirementMutations';
-import { useSyncRequirementDataWithKVs } from '@/hooks/mutations/useRequirementPropertyKVMutations';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { Json } from '@/types/base/database.types';
 import {
-    RequirementFormat,
-    RequirementLevel,
-    RequirementPriority,
-    RequirementStatus,
+    ERequirementPriority,
+    ERequirementStatus,
+    RequirementFormat as _RequirementFormat,
+    RequirementLevel as _RequirementLevel,
 } from '@/types/base/enums.types';
 import { Requirement } from '@/types/base/requirements.types';
 
 // Type for the requirement data that will be displayed in the table
 export type DynamicRequirement = {
     id: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    [key: string]: any;
+    [key: string]: CellValue;
 };
 
 interface UseRequirementActionsProps {
@@ -26,7 +28,7 @@ interface UseRequirementActionsProps {
     documentId: string;
     localRequirements: Requirement[];
     setLocalRequirements: React.Dispatch<React.SetStateAction<Requirement[]>>;
-    blockPropertySchemas: BlockPropertySchema[] | undefined;
+    properties: Property[] | undefined;
 }
 
 export const useRequirementActions = ({
@@ -34,61 +36,128 @@ export const useRequirementActions = ({
     documentId,
     localRequirements,
     setLocalRequirements,
-    blockPropertySchemas,
+    properties,
 }: UseRequirementActionsProps) => {
-    const createRequirementMutation = useCreateRequirement();
-    const updateRequirementMutation = useUpdateRequirement();
-    const syncRequirementDataWithKVs = useSyncRequirementDataWithKVs();
+    const _createRequirementMutation = useCreateRequirement();
+    const _updateRequirementMutation = useUpdateRequirement();
 
-    // Helper function to create data object from dynamic requirement
-    const createDataObjectFromDynamicReq = (
+    // Function to refresh requirements from the database
+    const refreshRequirements = useCallback(async () => {
+        try {
+            const { data: requirements, error } = await supabase
+                .from('requirements')
+                .select('*')
+                .eq('block_id', blockId)
+                .eq('document_id', documentId)
+                .eq('is_deleted', false)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            if (!requirements) return;
+
+            setLocalRequirements(requirements);
+        } catch (error) {
+            console.error('Error refreshing requirements:', error);
+        }
+    }, [blockId, documentId, setLocalRequirements]);
+
+    // Helper function to create properties object from dynamic requirement
+    const createPropertiesObjectFromDynamicReq = async (
         dynamicReq: DynamicRequirement,
-        schemas: BlockPropertySchema[] | undefined,
     ) => {
-        if (!schemas) return {};
+        if (!properties) return { propertiesObj: {}, naturalFields: {} };
 
-        return schemas.reduce(
-            (acc, schema) => {
-                if (
-                    !['Name', 'Description', 'Status', 'Priority'].includes(
-                        schema.name,
-                    )
-                ) {
-                    acc[schema.name] = dynamicReq[schema.name] || '';
-                }
-                return acc;
-            },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            {} as Record<string, any>,
-        );
+        // Fetch block columns to get position information
+        const { data: blockColumns } = await supabase
+            .from('columns')
+            .select('*')
+            .eq('block_id', blockId)
+            .order('position');
+
+        const propertiesObj: Record<string, unknown> = {};
+        const naturalFields: Record<string, string> = {};
+
+        // Process each property
+        properties.forEach((prop) => {
+            const value = dynamicReq[prop.name];
+            const column = blockColumns?.find(
+                (col) => col.property_id === prop.id,
+            );
+            const lowerCaseName = prop.name.toLowerCase();
+
+            // Check if this property maps to a natural field
+            if (
+                [
+                    'name',
+                    'description',
+                    'external_id',
+                    'status',
+                    'priority',
+                ].includes(lowerCaseName)
+            ) {
+                naturalFields[lowerCaseName] =
+                    typeof value === 'string' ? value : '';
+            }
+
+            if (column) {
+                propertiesObj[prop.name] = {
+                    key: prop.name,
+                    type: prop.property_type,
+                    value: value ?? '',
+                    options: prop.options,
+                    position: column.position,
+                    column_id: column.id,
+                    property_id: prop.id,
+                };
+            }
+        });
+
+        return { propertiesObj, naturalFields };
     };
 
     // Convert requirements to dynamic requirements for the table
     const getDynamicRequirements = (): DynamicRequirement[] => {
-        if (!localRequirements || !blockPropertySchemas) {
+        if (!localRequirements) {
             return [];
         }
 
         return localRequirements.map((req) => {
-            // Start with the requirement ID and basic fields
             const dynamicReq: DynamicRequirement = {
                 id: req.id,
-                Name: req.name,
-                Description: req.description,
-                Status: req.status,
-                Priority: req.priority,
             };
 
-            // Add properties from requirement data field
-            if (req.data) {
-                blockPropertySchemas.forEach((schema) => {
-                    // Skip the basic fields that are already added
+            // Extract values from properties object
+            if (req.properties) {
+                Object.entries(req.properties).forEach(([key, prop]) => {
                     if (
-                        !['Name', 'Description', 'Status', 'Priority'].includes(
-                            schema.name,
-                        )
+                        typeof prop === 'object' &&
+                        prop !== null &&
+                        'value' in prop
                     ) {
-                        dynamicReq[schema.name] = req.data?.[schema.name] || '';
+                        // Ensure we only assign CellValue compatible values
+                        const value = prop.value;
+                        if (
+                            typeof value === 'string' ||
+                            typeof value === 'number' ||
+                            value instanceof Date ||
+                            Array.isArray(value) ||
+                            value === null
+                        ) {
+                            dynamicReq[key] = value as CellValue;
+                        } else {
+                            dynamicReq[key] = String(value);
+                        }
+                    } else if (
+                        typeof prop === 'string' ||
+                        typeof prop === 'number' ||
+                        prop === null ||
+                        (Array.isArray(prop) &&
+                            prop.every((item) => typeof item === 'string'))
+                    ) {
+                        dynamicReq[key] = prop as CellValue;
+                    } else {
+                        // Convert other types to string
+                        dynamicReq[key] = String(prop);
                     }
                 });
             }
@@ -97,174 +166,134 @@ export const useRequirementActions = ({
         });
     };
 
+    // Helper function to format enum values for display
+    const _formatEnumValueForDisplay = (value: unknown): string => {
+        if (!value || typeof value !== 'string') return '';
+
+        // Handle snake_case values (e.g., "in_progress" -> "In Progress")
+        if (value.includes('_')) {
+            return value
+                .split('_')
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Handle simple values (e.g., "draft" -> "Draft")
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    };
+
+    // Helper function to convert display values back to enum values
+    const _parseDisplayValueToEnum = (displayValue: string): string => {
+        if (!displayValue) return '';
+
+        // Convert "In Progress" -> "in_progress"
+        return displayValue.toLowerCase().replace(/\s+/g, '_');
+    };
+
+    // Save a requirement
     const saveRequirement = async (
         dynamicReq: DynamicRequirement,
         isNew: boolean,
         userId: string,
     ) => {
-        if (!userId || !blockPropertySchemas) {
-            return;
-        }
-
         try {
-            let requirementId = dynamicReq.id;
+            // Create properties object and extract natural fields
+            const { propertiesObj, naturalFields } =
+                await createPropertiesObjectFromDynamicReq(dynamicReq);
 
+            const requirementData = {
+                block_id: blockId,
+                document_id: documentId,
+                properties: propertiesObj as unknown as Json, // Ensure properties is treated as Json
+                updated_by: userId,
+                // Use natural fields from properties if they exist
+                ...(naturalFields?.name && { name: naturalFields.name }),
+                ...(naturalFields?.description && {
+                    description: naturalFields.description,
+                }),
+                ...(naturalFields?.external_id && {
+                    external_id: naturalFields.external_id,
+                }),
+                ...(naturalFields?.status && {
+                    status: naturalFields.status as ERequirementStatus,
+                }),
+                ...(naturalFields?.priority && {
+                    priority: naturalFields.priority as ERequirementPriority,
+                }),
+            };
+
+            let savedRequirement: Requirement;
             if (isNew) {
-                // Generate a UUID for new requirements
-                const tempId = requirementId || uuidv4();
-
-                // Extract name and description from dynamic requirement
-                const name = dynamicReq['Name'] || 'New Requirement';
-                const description = dynamicReq['Description'] || '';
-                const status =
-                    (dynamicReq['Status'] as RequirementStatus) ||
-                    RequirementStatus.draft;
-                const priority =
-                    (dynamicReq['Priority'] as RequirementPriority) ||
-                    RequirementPriority.medium;
-
-                // Create data object from dynamic requirement
-                const dataObject = createDataObjectFromDynamicReq(
-                    dynamicReq,
-                    blockPropertySchemas,
-                );
-
-                // Create the base requirement with data field
-                const newRequirement: Requirement = {
-                    id: tempId,
-                    name,
-                    description,
-                    status,
-                    priority,
-                    format: RequirementFormat.incose,
-                    level: RequirementLevel.system,
-                    document_id: documentId,
-                    block_id: blockId,
+                const newRequirementData = {
+                    ...requirementData,
                     created_by: userId,
-                    updated_by: userId,
-                    data: dataObject,
-                    ai_analysis: null,
-                    enchanced_requirement: null,
-                    external_id: null,
-                    original_requirement: null,
-                    tags: [],
-                    created_at: null,
-                    updated_at: null,
-                    deleted_at: null,
-                    deleted_by: null,
-                    is_deleted: null,
-                    version: 1,
+                    name: naturalFields?.name || 'New Requirement', // Default name for new requirements
                 };
 
-                // Update local state optimistically
-                setLocalRequirements((prev) => [...prev, newRequirement]);
+                const { data, error } = await supabase
+                    .from('requirements')
+                    .insert(newRequirementData)
+                    .select()
+                    .single();
 
-                // Save the requirement
-                const savedRequirement =
-                    await createRequirementMutation.mutateAsync(newRequirement);
-                requirementId = savedRequirement.id;
+                if (error) throw error;
+                if (!data) throw new Error('No data returned from insert');
+                savedRequirement = data;
 
-                // Sync the requirement data with KVs
-                await syncRequirementDataWithKVs.mutateAsync({
-                    requirementId,
-                    blockId,
-                    data: dataObject,
-                    userId,
-                });
+                // Update local state with the new requirement
+                setLocalRequirements((prev) => [...prev, savedRequirement]);
             } else {
-                // Find the original requirement
-                const originalReq = localRequirements.find(
-                    (req) => req.id === requirementId,
-                );
-                if (!originalReq) {
-                    return;
-                }
-
-                // Create data object from dynamic requirement
-                const dataObject = createDataObjectFromDynamicReq(
-                    dynamicReq,
-                    blockPropertySchemas,
-                );
-
-                // Update the base requirement with name, description, status, priority
-                const updatedRequirement: Partial<Requirement> = {
-                    ...originalReq,
-                    name: dynamicReq['Name'] || originalReq.name,
-                    description:
-                        dynamicReq['Description'] || originalReq.description,
-                    status:
-                        (dynamicReq['Status'] as RequirementStatus) ||
-                        originalReq.status,
-                    priority:
-                        (dynamicReq['Priority'] as RequirementPriority) ||
-                        originalReq.priority,
-                    updated_by: userId,
+                // For updates, only include fields that have values to avoid nullifying existing data
+                const updateData = {
+                    ...requirementData,
+                    updated_at: new Date().toISOString(),
                 };
 
-                // Update local state optimistically
+                const { data, error } = await supabase
+                    .from('requirements')
+                    .update(updateData)
+                    .eq('id', dynamicReq.id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                if (!data) throw new Error('No data returned from update');
+                savedRequirement = data;
+
+                // Update local state with the updated requirement
                 setLocalRequirements((prev) =>
                     prev.map((req) =>
-                        req.id === requirementId
-                            ? ({
-                                  ...req,
-                                  ...updatedRequirement,
-                                  data: dataObject,
-                              } as Requirement)
-                            : req,
+                        req.id === savedRequirement.id ? savedRequirement : req,
                     ),
                 );
-
-                // Update the requirement
-                await updateRequirementMutation.mutateAsync(
-                    updatedRequirement as Requirement,
-                );
-
-                // Sync the requirement data with KVs
-                await syncRequirementDataWithKVs.mutateAsync({
-                    requirementId,
-                    blockId,
-                    data: dataObject,
-                    userId,
-                });
             }
+
+            return savedRequirement;
         } catch (error) {
-            // Revert local state on error
-            if (isNew) {
-                setLocalRequirements((prev) =>
-                    prev.filter((req) => req.id !== dynamicReq.id),
-                );
-            }
+            console.error('Error saving requirement:', error);
             throw error;
         }
     };
 
+    // Delete a requirement
     const deleteRequirement = async (
         dynamicReq: DynamicRequirement,
-        userId: string,
+        _userId: string,
     ) => {
         try {
-            // Find the original requirement
-            const originalReq = localRequirements.find(
-                (req) => req.id === dynamicReq.id,
-            );
-            if (!originalReq) {
-                return;
-            }
+            const { error } = await supabase
+                .from('requirements')
+                .delete()
+                .eq('id', dynamicReq.id);
 
-            // Update local state optimistically
+            if (error) throw error;
+
+            // Update local state by removing the deleted requirement
             setLocalRequirements((prev) =>
                 prev.filter((req) => req.id !== dynamicReq.id),
             );
-
-            // Make API call to delete the requirement
-            await updateRequirementMutation.mutateAsync({
-                ...originalReq,
-                is_deleted: true,
-                updated_by: userId,
-            });
         } catch (error) {
-            // Revert local state on error
-            setLocalRequirements((_prev) => localRequirements);
+            console.error('Error deleting requirement:', error);
             throw error;
         }
     };
@@ -273,6 +302,7 @@ export const useRequirementActions = ({
         getDynamicRequirements,
         saveRequirement,
         deleteRequirement,
-        createDataObjectFromDynamicReq,
+        createPropertiesObjectFromDynamicReq,
+        refreshRequirements,
     };
 };

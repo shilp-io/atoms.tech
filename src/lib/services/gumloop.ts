@@ -33,7 +33,7 @@ interface PipelineInput {
 export type StartPipelineParams = {
     pipelineType: PipelineType;
     requirement?: string;
-    fileNames?: string[] | string;
+    fileNames?: string[];
     systemName?: string;
     objective?: string;
     customPipelineInputs?: PipelineInput[];
@@ -43,7 +43,7 @@ export type GetPipelineRunParams = {
     runId: string;
 };
 
-interface StartPipelineResponse {
+export interface StartPipelineResponse {
     run_id: string;
 }
 
@@ -55,10 +55,10 @@ export enum PipelineRunState {
     TERMINATED = 'TERMINATED',
 }
 
-interface PipelineRunStatusResponse {
+export interface PipelineRunStatusResponse {
     run_id: string;
     state: PipelineRunState;
-    outputs?: Record<string, string>;
+    outputs?: Record<string, string[] | string>;
     credit_cost: number;
 }
 
@@ -110,10 +110,7 @@ export class GumloopService {
                 files.map(async (file) => {
                     const fileContents = await file.bytes();
 
-                    const binString = Array.from(fileContents, (byte) =>
-                        String.fromCodePoint(byte),
-                    ).join('');
-                    return btoa(binString);
+                    return Buffer.from(fileContents).toString('base64');
                 }),
             );
 
@@ -191,18 +188,12 @@ export class GumloopService {
         const pipelineInputs = customPipelineInputs || [];
 
         if (!customPipelineInputs) {
-            // Convert filenames to array if it's a string
-            const filenamesArray =
-                typeof fileNames === 'string'
-                    ? fileNames.split(',').map((f) => f.trim())
-                    : fileNames;
+            console.log('Processed filenames:', fileNames);
 
-            console.log('Processed filenames:', filenamesArray);
-
-            if (filenamesArray?.length) {
+            if (fileNames?.length) {
                 pipelineInputs.push({
-                    input_name: 'File Names',
-                    value: filenamesArray.join('\n'),
+                    input_name: 'Regulation Document Name',
+                    value: fileNames.join('\n'),
                 });
             }
 
@@ -222,7 +213,7 @@ export class GumloopService {
 
             if (requirement) {
                 pipelineInputs.push({
-                    input_name: 'Original Requirement',
+                    input_name: 'Requirement',
                     value: requirement,
                 });
             }

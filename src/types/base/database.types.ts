@@ -140,59 +140,6 @@ export type Database = {
                     },
                 ];
             };
-            block_property_schemas: {
-                Row: {
-                    block_id: string;
-                    created_at: string | null;
-                    created_by: string | null;
-                    data_type: string;
-                    deleted_at: string | null;
-                    deleted_by: string | null;
-                    id: string;
-                    is_deleted: boolean | null;
-                    name: string;
-                    updated_at: string | null;
-                    updated_by: string | null;
-                    version: number;
-                };
-                Insert: {
-                    block_id: string;
-                    created_at?: string | null;
-                    created_by?: string | null;
-                    data_type: string;
-                    deleted_at?: string | null;
-                    deleted_by?: string | null;
-                    id?: string;
-                    is_deleted?: boolean | null;
-                    name: string;
-                    updated_at?: string | null;
-                    updated_by?: string | null;
-                    version?: number;
-                };
-                Update: {
-                    block_id?: string;
-                    created_at?: string | null;
-                    created_by?: string | null;
-                    data_type?: string;
-                    deleted_at?: string | null;
-                    deleted_by?: string | null;
-                    id?: string;
-                    is_deleted?: boolean | null;
-                    name?: string;
-                    updated_at?: string | null;
-                    updated_by?: string | null;
-                    version?: number;
-                };
-                Relationships: [
-                    {
-                        foreignKeyName: 'block_property_schemas_block_id_fkey';
-                        columns: ['block_id'];
-                        isOneToOne: false;
-                        referencedRelation: 'blocks';
-                        referencedColumns: ['id'];
-                    },
-                ];
-            };
             blocks: {
                 Row: {
                     content: Json | null;
@@ -203,6 +150,8 @@ export type Database = {
                     document_id: string;
                     id: string;
                     is_deleted: boolean | null;
+                    name: string;
+                    org_id: string | null;
                     position: number;
                     type: string;
                     updated_at: string | null;
@@ -218,6 +167,8 @@ export type Database = {
                     document_id: string;
                     id?: string;
                     is_deleted?: boolean | null;
+                    name?: string;
+                    org_id?: string | null;
                     position: number;
                     type: string;
                     updated_at?: string | null;
@@ -233,6 +184,8 @@ export type Database = {
                     document_id?: string;
                     id?: string;
                     is_deleted?: boolean | null;
+                    name?: string;
+                    org_id?: string | null;
                     position?: number;
                     type?: string;
                     updated_at?: string | null;
@@ -254,64 +207,71 @@ export type Database = {
                         referencedRelation: 'documents';
                         referencedColumns: ['id'];
                     },
+                    {
+                        foreignKeyName: 'blocks_org_id_fkey';
+                        columns: ['org_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'organizations';
+                        referencedColumns: ['id'];
+                    },
                 ];
             };
-            document_property_schemas: {
+            columns: {
                 Row: {
+                    block_id: string | null;
                     created_at: string | null;
                     created_by: string | null;
-                    data_type: Database['public']['Enums']['property_type'];
-                    deleted_at: string | null;
-                    deleted_by: string | null;
-                    document_id: string;
+                    default_value: string | null;
                     id: string;
-                    is_deleted: boolean | null;
-                    name: string;
+                    is_hidden: boolean | null;
+                    is_pinned: boolean | null;
+                    position: number;
+                    property_id: string;
                     updated_at: string | null;
                     updated_by: string | null;
-                    version: number;
+                    width: number | null;
                 };
                 Insert: {
+                    block_id?: string | null;
                     created_at?: string | null;
                     created_by?: string | null;
-                    data_type?: Database['public']['Enums']['property_type'];
-                    deleted_at?: string | null;
-                    deleted_by?: string | null;
-                    document_id: string;
+                    default_value?: string | null;
                     id?: string;
-                    is_deleted?: boolean | null;
-                    name: string;
+                    is_hidden?: boolean | null;
+                    is_pinned?: boolean | null;
+                    position: number;
+                    property_id: string;
                     updated_at?: string | null;
                     updated_by?: string | null;
-                    version?: number;
+                    width?: number | null;
                 };
                 Update: {
+                    block_id?: string | null;
                     created_at?: string | null;
                     created_by?: string | null;
-                    data_type?: Database['public']['Enums']['property_type'];
-                    deleted_at?: string | null;
-                    deleted_by?: string | null;
-                    document_id?: string;
+                    default_value?: string | null;
                     id?: string;
-                    is_deleted?: boolean | null;
-                    name?: string;
+                    is_hidden?: boolean | null;
+                    is_pinned?: boolean | null;
+                    position?: number;
+                    property_id?: string;
                     updated_at?: string | null;
                     updated_by?: string | null;
-                    version?: number;
+                    width?: number | null;
                 };
                 Relationships: [
                     {
-                        foreignKeyName: 'document_property_schemas_document_id_fkey';
-                        columns: ['document_id'];
+                        foreignKeyName: 'columns_block_id_fkey';
+                        columns: ['block_id'];
                         isOneToOne: false;
-                        referencedRelation: 'document_summary';
-                        referencedColumns: ['document_id'];
+                        referencedRelation: 'blocks';
+                        referencedColumns: ['id'];
                     },
                     {
-                        foreignKeyName: 'document_property_schemas_document_id_fkey';
-                        columns: ['document_id'];
+                        foreignKeyName: 'columns_property_id_fkey';
+                        columns: ['property_id'];
                         isOneToOne: false;
-                        referencedRelation: 'documents';
+                        referencedRelation: 'properties';
                         referencedColumns: ['id'];
                     },
                 ];
@@ -374,6 +334,132 @@ export type Database = {
                         referencedColumns: ['id'];
                     },
                 ];
+            };
+            excalidraw_diagrams: {
+                Row: {
+                    created_at: string;
+                    diagram_data: Json | null;
+                    id: number;
+                    updated_at: string | null;
+                };
+                Insert: {
+                    created_at?: string;
+                    diagram_data?: Json | null;
+                    id?: number;
+                    updated_at?: string | null;
+                };
+                Update: {
+                    created_at?: string;
+                    diagram_data?: Json | null;
+                    id?: number;
+                    updated_at?: string | null;
+                };
+                Relationships: [];
+            };
+            extdocuments: {
+                Row: {
+                    created_at: string | null;
+                    created_by: string;
+                    deleted_at: string | null;
+                    deleted_by: string | null;
+                    id: string;
+                    is_deleted: boolean | null;
+                    name: string;
+                    organization_id: string;
+                    owned_by: string;
+                    size: number | null;
+                    type: string | null;
+                    updated_at: string | null;
+                    updated_by: string;
+                    url: string | null;
+                };
+                Insert: {
+                    created_at?: string | null;
+                    created_by: string;
+                    deleted_at?: string | null;
+                    deleted_by?: string | null;
+                    id?: string;
+                    is_deleted?: boolean | null;
+                    name: string;
+                    organization_id: string;
+                    owned_by: string;
+                    size?: number | null;
+                    type?: string | null;
+                    updated_at?: string | null;
+                    updated_by: string;
+                    url?: string | null;
+                };
+                Update: {
+                    created_at?: string | null;
+                    created_by?: string;
+                    deleted_at?: string | null;
+                    deleted_by?: string | null;
+                    id?: string;
+                    is_deleted?: boolean | null;
+                    name?: string;
+                    organization_id?: string;
+                    owned_by?: string;
+                    size?: number | null;
+                    type?: string | null;
+                    updated_at?: string | null;
+                    updated_by?: string;
+                    url?: string | null;
+                };
+                Relationships: [];
+            };
+            external_documents: {
+                Row: {
+                    created_at: string | null;
+                    created_by: string | null;
+                    deleted_at: string | null;
+                    deleted_by: string | null;
+                    gumloop_name: string | null;
+                    id: string;
+                    is_deleted: boolean | null;
+                    name: string;
+                    organization_id: string;
+                    owned_by: string | null;
+                    size: number | null;
+                    type: string | null;
+                    updated_at: string | null;
+                    updated_by: string | null;
+                    url: string | null;
+                };
+                Insert: {
+                    created_at?: string | null;
+                    created_by?: string | null;
+                    deleted_at?: string | null;
+                    deleted_by?: string | null;
+                    gumloop_name?: string | null;
+                    id?: string;
+                    is_deleted?: boolean | null;
+                    name: string;
+                    organization_id: string;
+                    owned_by?: string | null;
+                    size?: number | null;
+                    type?: string | null;
+                    updated_at?: string | null;
+                    updated_by?: string | null;
+                    url?: string | null;
+                };
+                Update: {
+                    created_at?: string | null;
+                    created_by?: string | null;
+                    deleted_at?: string | null;
+                    deleted_by?: string | null;
+                    gumloop_name?: string | null;
+                    id?: string;
+                    is_deleted?: boolean | null;
+                    name?: string;
+                    organization_id?: string;
+                    owned_by?: string | null;
+                    size?: number | null;
+                    type?: string | null;
+                    updated_at?: string | null;
+                    updated_by?: string | null;
+                    url?: string | null;
+                };
+                Relationships: [];
             };
             notifications: {
                 Row: {
@@ -860,68 +946,79 @@ export type Database = {
                     },
                 ];
             };
-            requirement_property_kv: {
+            properties: {
                 Row: {
-                    block_id: string;
                     created_at: string | null;
                     created_by: string | null;
-                    deleted_at: string | null;
-                    deleted_by: string | null;
+                    document_id: string | null;
                     id: string;
-                    is_deleted: boolean | null;
-                    position: number;
-                    property_name: string;
-                    property_value: string;
-                    requirement_id: string;
+                    is_base: boolean | null;
+                    name: string;
+                    options: Json | null;
+                    org_id: string;
+                    project_id: string | null;
+                    property_type: string;
+                    scope: string | null;
                     updated_at: string | null;
                     updated_by: string | null;
-                    version: number;
                 };
                 Insert: {
-                    block_id: string;
                     created_at?: string | null;
                     created_by?: string | null;
-                    deleted_at?: string | null;
-                    deleted_by?: string | null;
+                    document_id?: string | null;
                     id?: string;
-                    is_deleted?: boolean | null;
-                    position: number;
-                    property_name: string;
-                    property_value: string;
-                    requirement_id: string;
+                    is_base?: boolean | null;
+                    name: string;
+                    options?: Json | null;
+                    org_id: string;
+                    project_id?: string | null;
+                    property_type: string;
+                    scope?: string | null;
                     updated_at?: string | null;
                     updated_by?: string | null;
-                    version?: number;
                 };
                 Update: {
-                    block_id?: string;
                     created_at?: string | null;
                     created_by?: string | null;
-                    deleted_at?: string | null;
-                    deleted_by?: string | null;
+                    document_id?: string | null;
                     id?: string;
-                    is_deleted?: boolean | null;
-                    position?: number;
-                    property_name?: string;
-                    property_value?: string;
-                    requirement_id?: string;
+                    is_base?: boolean | null;
+                    name?: string;
+                    options?: Json | null;
+                    org_id?: string;
+                    project_id?: string | null;
+                    property_type?: string;
+                    scope?: string | null;
                     updated_at?: string | null;
                     updated_by?: string | null;
-                    version?: number;
                 };
                 Relationships: [
                     {
-                        foreignKeyName: 'requirement_property_kv_block_id_fkey';
-                        columns: ['block_id'];
+                        foreignKeyName: 'properties_document_id_fkey';
+                        columns: ['document_id'];
                         isOneToOne: false;
-                        referencedRelation: 'blocks';
+                        referencedRelation: 'document_summary';
+                        referencedColumns: ['document_id'];
+                    },
+                    {
+                        foreignKeyName: 'properties_document_id_fkey';
+                        columns: ['document_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'documents';
                         referencedColumns: ['id'];
                     },
                     {
-                        foreignKeyName: 'requirement_property_kv_requirement_id_fkey';
-                        columns: ['requirement_id'];
+                        foreignKeyName: 'properties_org_id_fkey';
+                        columns: ['org_id'];
                         isOneToOne: false;
-                        referencedRelation: 'requirements';
+                        referencedRelation: 'organizations';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'properties_project_id_fkey';
+                        columns: ['project_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'projects';
                         referencedColumns: ['id'];
                     },
                 ];
@@ -944,7 +1041,9 @@ export type Database = {
                     level: Database['public']['Enums']['requirement_level'];
                     name: string;
                     original_requirement: string | null;
+                    position: number;
                     priority: Database['public']['Enums']['requirement_priority'];
+                    properties: Json | null;
                     status: Database['public']['Enums']['requirement_status'];
                     tags: string[] | null;
                     updated_at: string | null;
@@ -968,7 +1067,9 @@ export type Database = {
                     level?: Database['public']['Enums']['requirement_level'];
                     name: string;
                     original_requirement?: string | null;
+                    position?: number;
                     priority?: Database['public']['Enums']['requirement_priority'];
+                    properties?: Json | null;
                     status?: Database['public']['Enums']['requirement_status'];
                     tags?: string[] | null;
                     updated_at?: string | null;
@@ -992,7 +1093,9 @@ export type Database = {
                     level?: Database['public']['Enums']['requirement_level'];
                     name?: string;
                     original_requirement?: string | null;
+                    position?: number;
                     priority?: Database['public']['Enums']['requirement_priority'];
+                    properties?: Json | null;
                     status?: Database['public']['Enums']['requirement_status'];
                     tags?: string[] | null;
                     updated_at?: string | null;
@@ -1030,15 +1133,13 @@ export type Database = {
                     current_period_end: string | null;
                     current_period_start: string | null;
                     id: string;
-                    organization_id: string;
+                    organization_id: string | null;
                     payment_method_brand: string | null;
                     payment_method_last4: string | null;
                     price_id: string | null;
                     stripe_customer_id: string | null;
                     stripe_subscription_id: string | null;
-                    subscription_status:
-                        | Database['public']['Enums']['subscription_status']
-                        | null;
+                    subscription_status: Database['public']['Enums']['subscription_status'];
                     updated_at: string | null;
                 };
                 Insert: {
@@ -1047,15 +1148,13 @@ export type Database = {
                     current_period_end?: string | null;
                     current_period_start?: string | null;
                     id?: string;
-                    organization_id: string;
+                    organization_id?: string | null;
                     payment_method_brand?: string | null;
                     payment_method_last4?: string | null;
                     price_id?: string | null;
                     stripe_customer_id?: string | null;
                     stripe_subscription_id?: string | null;
-                    subscription_status?:
-                        | Database['public']['Enums']['subscription_status']
-                        | null;
+                    subscription_status: Database['public']['Enums']['subscription_status'];
                     updated_at?: string | null;
                 };
                 Update: {
@@ -1064,15 +1163,13 @@ export type Database = {
                     current_period_end?: string | null;
                     current_period_start?: string | null;
                     id?: string;
-                    organization_id?: string;
+                    organization_id?: string | null;
                     payment_method_brand?: string | null;
                     payment_method_last4?: string | null;
                     price_id?: string | null;
                     stripe_customer_id?: string | null;
                     stripe_subscription_id?: string | null;
-                    subscription_status?:
-                        | Database['public']['Enums']['subscription_status']
-                        | null;
+                    subscription_status?: Database['public']['Enums']['subscription_status'];
                     updated_at?: string | null;
                 };
                 Relationships: [
@@ -1182,27 +1279,89 @@ export type Database = {
             };
             user_roles: {
                 Row: {
+                    admin_role:
+                        | Database['public']['Enums']['user_role_type']
+                        | null;
                     created_at: string;
+                    document_id: string | null;
+                    document_role:
+                        | Database['public']['Enums']['project_role']
+                        | null;
                     id: string;
-                    role: Database['public']['Enums']['user_role_type'];
+                    org_id: string | null;
+                    project_id: string | null;
+                    project_role:
+                        | Database['public']['Enums']['project_role']
+                        | null;
                     updated_at: string;
                     user_id: string;
                 };
                 Insert: {
+                    admin_role?:
+                        | Database['public']['Enums']['user_role_type']
+                        | null;
                     created_at?: string;
+                    document_id?: string | null;
+                    document_role?:
+                        | Database['public']['Enums']['project_role']
+                        | null;
                     id?: string;
-                    role: Database['public']['Enums']['user_role_type'];
+                    org_id?: string | null;
+                    project_id?: string | null;
+                    project_role?:
+                        | Database['public']['Enums']['project_role']
+                        | null;
                     updated_at?: string;
                     user_id: string;
                 };
                 Update: {
+                    admin_role?:
+                        | Database['public']['Enums']['user_role_type']
+                        | null;
                     created_at?: string;
+                    document_id?: string | null;
+                    document_role?:
+                        | Database['public']['Enums']['project_role']
+                        | null;
                     id?: string;
-                    role?: Database['public']['Enums']['user_role_type'];
+                    org_id?: string | null;
+                    project_id?: string | null;
+                    project_role?:
+                        | Database['public']['Enums']['project_role']
+                        | null;
                     updated_at?: string;
                     user_id?: string;
                 };
-                Relationships: [];
+                Relationships: [
+                    {
+                        foreignKeyName: 'user_roles_document_id_fkey';
+                        columns: ['document_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'document_summary';
+                        referencedColumns: ['document_id'];
+                    },
+                    {
+                        foreignKeyName: 'user_roles_document_id_fkey';
+                        columns: ['document_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'documents';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'user_roles_org_id_fkey';
+                        columns: ['org_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'organizations';
+                        referencedColumns: ['id'];
+                    },
+                    {
+                        foreignKeyName: 'user_roles_project_id_fkey';
+                        columns: ['project_id'];
+                        isOneToOne: false;
+                        referencedRelation: 'projects';
+                        referencedColumns: ['id'];
+                    },
+                ];
             };
         };
         Views: {
@@ -1240,6 +1399,13 @@ export type Database = {
                     quantity: number;
                 };
                 Returns: boolean;
+            };
+            create_columns_for_table_block: {
+                Args: {
+                    block_id: string;
+                    p_org_id: string;
+                };
+                Returns: undefined;
             };
             create_notification: {
                 Args: {
@@ -1678,6 +1844,14 @@ export type Database = {
                 };
                 Returns: boolean;
             };
+            reorder_blocks: {
+                Args: {
+                    p_document_id: string;
+                    p_block_ids: string[];
+                    p_user_id: string;
+                };
+                Returns: undefined;
+            };
             switch_organization: {
                 Args: {
                     user_id: string;
@@ -1698,7 +1872,7 @@ export type Database = {
             entity_type: 'document' | 'requirement';
             invitation_status: 'pending' | 'accepted' | 'rejected' | 'revoked';
             notification_type: 'invitation' | 'mention' | 'system';
-            organization_type: 'personal' | 'team';
+            organization_type: 'personal' | 'team' | 'enterprise';
             pricing_plan_interval: 'none' | 'month' | 'year';
             project_role:
                 | 'owner'
@@ -1708,23 +1882,26 @@ export type Database = {
                 | 'viewer';
             project_status: 'active' | 'archived' | 'draft' | 'deleted';
             property_type:
-                | 'string'
+                | 'text'
                 | 'number'
                 | 'boolean'
                 | 'date'
                 | 'url'
                 | 'array'
                 | 'enum'
-                | 'entity_reference';
+                | 'entity_reference'
+                | 'select'
+                | 'multi_select'
+                | 'file';
             requirement_format: 'incose' | 'ears' | 'other';
             requirement_level: 'component' | 'system' | 'subsystem';
-            requirement_priority: 'low' | 'medium' | 'high';
+            requirement_priority: 'low' | 'medium' | 'high' | 'critical';
             requirement_status:
                 | 'active'
                 | 'archived'
                 | 'draft'
                 | 'deleted'
-                | 'pending'
+                | 'in_review'
                 | 'in_progress'
                 | 'approved'
                 | 'rejected';
