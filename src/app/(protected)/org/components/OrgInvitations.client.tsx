@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useCreateOrgInvitation } from '@/hooks/mutations/useOrgInvitationMutations';
 import { useOrgInvitationsByOrgId } from '@/hooks/queries/useOrganization';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { useUser } from '@/lib/providers/user.provider';
 import { InvitationStatus } from '@/types/base/enums.types';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { useToast } from '@/components/ui/use-toast';
+import { getOrganizationMembers } from '@/lib/db/client';
 
 interface OrgInvitationsProps {
     orgId: string;
@@ -19,6 +20,8 @@ interface OrgInvitationsProps {
 
 export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
     const [inviteEmail, setInviteEmail] = useState('');
+    const [, setUserExists] = useState<boolean | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null); // Track error messages
     const { user } = useUser();
     const { mutateAsync: createInvitation, isPending } = useCreateOrgInvitation();
     const { data: allInvitations, isLoading: outgoingLoading, refetch } = useOrgInvitationsByOrgId(orgId);
@@ -30,38 +33,61 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
     );
 
     const handleInvite = async () => {
+        setErrorMessage(null); // Reset error message
+
         if (!inviteEmail) {
+            setErrorMessage('Please enter a valid email.');
             toast({ title: 'Error', description: 'Please enter a valid email.', variant: 'destructive' });
             return;
         }
         if (!user?.id) {
+            setErrorMessage('User not authenticated.');
             toast({ title: 'Error', description: 'User not authenticated.', variant: 'destructive' });
             return;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(inviteEmail.trim())) {
+            setErrorMessage('Please enter a valid email address.');
             toast({ title: 'Error', description: 'Please enter a valid email address.', variant: 'destructive' });
             return;
         }
 
         if (inviteEmail.trim() === user.email) {
-            toast({ title: 'Error', description: 'You cannot send an invitation to yourself.', variant: 'destructive' });
+            setErrorMessage('You cannot send an invitation to yourself.');
+            toast({ title: 'Error', description: 'You cannot send an invitation to yourself.', variant: 'default' });
             return;
         }
 
         try {
-            // Check if the email exists in the profiles
-            const { data: profile, error: profileError } = await supabase
+            // Check if the user is already a member of the organization
+            const members = await getOrganizationMembers(orgId);
+            const isAlreadyMember = members.some((member) => member.email === inviteEmail.trim());
+
+            if (isAlreadyMember) {
+                setErrorMessage('This user is already a member of the organization.');
+                toast({ title: 'Error', description: 'This user is already a member of the organization.', variant: 'default' });
+                return;
+            }
+
+            // Check if the email exists in the profiles table
+            const { error: profileError } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('id')
                 .eq('email', inviteEmail.trim())
                 .single();
 
-            if (profileError || !profile) {
-                toast({ title: 'Error', description: 'No user found with this email.', variant: 'destructive' });
-                return;
+            if (profileError) {
+                if (profileError.code === 'PGRST116') {
+                    setErrorMessage('This email does not belong to any user. Please ask the user to sign up first.');
+                    setUserExists(false); // User does not exist
+                    return;
+                }
+                console.error('Error checking email in profiles:', profileError);
+                throw profileError;
             }
+
+            setUserExists(true); // User exists
 
             // Check for duplicate invitations
             const { data: duplicateInvitations, error: duplicateError } = await supabase
@@ -77,6 +103,7 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
             }
 
             if (duplicateInvitations && duplicateInvitations.length > 0) {
+                setErrorMessage('An invitation has already been sent to this email for this organization.');
                 toast({ title: 'Error', description: 'An invitation has already been sent to this email for this organization.', variant: 'destructive' });
                 return;
             }
@@ -95,16 +122,20 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
                     onSuccess: () => {
                         toast({ title: 'Success', description: 'Invitation sent successfully!', variant: 'default' });
                         setInviteEmail('');
+                        setErrorMessage(null); // Reset error message
+                        setUserExists(null); // Reset user existence state
                         refetch(); // Refresh outgoing invitations
                     },
                     onError: (error) => {
                         console.error('Error sending invitation:', error);
+                        setErrorMessage('Failed to send invitation.');
                         toast({ title: 'Error', description: 'Failed to send invitation.', variant: 'destructive' });
                     },
                 }
             );
         } catch (error) {
             console.error('Error handling invitation:', error);
+            setErrorMessage('Failed to process the invitation.');
             toast({ title: 'Error', description: 'Failed to process the invitation.', variant: 'destructive' });
         }
     };
@@ -138,66 +169,80 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col md:flex-row md:space-x-6">
             {/* Invite Users Section */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Invite Users</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex space-x-4">
-                        <Input
-                            type="email"
-                            placeholder="Enter user email"
-                            value={inviteEmail}
-                            onChange={(e) => setInviteEmail(e.target.value)}
-                        />
-                        <Button onClick={handleInvite} disabled={isPending}>
-                            Invite
-                        </Button>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="flex-1">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Invite Users</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex flex-col space-y-4">
+                            <div className="flex space-x-4">
+                                <Input
+                                    type="email"
+                                    placeholder="Enter user email"
+                                    value={inviteEmail}
+                                    onChange={(e) => {
+                                        setInviteEmail(e.target.value);
+                                        setErrorMessage(null); // Reset error message on input change
+                                        setUserExists(null); // Reset user existence state on input change
+                                    }}
+                                />
+                                <Button onClick={handleInvite} disabled={isPending}>
+                                    Invite
+                                </Button>
+                            </div>
+                            <div>
+                                {errorMessage && (
+                                    <p className="text-primary text-sm">{errorMessage}</p>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
             {/* Outgoing Invitations Section */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Outgoing Invitations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {outgoingLoading ? (
-                        <p>Loading outgoing invitations...</p>
-                    ) : outgoingInvitations?.length ? (
-                        <ul className="space-y-2">
-                            {outgoingInvitations
-                                .map((invitation) => (
+            <div className="flex-1">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Outgoing Invitations</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {outgoingLoading ? (
+                            <p>Loading outgoing invitations...</p>
+                        ) : outgoingInvitations?.length ? (
+                            <ul className="space-y-2">
+                                {outgoingInvitations.map((invitation) => (
                                     <li
                                         key={invitation.id}
-                                        className="flex justify-between items-center rounded-md p-3" // Added outline styles
+                                        className="flex justify-between items-center rounded-md p-3"
                                     >
                                         <div className="flex items-center space-x-2">
                                             <span>{invitation.email}</span>
                                             <Badge
                                                 variant="outline"
-                                                className="border-gray-300 text-gray-500" // Light gray color
+                                                className="border-gray-300 text-gray-500"
                                             >
                                                 {invitation.status}
                                             </Badge>
                                         </div>
                                         {invitation.status === InvitationStatus.pending && (
                                             <X
-                                                className="h-5 w-5 text-accent cursor-pointer" // Use accent color
+                                                className="h-5 w-5 text-accent cursor-pointer"
                                                 onClick={() => handleRevoke(invitation.id)}
                                             />
                                         )}
                                     </li>
                                 ))}
-                        </ul>
-                    ) : (
-                        <p className="text-primary font-small ml-2">No outgoing invitations</p>
-                    )}
-                </CardContent>
-            </Card>
+                            </ul>
+                        ) : (
+                            <p className="text-primary font-small ml-2">No outgoing invitations</p>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }
