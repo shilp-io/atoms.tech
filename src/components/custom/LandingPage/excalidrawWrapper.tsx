@@ -13,6 +13,9 @@ import { supabase } from "@/lib/supabase/supabaseBrowser";
 import "@excalidraw/excalidraw/index.css";
 import { parseMermaidToExcalidraw } from "@excalidraw/mermaid-to-excalidraw";
 import { convertToExcalidrawElements } from "@excalidraw/excalidraw";
+import { v4 as uuidv4 } from 'uuid';
+import { useUser } from "@/lib/providers/user.provider";
+import { usePathname } from "next/navigation";
 
 const LAST_DIAGRAM_ID_KEY = 'lastExcalidrawDiagramId';
 
@@ -21,7 +24,7 @@ interface ExcalidrawWrapperProps {
 }
 
 const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
-  const [diagramId, setDiagramId] = useState<number | null>(null);
+  const [diagramId, setDiagramId] = useState<string | null>(null);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [initialData, setInitialData] = useState<ExcalidrawInitialDataState | null>(null);
@@ -33,6 +36,10 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
     elements: readonly ExcalidrawElement[];
     appState: AppState;
   } | null>(null);
+
+  const { user, profile } = useUser();
+  const organizationId = usePathname().split('/')[2];
+  const projectId = usePathname().split('/')[3];
 
   // Function to add mermaid diagram to canvas
   const addMermaidDiagram = async (mermaidSyntax: string) => {
@@ -70,21 +77,21 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
         const lastDiagramId = localStorage.getItem(LAST_DIAGRAM_ID_KEY);
         
         // Priority: URL param > localStorage > new diagram
-        let id: number | null = null;
+        let id: string | null = null;
         
-        if (idFromUrl && !isNaN(Number(idFromUrl))) {
-          id = Number(idFromUrl);
-        } else if (lastDiagramId && !isNaN(Number(lastDiagramId))) {
-          id = Number(lastDiagramId);
+        if (idFromUrl && isValidUuid(idFromUrl)) {
+          id = idFromUrl;
+        } else if (lastDiagramId && isValidUuid(lastDiagramId)) {
+          id = lastDiagramId;
           // Update URL with the stored ID
           const newUrl = new URL(window.location.href);
-          newUrl.searchParams.set('id', id.toString());
+          newUrl.searchParams.set('id', id);
           window.history.pushState({}, '', newUrl);
         }
 
         if (id) {
           setDiagramId(id);
-          localStorage.setItem(LAST_DIAGRAM_ID_KEY, id.toString());
+          localStorage.setItem(LAST_DIAGRAM_ID_KEY, id);
           
           // Fetch existing diagram data
           const { data, error } = await supabase
@@ -130,16 +137,21 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
       }
     };
 
+    // Helper function to validate UUID
+    const isValidUuid = (id: string): boolean => {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(id);
+    };
+
     const createNewDiagram = () => {
-      const timestamp = Date.now();
-      const random = Math.floor(Math.random() * 1000000);
-      const newId = Number(`${timestamp}${random}`);
+      // Generate a UUID v4
+      const newId = uuidv4();
       setDiagramId(newId);
-      localStorage.setItem(LAST_DIAGRAM_ID_KEY, newId.toString());
+      localStorage.setItem(LAST_DIAGRAM_ID_KEY, newId);
       
       // Update URL with the new ID
       const newUrl = new URL(window.location.href);
-      newUrl.searchParams.set('id', newId.toString());
+      newUrl.searchParams.set('id', newId);
       window.history.pushState({}, '', newUrl);
     };
 
@@ -213,7 +225,10 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
           id: diagramId,
           diagram_data: diagramData,
           updated_at: now,
-          created_at: now,
+          updated_by: user?.id,
+          created_by: user?.id,
+          organization_id: organizationId,
+          project_id: projectId,
         });
 
       if (error) {
@@ -232,7 +247,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
       
       setIsExistingDiagram(true); // Mark as existing after first successful save
       setLastSaved(new Date());
-      localStorage.setItem(LAST_DIAGRAM_ID_KEY, diagramId.toString());
+      localStorage.setItem(LAST_DIAGRAM_ID_KEY, diagramId);
       console.log('Diagram saved successfully');
     } catch (error) {
       console.error('Error saving diagram:', error);
