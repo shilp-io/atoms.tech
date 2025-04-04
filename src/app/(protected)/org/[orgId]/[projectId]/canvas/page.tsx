@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import React, { useState, useCallback, useEffect } from 'react';
 import { useGumloop } from '@/hooks/useGumloop';
 import { CircleAlert } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 const ExcalidrawWithClientOnly = dynamic(
     async () => (await import("@/components/custom/LandingPage/excalidrawWrapper")).default,
     {
@@ -12,7 +13,8 @@ const ExcalidrawWithClientOnly = dynamic(
   );
 
 export default function Draw() {
-    const organizationId = '9badbbf0-441c-49f6-91e7-3d9afa1c13e6';
+    // const organizationId = '9badbbf0-441c-49f6-91e7-3d9afa1c13e6';
+    const organizationId = usePathname().split('/')[2];
     const [prompt, setPrompt] = useState('');
     const [excalidrawApi, setExcalidrawApi] = useState<{ 
         addMermaidDiagram: (mermaidSyntax: string) => Promise<void> 
