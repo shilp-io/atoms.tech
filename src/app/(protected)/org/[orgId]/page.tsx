@@ -17,7 +17,6 @@ import { Project } from '@/types/base/projects.types';
 export default function OrgPage() {
     const router = useRouter();
     const params = useParams<{ orgId: string }>();
-    const { profile } = useUser();
     const { setCurrentProjectId } = useContextStore();
     const { theme } = useTheme();
     const { setCurrentOrganization } = useOrganization();
@@ -38,9 +37,8 @@ export default function OrgPage() {
     }, [organization, setCurrentOrganization]);
 
     // Fetch projects data
-    const { data: projects, isLoading: projectsLoading } = useOrganizationProjects(
-        orgId,
-    );
+    const { data: projects, isLoading: projectsLoading } =
+        useOrganizationProjects(orgId);
 
     const { data: externalDocuments, isLoading: documentsLoading } =
         useExternalDocumentsByOrg(params?.orgId || '');
