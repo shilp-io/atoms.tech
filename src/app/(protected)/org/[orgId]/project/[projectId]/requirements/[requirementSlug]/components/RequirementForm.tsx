@@ -75,10 +75,10 @@ export function RequirementForm({
     requirement,
     reqText,
     setReqText,
-    systemName,
-    setSystemName,
-    objective,
-    setObjective,
+    // systemName,
+    // setSystemName,
+    // objective,
+    // setObjective,
     isReasoning,
     setIsReasoning,
     isAnalysing,
@@ -394,40 +394,40 @@ export function RequirementForm({
                 placeholder="Enter requirement text"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <label
-                        htmlFor="systemName"
-                        className="text-sm font-medium text-muted-foreground block mb-1"
-                    >
-                        System Name - Optional
-                    </label>
-                    <input
-                        id="systemName"
-                        type="text"
-                        className="w-full p-2 border rounded-md text-muted-foreground"
-                        value={systemName}
-                        onChange={(e) => setSystemName(e.target.value)}
-                        placeholder="e.g. Backup Camera"
-                    />
-                </div>
-                <div>
-                    <label
-                        htmlFor="objective"
-                        className="text-sm font-medium text-muted-foreground block mb-1"
-                    >
-                        System Objective - Optional
-                    </label>
-                    <input
-                        id="objective"
-                        type="text"
-                        className="w-full p-2 border rounded-md text-muted-foreground"
-                        value={objective}
-                        onChange={(e) => setObjective(e.target.value)}
-                        placeholder="e.g. Provide rear visibility"
-                    />
-                </div>
-            </div>
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"> */}
+            {/*     <div> */}
+            {/*         <label */}
+            {/*             htmlFor="systemName" */}
+            {/*             className="text-sm font-medium text-muted-foreground block mb-1" */}
+            {/*         > */}
+            {/*             System Name - Optional */}
+            {/*         </label> */}
+            {/*         <input */}
+            {/*             id="systemName" */}
+            {/*             type="text" */}
+            {/*             className="w-full p-2 border rounded-md text-muted-foreground" */}
+            {/*             value={systemName} */}
+            {/*             onChange={(e) => setSystemName(e.target.value)} */}
+            {/*             placeholder="e.g. Backup Camera" */}
+            {/*         /> */}
+            {/*     </div> */}
+            {/*     <div> */}
+            {/*         <label */}
+            {/*             htmlFor="objective" */}
+            {/*             className="text-sm font-medium text-muted-foreground block mb-1" */}
+            {/*         > */}
+            {/*             System Objective - Optional */}
+            {/*         </label> */}
+            {/*         <input */}
+            {/*             id="objective" */}
+            {/*             type="text" */}
+            {/*             className="w-full p-2 border rounded-md text-muted-foreground" */}
+            {/*             value={objective} */}
+            {/*             onChange={(e) => setObjective(e.target.value)} */}
+            {/*             placeholder="e.g. Provide rear visibility" */}
+            {/*         /> */}
+            {/*     </div> */}
+            {/* </div> */}
             <div className="mt-4 space-y-2">
                 <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 sm:gap-0">
                     <div className="flex items-center gap-2">
