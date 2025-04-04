@@ -1,23 +1,27 @@
 'use client';
 
-import dynamic from 'next/dynamic';
-import React, { useState, useCallback, useEffect } from 'react';
-import { useGumloop } from '@/hooks/useGumloop';
 import { CircleAlert } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
+import React, { useCallback, useEffect, useState } from 'react';
+
+import { useGumloop } from '@/hooks/useGumloop';
+
 const ExcalidrawWithClientOnly = dynamic(
-    async () => (await import("@/components/custom/LandingPage/excalidrawWrapper")).default,
+    async () =>
+        (await import('@/components/custom/LandingPage/excalidrawWrapper'))
+            .default,
     {
-      ssr: false,
+        ssr: false,
     },
-  );
+);
 
 export default function Draw() {
     // const organizationId = '9badbbf0-441c-49f6-91e7-3d9afa1c13e6';
     const organizationId = usePathname().split('/')[2];
     const [prompt, setPrompt] = useState('');
-    const [excalidrawApi, setExcalidrawApi] = useState<{ 
-        addMermaidDiagram: (mermaidSyntax: string) => Promise<void> 
+    const [excalidrawApi, setExcalidrawApi] = useState<{
+        addMermaidDiagram: (mermaidSyntax: string) => Promise<void>;
     } | null>(null);
 
     // Gumloop state management
@@ -25,9 +29,12 @@ export default function Draw() {
     const [pipelineRunId, setPipelineRunId] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string>('');
-    
+
     // Get pipeline run data
-    const { data: pipelineResponse } = getPipelineRun(pipelineRunId, organizationId);
+    const { data: pipelineResponse } = getPipelineRun(
+        pipelineRunId,
+        organizationId,
+    );
 
     const handleGenerate = async () => {
         if (!excalidrawApi) {
@@ -49,9 +56,9 @@ export default function Draw() {
                 customPipelineInputs: [
                     {
                         input_name: 'Requirements(s)',
-                        value: prompt.trim()
-                    }
-                ]
+                        value: prompt.trim(),
+                    },
+                ],
             });
             setPipelineRunId(run_id);
         } catch (error) {
@@ -66,7 +73,7 @@ export default function Draw() {
         switch (pipelineResponse?.state) {
             case 'DONE': {
                 console.log('Pipeline response:', pipelineResponse);
-                
+
                 // Parse the JSON string from outputs.output
                 let parsedOutput;
                 try {
@@ -76,21 +83,27 @@ export default function Draw() {
                     }
                     parsedOutput = JSON.parse(output);
                     const mermaidSyntax = parsedOutput?.mermaid_syntax;
-                    
+
                     if (!mermaidSyntax) {
                         console.error('No mermaid syntax found in response');
-                        console.log("parsedOutput: ", parsedOutput);
-                        setError('Failed to generate diagram: No mermaid syntax in response');
+                        console.log('parsedOutput: ', parsedOutput);
+                        setError(
+                            'Failed to generate diagram: No mermaid syntax in response',
+                        );
                         break;
                     }
 
                     if (excalidrawApi) {
-                        const syntax = Array.isArray(mermaidSyntax) ? mermaidSyntax[0] : mermaidSyntax;
-                        excalidrawApi.addMermaidDiagram(syntax)
-                            .catch(err => {
-                                console.error('Error rendering mermaid diagram:', err);
-                                setError('Failed to render diagram');
-                            });
+                        const syntax = Array.isArray(mermaidSyntax)
+                            ? mermaidSyntax[0]
+                            : mermaidSyntax;
+                        excalidrawApi.addMermaidDiagram(syntax).catch((err) => {
+                            console.error(
+                                'Error rendering mermaid diagram:',
+                                err,
+                            );
+                            setError('Failed to render diagram');
+                        });
                     }
                 } catch (err) {
                     console.error('Error parsing pipeline output:', err);
@@ -112,26 +125,31 @@ export default function Draw() {
         setIsGenerating(false);
     }, [pipelineResponse, excalidrawApi]);
 
-    const handleExcalidrawMount = useCallback((api: { 
-        addMermaidDiagram: (mermaidSyntax: string) => Promise<void> 
-    }) => {
-        setExcalidrawApi(api);
-    }, []);
+    const handleExcalidrawMount = useCallback(
+        (api: {
+            addMermaidDiagram: (mermaidSyntax: string) => Promise<void>;
+        }) => {
+            setExcalidrawApi(api);
+        },
+        [],
+    );
 
     return (
         <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
             <div style={{ flexShrink: 0 }}>
                 <ExcalidrawWithClientOnly onMounted={handleExcalidrawMount} />
             </div>
-            <div style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '10px',
-                padding: '20px',
-                background: '#f5f5f5',
-                borderRadius: '8px',
-                height: 'fit-content' 
-            }}>
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    padding: '20px',
+                    background: '#f5f5f5',
+                    borderRadius: '8px',
+                    height: 'fit-content',
+                }}
+            >
                 <h3 style={{ margin: '0 0 10px 0' }}>Text to Diagram</h3>
                 <textarea
                     value={prompt}
@@ -146,7 +164,7 @@ export default function Draw() {
                         padding: '10px',
                         borderRadius: '0px',
                         border: '1px solid #ddd',
-                        resize: 'vertical'
+                        resize: 'vertical',
                     }}
                 />
                 <button
@@ -160,19 +178,28 @@ export default function Draw() {
                         borderRadius: '0px',
                         cursor: isGenerating ? 'default' : 'pointer',
                         opacity: isGenerating ? 0.7 : 1,
-                        fontWeight: 'bold'
+                        fontWeight: 'bold',
                     }}
                 >
                     {isGenerating ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                            <div style={{ 
-                                width: '16px', 
-                                height: '16px', 
-                                border: '2px solid #ffffff',
-                                borderTopColor: 'transparent',
-                                borderRadius: '50%',
-                                animation: 'spin 1s linear infinite'
-                            }} />
+                        <div
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: '16px',
+                                    height: '16px',
+                                    border: '2px solid #ffffff',
+                                    borderTopColor: 'transparent',
+                                    borderRadius: '50%',
+                                    animation: 'spin 1s linear infinite',
+                                }}
+                            />
                             Generating...
                         </div>
                     ) : (
@@ -180,35 +207,43 @@ export default function Draw() {
                     )}
                 </button>
                 {error && (
-                    <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px',
-                        color: '#dc2626',
-                        backgroundColor: '#fee2e2',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        fontSize: '14px'
-                    }}>
-                        <CircleAlert style={{ width: '16px', height: '16px' }} />
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            color: '#dc2626',
+                            backgroundColor: '#fee2e2',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                        }}
+                    >
+                        <CircleAlert
+                            style={{ width: '16px', height: '16px' }}
+                        />
                         {error}
                     </div>
                 )}
                 {pipelineResponse?.state === 'DONE' && (
-                    <div style={{ 
-                        color: '#059669',
-                        backgroundColor: '#d1fae5',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        fontSize: '14px'
-                    }}>
+                    <div
+                        style={{
+                            color: '#059669',
+                            backgroundColor: '#d1fae5',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            fontSize: '14px',
+                        }}
+                    >
                         Diagram generated successfully!
                     </div>
                 )}
             </div>
             <style jsx>{`
                 @keyframes spin {
-                    to { transform: rotate(360deg); }
+                    to {
+                        transform: rotate(360deg);
+                    }
                 }
             `}</style>
         </div>
