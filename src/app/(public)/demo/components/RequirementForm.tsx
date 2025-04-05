@@ -81,7 +81,7 @@ export function RequirementForm({
     };
 
     return (
-        <Card className="p-6">
+        <Card className="p-6 dark:shadow-[4px_4px_0px_0px_rgba(75,85,99,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(75,85,99,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px]">
             <div className="space-y-4">
                 <div>
                     <label
@@ -95,7 +95,7 @@ export function RequirementForm({
                             id="requirement"
                             name="requirement"
                             rows={4}
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-gray-800 dark:border-gray-700"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-black dark:border-gray-600 dark:text-white"
                             value={reqText}
                             onChange={handleInputChange}
                             placeholder="Enter your requirement here..."
@@ -120,7 +120,7 @@ export function RequirementForm({
                         <input
                             type="text"
                             id="systemName"
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-gray-800 dark:border-gray-700"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-black dark:border-gray-600 dark:text-white"
                             value={systemName}
                             onChange={(e) => setSystemName(e.target.value)}
                             placeholder="Enter system name..."
@@ -139,7 +139,7 @@ export function RequirementForm({
                         <input
                             type="text"
                             id="objective"
-                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-gray-800 dark:border-gray-700"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-black dark:border-gray-600 dark:text-white"
                             value={objective}
                             onChange={(e) => setObjective(e.target.value)}
                             placeholder="Enter objective..."
@@ -182,14 +182,14 @@ export function RequirementForm({
 
                 {Object.keys(selectedFiles).length > 0 && (
                     <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <h3 className="text-sm font-medium text-gray-700 dark:text-white">
                             Selected Files
                         </h3>
                         <ul className="space-y-1">
                             {Object.values(selectedFiles).map((file) => (
                                 <li
                                     key={file.name}
-                                    className="text-sm text-gray-600 dark:text-gray-400"
+                                    className="text-sm text-gray-600 dark:text-gray-300"
                                 >
                                     {file.name}
                                 </li>
