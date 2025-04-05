@@ -135,14 +135,14 @@ export default function DemoPage() {
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black">
+        <div className="min-h-screen bg-white">
             <div className="container mx-auto px-4 py-8">
                 {/* Header Section */}
                 <div className="mb-12">
-                    <h1 className="text-4xl font-black mb-2 dark:text-white">
+                    <h1 className="text-4xl font-black mb-2">
                         AI Requirement Analysis
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-200 text-lg">
+                    <p className="text-gray-600 text-lg">
                         Transform your requirements into precise, actionable
                         specifications
                     </p>
@@ -155,8 +155,8 @@ export default function DemoPage() {
                     <div
                         className={`${analysisData ? 'xl:col-span-5' : 'xl:col-span-6 xl:col-start-4'} w-full`}
                     >
-                        <div className="bg-gray-50 dark:bg-black border-2 border-black dark:border-gray-600 p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(75,85,99,1)] h-[calc(100vh-12rem)] flex flex-col">
-                            <h2 className="text-2xl font-bold mb-6 border-b-2 border-black dark:border-gray-600 pb-2 flex-none dark:text-white">
+                        <div className="bg-gray-50 border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-[calc(100vh-12rem)] flex flex-col">
+                            <h2 className="text-2xl font-bold mb-6 border-b-2 border-black pb-2 flex-none">
                                 Input Requirement
                             </h2>
                             <div className="overflow-y-auto flex-1 pr-2">
@@ -184,9 +184,9 @@ export default function DemoPage() {
                     {/* Analysis Section - Takes 7 columns, only shown after analysis */}
                     {analysisData && (
                         <div className="xl:col-span-7">
-                            <div className="bg-gray-50 dark:bg-gray-800 border-2 border-black dark:border-gray-600 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(75,85,99,1)] h-[calc(100vh-12rem)] flex flex-col transition-all duration-500 ease-in-out transform translate-x-0 opacity-100">
-                                <div className="p-6 border-b-2 border-black dark:border-gray-600 flex-none">
-                                    <h2 className="text-2xl font-bold dark:text-white">
+                            <div className="bg-gray-50 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] h-[calc(100vh-12rem)] flex flex-col transition-all duration-500 ease-in-out transform translate-x-0 opacity-100">
+                                <div className="p-6 border-b-2 border-black flex-none">
+                                    <h2 className="text-2xl font-bold">
                                         Analysis Results
                                     </h2>
                                 </div>
@@ -195,7 +195,7 @@ export default function DemoPage() {
                                 <div className="p-6 overflow-y-auto flex-1">
                                     <div className="grid grid-cols-1 gap-6">
                                         {/* Original Requirement */}
-                                        <div className="bg-white dark:bg-black border-2 border-black dark:border-gray-600 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(75,85,99,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(75,85,99,1)]">
+                                        <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                             <OriginalRequirementCard
                                                 reqId=""
                                                 originalRequirement={reqText}
@@ -203,7 +203,7 @@ export default function DemoPage() {
                                         </div>
 
                                         {/* EARS Analysis */}
-                                        <div className="bg-white dark:bg-black border-2 border-black dark:border-gray-600 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(75,85,99,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(75,85,99,1)]">
+                                        <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                             <EarsCard
                                                 earsPattern=""
                                                 earsRequirement={
@@ -215,7 +215,7 @@ export default function DemoPage() {
                                         </div>
 
                                         {/* INCOSE Analysis */}
-                                        <div className="bg-white dark:bg-black border-2 border-black dark:border-gray-600 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(75,85,99,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(75,85,99,1)]">
+                                        <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                             <IncoseCard
                                                 incoseFormat={
                                                     analysisData?.incoseReq
@@ -228,7 +228,7 @@ export default function DemoPage() {
                                         </div>
 
                                         {/* Compliance Analysis */}
-                                        <div className="bg-white dark:bg-black border-2 border-black dark:border-gray-600 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(75,85,99,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(75,85,99,1)]">
+                                        <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                             <ComplianceCard
                                                 complianceFeedback={
                                                     analysisData?.generalFeedback
@@ -240,7 +240,7 @@ export default function DemoPage() {
                                         </div>
 
                                         {/* Enhanced Analysis */}
-                                        <div className="bg-white dark:bg-black border-2 border-black dark:border-gray-600 p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(75,85,99,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[2px_2px_0px_0px_rgba(75,85,99,1)]">
+                                        <div className="bg-white border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-transform hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                             <EnhancedCard
                                                 enhancedReqEars=""
                                                 enhancedReqIncose=""
