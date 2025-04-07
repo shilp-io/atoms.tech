@@ -135,22 +135,16 @@ export default function Draw() {
     );
 
     return (
-        <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
+        <div className="flex gap-5 p-5">
             <div style={{ flexShrink: 0 }}>
                 <ExcalidrawWithClientOnly onMounted={handleExcalidrawMount} />
             </div>
             <div
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
-                    padding: '20px',
-                    background: '#f5f5f5',
-                    borderRadius: '8px',
-                    height: 'fit-content',
-                }}
+                className="flex flex-col gap-2.5 p-5 bg-gray-100 dark:bg-sidebar rounded-lg h-fit"
             >
-                <h3 style={{ margin: '0 0 10px 0' }}>Text to Diagram</h3>
+                <h3 className="text-xl text-BLACK dark:text-white">
+                    Text to Diagram
+                </h3>
                 <textarea
                     value={prompt}
                     onChange={(e) => {
