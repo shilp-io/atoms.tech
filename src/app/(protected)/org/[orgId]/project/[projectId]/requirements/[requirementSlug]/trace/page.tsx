@@ -1,19 +1,15 @@
 'use client';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Check, Network, Plus, Search, Trash2, Trash, X } from 'lucide-react';
+import { Check, Network, Plus, Search, Trash2, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
@@ -34,8 +30,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Separator } from '@/components/ui/separator';
 import {
     Table,
     TableBody,

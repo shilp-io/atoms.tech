@@ -1,6 +1,6 @@
 'use client';
 
-import { Brain, CircleAlert, FilePlus, Wand } from 'lucide-react';
+import { Brain, CircleAlert, FilePlus, Shield, Wand } from 'lucide-react';
 import { ChangeEvent, Dispatch, SetStateAction, useRef } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,8 @@ interface RequirementFormProps {
     setObjective: Dispatch<SetStateAction<string>>;
     isReasoning: boolean;
     setIsReasoning: Dispatch<SetStateAction<boolean>>;
+    useRegulation: boolean;
+    setUseRegulation: Dispatch<SetStateAction<boolean>>;
     isAnalysing: boolean;
     handleAnalyze: () => void;
     missingReqError: string;
@@ -45,6 +47,8 @@ export function RequirementForm({
     setObjective,
     isReasoning,
     setIsReasoning,
+    useRegulation,
+    setUseRegulation,
     isAnalysing,
     handleAnalyze,
     missingReqError,
@@ -147,19 +151,36 @@ export function RequirementForm({
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                    <Checkbox
-                        id="reasoning"
-                        checked={isReasoning}
-                        onChange={() => setIsReasoning(!isReasoning)}
-                    />
-                    <label
-                        htmlFor="reasoning"
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1"
-                    >
-                        <Brain className="h-4 w-4" />
-                        Enable Reasoning
-                    </label>
+                <div className="flex flex-col space-y-2">
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="reasoning"
+                            checked={isReasoning}
+                            onChange={() => setIsReasoning(!isReasoning)}
+                        />
+                        <label
+                            htmlFor="reasoning"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1"
+                        >
+                            <Brain className="h-4 w-4" />
+                            Enable Reasoning
+                        </label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                        <Checkbox
+                            id="regulation"
+                            checked={useRegulation}
+                            onChange={() => setUseRegulation(!useRegulation)}
+                        />
+                        <label
+                            htmlFor="regulation"
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-1"
+                        >
+                            <Shield className="h-4 w-4" />
+                            Enable Regulation
+                        </label>
+                    </div>
                 </div>
 
                 <div>
