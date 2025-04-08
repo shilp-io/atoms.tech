@@ -1,6 +1,7 @@
 'use client';
 
-import { lazy, Suspense, useState } from 'react';
+import { Suspense, lazy, useState } from 'react';
+
 import {
     Sheet,
     SheetContent,
@@ -13,7 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // Lazy load form components to reduce initial bundle size
 const ProjectForm = lazy(() => import('@/components/base/forms/ProjectForm'));
 const DocumentForm = lazy(() => import('@/components/base/forms/DocumentForm'));
-const OrganizationForm = lazy(() => import('@/components/base/forms/OrganizationForm'));
+const OrganizationForm = lazy(
+    () => import('@/components/base/forms/OrganizationForm'),
+);
 
 // Fallback loading component
 const FormLoader = () => (

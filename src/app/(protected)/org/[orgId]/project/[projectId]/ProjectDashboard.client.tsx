@@ -25,7 +25,8 @@ export default function ProjectPage() {
     const params = useParams<{ orgId: string; projectId: string }>();
     const { project } = useProject();
     const { currentOrganization: _currentOrganization } = useOrganization();
-    const [showCreateDocumentPanel, setShowCreateDocumentPanel] = useState(false);
+    const [showCreateDocumentPanel, setShowCreateDocumentPanel] =
+        useState(false);
     const { data: documents, isLoading: documentsLoading } =
         useProjectDocuments(params.projectId);
 

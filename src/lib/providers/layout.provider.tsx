@@ -28,7 +28,7 @@ export type SidebarState = 'expanded' | 'collapsed';
 export interface LayoutState {
     // Loading state
     isLayoutReady: boolean;
-    
+
     // Sidebar state
     sidebarState: SidebarState;
     toggleSidebar: () => void;
@@ -70,7 +70,7 @@ interface LayoutProviderProps {
 export const LayoutProvider = ({ children }: LayoutProviderProps) => {
     // Loading state
     const [isLayoutReady, setIsLayoutReady] = useState(false);
-    
+
     // Sidebar state
     const [sidebarState, setSidebarState] = useState<SidebarState>('expanded');
 
@@ -139,7 +139,7 @@ export const LayoutProvider = ({ children }: LayoutProviderProps) => {
                 if (newIsMobile && sidebarState === 'expanded') {
                     setSidebarState('collapsed');
                 }
-                
+
                 // Mark layout as ready after initial sizing
                 if (!isLayoutReady) {
                     setIsLayoutReady(true);

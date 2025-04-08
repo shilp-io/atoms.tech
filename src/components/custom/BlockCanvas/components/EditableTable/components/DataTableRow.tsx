@@ -1,6 +1,5 @@
 import { ArrowUpRight, Trash2 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
-import { useDocumentStore } from '@/lib/store/document.store';
 import React from 'react';
 
 import { CellRenderer } from '@/components/custom/BlockCanvas/components/EditableTable/CellRenderer';
@@ -16,6 +15,7 @@ import {
     SheetTitle,
 } from '@/components/ui/sheet';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useDocumentStore } from '@/lib/store/document.store';
 import { cn } from '@/lib/utils';
 
 interface DataTableRowProps<T> {

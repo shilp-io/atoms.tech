@@ -48,7 +48,7 @@ export function useRequirementsByIds(requirementIds: string[]) {
         queryKey: [...queryKeys.requirements.root, 'byIds', requirementIds],
         queryFn: async () => {
             if (!requirementIds.length) return [];
-            
+
             const { data, error } = await supabase
                 .from('requirements')
                 .select('*')

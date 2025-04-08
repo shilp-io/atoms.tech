@@ -168,7 +168,7 @@ export const queryKeys = {
                 'count',
             ] as const,
     },
-    
+
     auth: {
         root: ['auth'] as const,
         user: () => [...queryKeys.auth.root, 'user'] as const,

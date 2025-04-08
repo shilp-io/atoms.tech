@@ -87,7 +87,7 @@ const LayoutManagerInternal = ({ children }: LayoutManagerProps) => {
             {showVerticalToolbar && <VerticalToolbar />}
 
             {/* Horizontal toolbar - only on mobile/tablet */}
-            {showHorizontalToolbar && <HorizontalToolbar /> }
+            {showHorizontalToolbar && <HorizontalToolbar />}
         </Sidebar>
     );
 };

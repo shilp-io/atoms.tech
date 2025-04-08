@@ -11,7 +11,13 @@ import { TraceLink } from '@/types/base/traceability.types';
 
 export type CreateTraceLinkInput = Omit<
     TablesInsert<'trace_links'>,
-    'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'deleted_by' | 'is_deleted' | 'version'
+    | 'id'
+    | 'created_at'
+    | 'updated_at'
+    | 'deleted_at'
+    | 'deleted_by'
+    | 'is_deleted'
+    | 'version'
 >;
 
 export function useCreateTraceLink() {
@@ -130,12 +136,18 @@ export function useDeleteTraceLink() {
 
 const invalidateTraceLinkQueries = (
     queryClient: QueryClient,
-    data: TraceLink
+    data: TraceLink,
 ) => {
     queryClient.invalidateQueries({
-        queryKey: queryKeys.traceLinks.bySource(data.source_id, data.source_type),
+        queryKey: queryKeys.traceLinks.bySource(
+            data.source_id,
+            data.source_type,
+        ),
     });
     queryClient.invalidateQueries({
-        queryKey: queryKeys.traceLinks.byTarget(data.target_id, data.target_type),
+        queryKey: queryKeys.traceLinks.byTarget(
+            data.target_id,
+            data.target_type,
+        ),
     });
 };
