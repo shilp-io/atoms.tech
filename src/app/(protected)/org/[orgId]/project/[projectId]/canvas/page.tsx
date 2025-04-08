@@ -1,6 +1,6 @@
 'use client';
 
-import { CircleAlert, ChevronDown } from 'lucide-react';
+import { ChevronDown, CircleAlert } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -63,8 +63,8 @@ export default function Draw() {
                     },
                     {
                         input_name: 'Diagram-type',
-                        value: diagramType
-                    }
+                        value: diagramType,
+                    },
                 ],
             });
             setPipelineRunId(run_id);
@@ -89,7 +89,7 @@ export default function Draw() {
                         throw new Error('Invalid output format');
                     }
                     parsedOutput = JSON.parse(output);
-                    let mermaidSyntax = parsedOutput?.mermaid_syntax;
+                    const mermaidSyntax = parsedOutput?.mermaid_syntax;
 
                     if (!mermaidSyntax) {
                         console.error('No mermaid syntax found in response');
@@ -101,24 +101,35 @@ export default function Draw() {
                     }
 
                     // Clean the mermaid syntax
-                    const syntaxStr = Array.isArray(mermaidSyntax) ? mermaidSyntax[0] : mermaidSyntax;
-                    let cleanedSyntax = syntaxStr.replace(/```[\s\S]*?```/g, (match: string) => {
-                        const content = match.replace(/```[\w]*\n?/, '').replace(/\n?```$/, '');
-                        return content;
-                    });
-                    cleanedSyntax = cleanedSyntax.replace(/^```[\w]*\n?/, '').replace(/\n?```$/, '');
+                    const syntaxStr = Array.isArray(mermaidSyntax)
+                        ? mermaidSyntax[0]
+                        : mermaidSyntax;
+                    let cleanedSyntax = syntaxStr.replace(
+                        /```[\s\S]*?```/g,
+                        (match: string) => {
+                            const content = match
+                                .replace(/```[\w]*\n?/, '')
+                                .replace(/\n?```$/, '');
+                            return content;
+                        },
+                    );
+                    cleanedSyntax = cleanedSyntax
+                        .replace(/^```[\w]*\n?/, '')
+                        .replace(/\n?```$/, '');
                     cleanedSyntax = cleanedSyntax.trim();
-                    
+
                     // console.log('Cleaned mermaid syntax:', cleanedSyntax);
 
                     if (excalidrawApi) {
-                        excalidrawApi.addMermaidDiagram(cleanedSyntax).catch((err) => {
-                            console.error(
-                                'Error rendering mermaid diagram:',
-                                err,
-                            );
-                            setError('Failed to render diagram');
-                        });
+                        excalidrawApi
+                            .addMermaidDiagram(cleanedSyntax)
+                            .catch((err) => {
+                                console.error(
+                                    'Error rendering mermaid diagram:',
+                                    err,
+                                );
+                                setError('Failed to render diagram');
+                            });
                     }
                 } catch (err) {
                     console.error('Error parsing pipeline output:', err);
@@ -174,7 +185,9 @@ export default function Draw() {
                     <div className="relative">
                         <select
                             value={diagramType}
-                            onChange={(e) => setDiagramType(e.target.value as DiagramType)}
+                            onChange={(e) =>
+                                setDiagramType(e.target.value as DiagramType)
+                            }
                             className="w-full p-2.5 bg-white dark:bg-[#121212] border border-[#454545] appearance-none cursor-pointer"
                         >
                             <option value="flowchart">Flowchart</option>
@@ -190,7 +203,9 @@ export default function Draw() {
                     onClick={handleGenerate}
                     disabled={isGenerating}
                     className={`px-5 py-2.5 bg-[#993CF6] text-white border-none rounded-none font-bold ${
-                        isGenerating ? 'opacity-70 cursor-default' : 'opacity-100 cursor-pointer'
+                        isGenerating
+                            ? 'opacity-70 cursor-default'
+                            : 'opacity-100 cursor-pointer'
                     }`}
                 >
                     {isGenerating ? (

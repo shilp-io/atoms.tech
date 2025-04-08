@@ -56,7 +56,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
         elements: readonly ExcalidrawElement[];
         appState: AppState;
     } | null>(null);
-    
+
     // Get theme from next-themes
     const { theme, resolvedTheme } = useTheme();
     const [isDarkMode, setIsDarkMode] = useState(false);
@@ -213,8 +213,8 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
         if (excalidrawApiRef.current) {
             excalidrawApiRef.current.updateScene({
                 appState: {
-                    theme: isDarkMode ? 'dark' : 'light'
-                }
+                    theme: isDarkMode ? 'dark' : 'light',
+                },
             });
         }
     }, [isDarkMode]);
