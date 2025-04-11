@@ -16,6 +16,7 @@ import { useProject } from '@/lib/providers/project.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Document } from '@/types/base/documents.types';
 import { Requirement } from '@/types/base/requirements.types';
+import ProjectMembers from './ProjectMembers';
 
 export default function ProjectPage() {
     const router = useRouter();
@@ -198,6 +199,13 @@ export default function ProjectPage() {
                     emptyMessage="No requirements found for this project."
                 />
             </div>
+
+            {/* Project Management */}
+            <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Project Management</h2>
+                <ProjectMembers projectId={params.projectId} />
+            </div>
+
             {showCreateDocumentPanel && (
                 <CreatePanel
                     isOpen={showCreateDocumentPanel}

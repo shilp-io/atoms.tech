@@ -50,26 +50,6 @@ export function useCreateProject() {
                 throw new Error('Failed to create project');
             }
 
-            // // Add the creator as a project owner
-            // const { data: member, error: memberError } = await supabase
-            //     .from('project_members')
-            //     .insert({
-            //         project_id: project.id,
-            //         user_id: input.owned_by,
-            //         role: 'owner',
-            //         org_id: input.organization_id,
-            //     })
-            //     .select()
-            //     .single();
-
-            // if (memberError) {
-            //     // If member creation fails, we should probably delete the project
-            //     console.error('Failed to create member', memberError);
-            //     await supabase.from('projects').delete().eq('id', project.id);
-            //     throw memberError;
-            // }
-            // console.log('Member created successfully', member);
-
             return project;
         },
         onSuccess: (data) => {
@@ -79,6 +59,46 @@ export function useCreateProject() {
             });
             queryClient.invalidateQueries({
                 queryKey: queryKeys.projects.byOrg(data.organization_id),
+            });
+        },
+    });
+}
+
+export function useCreateProjectMember() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            userId,
+            projectId,
+            role,
+        }: {
+            userId: string;
+            projectId: string;
+            role: 'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer';
+        }) => {
+            const { data, error } = await supabase
+                .from('project_members')
+                .insert({
+                    user_id: userId,
+                    project_id: projectId,
+                    role,
+                    status: 'active',
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Failed to assign user to project', error);
+                throw error;
+            }
+
+            return data;
+        },
+        onSuccess: (_, { projectId }) => {
+            // Invalidate relevant queries
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.projects.detail(projectId),
             });
         },
     });
