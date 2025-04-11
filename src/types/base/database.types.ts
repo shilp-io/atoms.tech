@@ -340,6 +340,8 @@ export type Database = {
                     created_at: string | null;
                     diagram_data: Json | null;
                     id: string;
+                    name: string | null;
+                    thumbnail_url: string | null;
                     organization_id: string;
                     project_id: string;
                     created_by: string;
@@ -350,6 +352,8 @@ export type Database = {
                     created_at?: string | null;
                     diagram_data?: Json | null;
                     id?: string;
+                    name?: string | null;
+                    thumbnail_url?: string | null;
                     organization_id?: string;
                     project_id?: string;
                     created_by?: string;
@@ -360,6 +364,8 @@ export type Database = {
                     created_at?: string | null;
                     diagram_data?: Json | null;
                     id?: string;
+                    name?: string | null;
+                    thumbnail_url?: string | null;
                     organization_id?: string;
                     project_id?: string;
                     created_by?: string;
