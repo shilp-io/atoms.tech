@@ -48,6 +48,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
         useState<ExcalidrawInitialDataState | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isExistingDiagram, setIsExistingDiagram] = useState(false);
+    const [authError, setAuthError] = useState<string | null>(null);
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
         undefined,
     );
@@ -104,80 +105,105 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
     useEffect(() => {
         const initializeDiagram = async () => {
             try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const idFromUrl = urlParams.get('id');
-                const lastDiagramId = localStorage.getItem(LAST_DIAGRAM_ID_KEY);
+                // Clear previous diagram when project changes
+                if (projectId) {
+                    // Use a project-specific storage key to prevent leakage between projects
+                    const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const idFromUrl = urlParams.get('id');
+                    const pidFromUrl = urlParams.get('pid');
+                    const lastDiagramId = localStorage.getItem(projectStorageKey);
 
-                // Priority: URL param > localStorage > new diagram
-                let id: string | null = null;
+                    // Priority: URL param > localStorage > new diagram
+                    let id: string | null = null;
 
-                if (idFromUrl && isValidUuid(idFromUrl)) {
-                    id = idFromUrl;
-                } else if (lastDiagramId && isValidUuid(lastDiagramId)) {
-                    id = lastDiagramId;
-                    // Update URL with the stored ID
-                    const newUrl = new URL(window.location.href);
-                    newUrl.searchParams.set('id', id);
-                    window.history.pushState({}, '', newUrl);
-                }
-
-                if (id) {
-                    setDiagramId(id);
-                    localStorage.setItem(LAST_DIAGRAM_ID_KEY, id);
-
-                    // Fetch existing diagram data
-                    const { data, error } = await supabase
-                        .from('excalidraw_diagrams')
-                        .select('diagram_data')
-                        .eq('id', id)
-                        .single();
-
-                    if (error) {
-                        console.error('Error loading diagram:', error);
-                        // If error is not found, create new diagram
-                        if (error.code === 'PGRST116') {
+                    if (idFromUrl && isValidUuid(idFromUrl)) {
+                        // If URL has both ID and project ID, verify project matches
+                        if (pidFromUrl && pidFromUrl !== projectId) {
+                            console.warn('Project ID in URL does not match current project');
+                            setAuthError('This diagram belongs to a different project');
+                            // Don't use this diagram, create a new one instead
                             createNewDiagram();
+                            return;
                         }
-                    } else if (data?.diagram_data) {
-                        setIsExistingDiagram(true);
-                        // Parse diagram data from Supabase
-                        const diagramData =
-                            typeof data.diagram_data === 'string'
-                                ? (JSON.parse(
-                                      data.diagram_data,
-                                  ) as unknown as ExcalidrawDiagramData)
-                                : (data.diagram_data as unknown as ExcalidrawDiagramData);
-
-                        // Extract the properties we need
-                        const elements = diagramData.elements || [];
-                        const appState = diagramData.appState || {};
-                        const files = diagramData.files || {};
-
-                        const initialDataState: ExcalidrawInitialDataState = {
-                            elements: elements,
-                            appState: {
-                                ...appState,
-                                collaborators: new Map(),
-                                currentItemFontFamily:
-                                    appState?.currentItemFontFamily || 1,
-                                viewBackgroundColor:
-                                    appState?.viewBackgroundColor || '#ffffff',
-                                zoom: appState?.zoom || {
-                                    value: 1 as NormalizedZoomValue,
-                                },
-                                theme: isDarkMode ? 'dark' : 'light',
-                            },
-                            files: files,
-                        };
-                        setInitialData(initialDataState);
-                        lastSavedDataRef.current = {
-                            elements:
-                                initialDataState.elements as readonly ExcalidrawElement[],
-                            appState: initialDataState.appState as AppState,
-                        };
+                        id = idFromUrl;
+                    } else if (lastDiagramId && isValidUuid(lastDiagramId)) {
+                        id = lastDiagramId;
+                        // Update URL with the stored ID
+                        const newUrl = new URL(window.location.href);
+                        newUrl.searchParams.set('id', id);
+                        newUrl.searchParams.set('pid', projectId);
+                        window.history.pushState({}, '', newUrl);
                     }
-                } else {
-                    createNewDiagram();
+
+                    if (id) {
+                        setDiagramId(id);
+                        localStorage.setItem(projectStorageKey, id);
+
+                        // Fetch existing diagram data with authorization check
+                        const { data, error } = await supabase
+                            .from('excalidraw_diagrams')
+                            .select('diagram_data, project_id')
+                            .eq('id', id)
+                            .single();
+
+                        if (error) {
+                            console.error('Error loading diagram:', error);
+                            // If error is not found, create new diagram
+                            if (error.code === 'PGRST116') {
+                                createNewDiagram();
+                            }
+                        } else if (data?.diagram_data) {
+                            // Verify diagram belongs to current project
+                            if (data.project_id !== projectId) {
+                                console.error('Unauthorized: Diagram does not belong to current project');
+                                // Create new diagram when unauthorized
+                                setAuthError('Unauthorized: Diagram does not belong to current project');
+                                createNewDiagram();
+                                return;
+                            }
+
+                            setAuthError(null);
+                            setIsExistingDiagram(true);
+                            // Parse diagram data from Supabase
+                            const diagramData =
+                                typeof data.diagram_data === 'string'
+                                    ? (JSON.parse(
+                                          data.diagram_data,
+                                      ) as unknown as ExcalidrawDiagramData)
+                                    : (data.diagram_data as unknown as ExcalidrawDiagramData);
+
+                            // Extract the properties we need
+                            const elements = diagramData.elements || [];
+                            const appState = diagramData.appState || {};
+                            const files = diagramData.files || {};
+
+                            const initialDataState: ExcalidrawInitialDataState = {
+                                elements: elements,
+                                appState: {
+                                    ...appState,
+                                    collaborators: new Map(),
+                                    currentItemFontFamily:
+                                        appState?.currentItemFontFamily || 1,
+                                    viewBackgroundColor:
+                                        appState?.viewBackgroundColor || '#ffffff',
+                                    zoom: appState?.zoom || {
+                                        value: 1 as NormalizedZoomValue,
+                                    },
+                                    theme: isDarkMode ? 'dark' : 'light',
+                                },
+                                files: files,
+                            };
+                            setInitialData(initialDataState);
+                            lastSavedDataRef.current = {
+                                elements:
+                                    initialDataState.elements as readonly ExcalidrawElement[],
+                                appState: initialDataState.appState as AppState,
+                            };
+                        }
+                    } else {
+                        createNewDiagram();
+                    }
                 }
             } catch (error) {
                 console.error('Error initializing diagram:', error);
@@ -197,16 +223,21 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
             // Generate a UUID v4
             const newId = uuidv4();
             setDiagramId(newId);
-            localStorage.setItem(LAST_DIAGRAM_ID_KEY, newId);
+            const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
+            localStorage.setItem(projectStorageKey, newId);
+            
+            // Clear auth error since we're starting with a fresh diagram
+            setAuthError(null);
 
             // Update URL with the new ID
             const newUrl = new URL(window.location.href);
             newUrl.searchParams.set('id', newId);
+            newUrl.searchParams.set('pid', projectId);
             window.history.pushState({}, '', newUrl);
         };
 
         initializeDiagram();
-    }, [isDarkMode]);
+    }, [isDarkMode, projectId]);
 
     // Update theme in Excalidraw when dark mode changes
     useEffect(() => {
@@ -314,7 +345,8 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
 
                 setIsExistingDiagram(true); // Mark as existing after first successful save
                 setLastSaved(new Date());
-                localStorage.setItem(LAST_DIAGRAM_ID_KEY, diagramId);
+                const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
+                localStorage.setItem(projectStorageKey, diagramId);
                 console.log('Diagram saved successfully');
             } catch (error) {
                 console.error('Error saving diagram:', error);
@@ -375,18 +407,15 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ onMounted }) => {
     }
 
     return (
-        <div style={{ height: '720px', width: '1280px' }}>
+        <div className="h-[720px] w-[1280px]">
             {lastSaved && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '10px',
-                        right: '10px',
-                        fontSize: '12px',
-                        color: isDarkMode ? '#aaa' : '#666',
-                    }}
-                >
+                <div className="absolute top-2.5 right-2.5 text-xs text-gray-400 dark:text-gray-400">
                     Last saved: {lastSaved.toLocaleTimeString()}
+                </div>
+            )}
+            {authError && (
+                <div className="absolute top-2.5 left-2.5 text-sm text-red-600 bg-red-100 bg-opacity-80 p-2 rounded z-[1000]">
+                    {authError}
                 </div>
             )}
             <Excalidraw
