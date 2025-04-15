@@ -51,15 +51,34 @@ export default function Draw() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string>('');
 
-    // Read diagram ID from URL on mount
+    // Read diagram ID from URL on mount or get last used diagram
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const urlDiagramId = urlParams.get('id');
+        
         if (urlDiagramId) {
             console.log('Found diagram ID in URL:', urlDiagramId);
             setSelectedDiagramId(urlDiagramId);
             // Update the instance key to ensure the component remounts with the correct diagram
             setInstanceKey(`diagram-${urlDiagramId}`);
+        } else {
+            // Try to get the last used diagram ID from localStorage
+            const projectId = window.location.pathname.split('/')[4];
+            const projectStorageKey = `lastExcalidrawDiagramId_${projectId}`;
+            const lastDiagramId = localStorage.getItem(projectStorageKey);
+            
+            if (lastDiagramId) {
+                console.log('Found last used diagram ID in localStorage:', lastDiagramId);
+                setSelectedDiagramId(lastDiagramId);
+                setInstanceKey(`diagram-${lastDiagramId}`);
+                
+                // Update URL with the stored ID
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('id', lastDiagramId);
+                window.history.pushState({}, '', newUrl);
+            }
+            // If no diagram ID is found in URL or localStorage, selectedDiagramId remains null
+            // and the ExcalidrawWrapper will handle the fallback logic
         }
     }, []);
 

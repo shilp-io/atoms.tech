@@ -170,9 +170,6 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             
             if (externalDiagramId) {
                 loadDiagram(externalDiagramId);
-            } else {
-                // If null was passed, create a new diagram
-                createNewDiagram();
             }
         }
     }, [externalDiagramId]);
