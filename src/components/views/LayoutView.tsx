@@ -19,7 +19,7 @@ const layoutVariants = {
     },
     wide: {
         width: '100%',
-        maxWidth: '100rem', 
+        maxWidth: '100rem',
     },
 };
 

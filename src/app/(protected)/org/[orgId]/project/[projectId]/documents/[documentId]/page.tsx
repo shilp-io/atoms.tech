@@ -11,9 +11,9 @@ export default function DocumentPage() {
 
     return (
         <LayoutView>
-        <div>
-            <BlockCanvas documentId={documentId} />
-        </div>
+            <div>
+                <BlockCanvas documentId={documentId} />
+            </div>
         </LayoutView>
     );
 }

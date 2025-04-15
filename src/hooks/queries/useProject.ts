@@ -79,7 +79,7 @@ export function useProjectsByMembershipForOrg(orgId: string, userId: string) {
                 .select('project_id')
                 .eq('org_id', orgId) // Filter by organization ID
                 .eq('user_id', userId) // Filter by user ID
-                .eq('status', 'active') // Ensure the membership is active
+                .eq('status', 'active'); // Ensure the membership is active
 
             if (error) throw error;
 

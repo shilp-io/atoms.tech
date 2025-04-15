@@ -62,7 +62,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         enabled: params?.orgId ? true : false,
     });
 
-    const { data: projects = [], refetch: refetchProjects } = useQuery({
+    const { data: projects = [] } = useQuery({
         queryKey: ['organization-projects', params?.orgId || ''],
         queryFn: async () => {
             const { data, error } = await supabase
@@ -206,7 +206,11 @@ export default function OrgMembers({ className }: OrgMembersProps) {
 
         try {
             // Check if the user is already part of the project
-            const { data: existingMember, error: checkError, status } = await supabase
+            const {
+                data: existingMember,
+                error: checkError,
+                status,
+            } = await supabase
                 .from('project_members')
                 .select('id')
                 .eq('user_id', activeMemberId)

@@ -2,5 +2,9 @@ import ProjectPage from '@/app/(protected)/org/[orgId]/project/[projectId]/Proje
 import LayoutView from '@/components/views/LayoutView';
 
 export default function ProjectPageWrapper() {
-    return <LayoutView><ProjectPage /></LayoutView>;
+    return (
+        <LayoutView>
+            <ProjectPage />
+        </LayoutView>
+    );
 }

@@ -6,6 +6,7 @@ import { Suspense, useEffect } from 'react';
 
 import OrgDashboard from '@/app/(protected)/org/[orgId]/OrgDashboard.client';
 import { OrgDashboardSkeleton } from '@/components/custom/skeletons/OrgDashboardSkeleton';
+import LayoutView from '@/components/views/LayoutView';
 import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
 import { useOrganization as useOrgQuery } from '@/hooks/queries/useOrganization';
 import { useProjectsByMembershipForOrg } from '@/hooks/queries/useProject';
@@ -13,7 +14,6 @@ import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { Project } from '@/types/base/projects.types';
-import LayoutView from '@/components/views/LayoutView';
 
 export default function OrgPage() {
     const router = useRouter();
@@ -56,20 +56,20 @@ export default function OrgPage() {
 
     return (
         <LayoutView>
-        <Suspense fallback={<OrgDashboardSkeleton />}>
-            <OrgDashboard
-                organization={organization}
-                orgLoading={orgLoading}
-                projects={projects}
-                projectsLoading={projectsLoading}
-                externalDocuments={externalDocuments}
-                documentsLoading={documentsLoading}
-                theme={theme}
-                onProjectClick={handleProjectClick}
-                onExternalDocsClick={handleExternalDocsClick}
-                orgId={orgId}
-            />
-        </Suspense>
+            <Suspense fallback={<OrgDashboardSkeleton />}>
+                <OrgDashboard
+                    organization={organization}
+                    orgLoading={orgLoading}
+                    projects={projects}
+                    projectsLoading={projectsLoading}
+                    externalDocuments={externalDocuments}
+                    documentsLoading={documentsLoading}
+                    theme={theme}
+                    onProjectClick={handleProjectClick}
+                    onExternalDocsClick={handleExternalDocsClick}
+                    orgId={orgId}
+                />
+            </Suspense>
         </LayoutView>
     );
 }
