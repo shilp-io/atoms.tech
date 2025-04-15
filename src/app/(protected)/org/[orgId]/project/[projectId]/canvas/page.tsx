@@ -51,6 +51,18 @@ export default function Draw() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string>('');
 
+    // Read diagram ID from URL on mount
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlDiagramId = urlParams.get('id');
+        if (urlDiagramId) {
+            console.log('Found diagram ID in URL:', urlDiagramId);
+            setSelectedDiagramId(urlDiagramId);
+            // Update the instance key to ensure the component remounts with the correct diagram
+            setInstanceKey(`diagram-${urlDiagramId}`);
+        }
+    }, []);
+
     // Handle tab changes
     useEffect(() => {
         // Skip first render

@@ -547,33 +547,45 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     // Handle rename operation
     const handleRename = async () => {
         if (!diagramId || !newDiagramName.trim()) return;
+
+        console.log('Renaming diagram:', diagramId, newDiagramName.trim());
         
         try {
-            const { error } = await supabase
-                .from('excalidraw_diagrams')
-                .update({ name: newDiagramName.trim() })
-                .eq('id', diagramId);
-                
-            if (error) {
-                console.error('Error renaming diagram:', error);
-                return;
-            }
+            // Store the trimmed name value
+            const trimmedName = newDiagramName.trim();
             
-            setDiagramName(newDiagramName.trim());
-            setIsRenameDialogOpen(false);
-            setNewDiagramName('');
-            
-            // If we have a current state, save it to update the timestamp
+            // Get current diagram state
             if (excalidrawApiRef.current) {
+                // Get current diagram data
                 const elements = excalidrawApiRef.current.getSceneElements();
                 const appState = excalidrawApiRef.current.getAppState();
                 const files = excalidrawApiRef.current.getFiles();
                 
-                // Use the regular save function but force it to save
-                saveDiagram(elements, appState, files, undefined, undefined, true);
+                // Use saveDiagram directly with the new name - one operation for everything
+                await saveDiagram(elements, appState, files, undefined, trimmedName, true);
+                console.log('Diagram renamed and saved successfully with name:', trimmedName);
+            } else {
+                // Fallback if we can't get excalidraw state
+                const { error } = await supabase
+                    .from('excalidraw_diagrams')
+                    .update({ name: trimmedName })
+                    .eq('id', diagramId);
+                    
+                if (error) {
+                    console.error('Error renaming diagram:', error);
+                    return;
+                }
+                
+                // Update local state
+                setDiagramName(trimmedName);
+                console.log('Diagram renamed with name-only update:', trimmedName);
             }
+            
+            // Close dialog and reset input
+            setIsRenameDialogOpen(false);
+            setNewDiagramName('');
         } catch (err) {
-            console.error('Error renaming diagram:', err);
+            console.error('Error in handleRename:', err);
         }
     };
 
