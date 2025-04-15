@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { FileBox, FolderArchive, ArrowUp, ArrowDown } from 'lucide-react';
 import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,8 @@ const CreatePanel = dynamic(
 );
 
 export default function ProjectPage() {
+    const router = useRouter();
+    const params = useParams<{ orgId: string; projectId: string }>();
     const { project } = useProject();
     const [activeTab, setActiveTab] = useState('overview');
     const [searchQuery, setSearchQuery] = useState('');
@@ -48,7 +51,9 @@ export default function ProjectPage() {
         useProjectDocuments(project?.id || '');
 
     const handleDocumentClick = (doc: Document) => {
-        // Navigate to document details
+        router.push(
+            `/org/${params.orgId}/project/${params.projectId}/documents/${doc.id}`,
+        );
     };
 
     const sortedDocuments = [...(documents || [])].sort((a, b) => {
