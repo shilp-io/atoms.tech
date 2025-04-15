@@ -2,7 +2,7 @@
 
 import { ChevronDown, CircleAlert, Grid, PenTool } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 
 import { useGumloop } from '@/hooks/useGumloop';
@@ -31,6 +31,7 @@ type DiagramType = 'flowchart' | 'sequence' | 'class';
 export default function Draw() {
     // const organizationId = '9badbbf0-441c-49f6-91e7-3d9afa1c13e6';
     const organizationId = usePathname().split('/')[2];
+    const searchParams = useSearchParams();
     const [prompt, setPrompt] = useState('');
     const [diagramType, setDiagramType] = useState<DiagramType>('flowchart');
     const [excalidrawApi, setExcalidrawApi] = useState<{
@@ -44,6 +45,9 @@ export default function Draw() {
     const [shouldRefreshGallery, setShouldRefreshGallery] = useState<boolean>(false);
     const [instanceKey, setInstanceKey] = useState<string>('initial');
     const isInitialRender = useRef(true);
+    // Track generation status with refs to avoid re-renders triggering effects
+    const hasProcessedUrlPrompt = useRef(false);
+    const isManualGeneration = useRef(false);
 
     // Gumloop state management
     const { startPipeline, getPipelineRun } = useGumloop();
@@ -51,18 +55,29 @@ export default function Draw() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string>('');
 
-    // Read diagram ID from URL on mount or get last used diagram
+    // Read diagram ID and diagram prompt from URL on mount
     useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlDiagramId = urlParams.get('id');
-        
+        const urlDiagramId = searchParams.get('id');
+        const diagramPromptFromUrl = searchParams.get('diagramPrompt');
+
+        // Set prompt from URL if present
+        if (diagramPromptFromUrl) {
+            console.log('Found diagram prompt in URL:', diagramPromptFromUrl);
+            setPrompt(decodeURIComponent(diagramPromptFromUrl));
+            // Mark that we've seen a URL prompt, but don't auto-generate yet
+            // We'll handle auto-generation in a separate effect when excalidrawApi is ready
+            hasProcessedUrlPrompt.current = false;
+        } else {
+            // No diagram prompt in URL - reset flag
+            hasProcessedUrlPrompt.current = true;
+        }
+
+        // Handle diagram ID loading/creation
         if (urlDiagramId) {
             console.log('Found diagram ID in URL:', urlDiagramId);
             setSelectedDiagramId(urlDiagramId);
-            // Update the instance key to ensure the component remounts with the correct diagram
             setInstanceKey(`diagram-${urlDiagramId}`);
         } else {
-            // Try to get the last used diagram ID from localStorage
             const projectId = window.location.pathname.split('/')[4];
             const projectStorageKey = `lastExcalidrawDiagramId_${projectId}`;
             const lastDiagramId = localStorage.getItem(projectStorageKey);
@@ -72,15 +87,15 @@ export default function Draw() {
                 setSelectedDiagramId(lastDiagramId);
                 setInstanceKey(`diagram-${lastDiagramId}`);
                 
-                // Update URL with the stored ID
                 const newUrl = new URL(window.location.href);
-                newUrl.searchParams.set('id', lastDiagramId);
-                window.history.pushState({}, '', newUrl);
+                if (!newUrl.searchParams.has('id')) { // Only set if ID is not already in URL
+                    newUrl.searchParams.set('id', lastDiagramId);
+                    window.history.pushState({}, '', newUrl);
+                }
             }
-            // If no diagram ID is found in URL or localStorage, selectedDiagramId remains null
-            // and the ExcalidrawWrapper will handle the fallback logic
+            // ExcalidrawWrapper handles new diagram creation if no ID
         }
-    }, []);
+    }, [searchParams]); // Rerun when searchParams change
 
     // Handle tab changes
     useEffect(() => {
@@ -106,19 +121,32 @@ export default function Draw() {
         organizationId,
     );
 
-    const handleGenerate = async () => {
+    const handleGenerate = useCallback(async () => {
         if (!excalidrawApi) {
-            console.error('Excalidraw API not initialized');
+            console.error('Excalidraw API not initialized for generation');
             return;
         }
 
         if (!prompt.trim()) {
-            setError('Please enter a description for your diagram');
+            console.log('Prompt is empty, skipping generation.');
+            return;
+        }
+
+        // Already generating, don't trigger again
+        if (isGenerating || pipelineRunId) {
+            console.log('Already generating, skipping duplicate request');
             return;
         }
 
         setError('');
         setIsGenerating(true);
+
+        // Safety timeout to ensure the button doesn't get stuck in "generating" state
+        const safetyTimer = setTimeout(() => {
+            console.log('Safety timeout triggered - resetting generation state');
+            setIsGenerating(false);
+            setPipelineRunId('');
+        }, 15000); // 15 seconds timeout
 
         try {
             const { run_id } = await startPipeline({
@@ -135,18 +163,62 @@ export default function Draw() {
                 ],
             });
             setPipelineRunId(run_id);
+            // Clear the safety timeout since we got a successful response
+            clearTimeout(safetyTimer);
         } catch (error) {
             console.error('Failed to start pipeline:', error);
             setError('Failed to start diagram generation');
             setIsGenerating(false);
+            setPipelineRunId('');
+            // Reset the flags regardless of success or failure
+            isManualGeneration.current = false;
+            // Clear the safety timeout since we're handling the error
+            clearTimeout(safetyTimer);
         }
-    };
+    }, [excalidrawApi, prompt, diagramType, startPipeline, isGenerating, pipelineRunId]);
+
+    // Separate auto-generation from manual generation
+    // This effect only handles auto-generation from URL parameters
+    useEffect(() => {
+        const diagramPromptFromUrl = searchParams.get('diagramPrompt');
+        
+        // Only auto-generate when:
+        // 1. We have a URL prompt that hasn't been processed
+        // 2. ExcalidrawApi is initialized
+        // 3. We're not already generating
+        // 4. We have a prompt value set
+        if (diagramPromptFromUrl && 
+            !hasProcessedUrlPrompt.current && 
+            excalidrawApi && 
+            !isGenerating && 
+            !pipelineRunId && 
+            prompt) {
+            
+            console.log('Auto-generating diagram from URL prompt (one-time)...');
+            // Mark that we've handled this URL prompt
+            hasProcessedUrlPrompt.current = true;
+            
+            // Not a manual generation
+            isManualGeneration.current = false;
+            
+            // Call generate
+            handleGenerate();
+            
+            // Remove the diagramPrompt parameter from the URL
+            // to prevent regeneration on refresh
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('diagramPrompt');
+            window.history.replaceState({}, '', newUrl);
+        }
+    }, [excalidrawApi, prompt, searchParams, handleGenerate, isGenerating, pipelineRunId]);
 
     // Handle the pipeline response
     useEffect(() => {
-        switch (pipelineResponse?.state) {
+        if (!pipelineResponse) return;
+        
+        switch (pipelineResponse.state) {
             case 'DONE': {
-                console.log('Pipeline response:', pipelineResponse);
+                console.log('Pipeline response: DONE');
 
                 // Parse the JSON string from outputs.output
                 let parsedOutput;
@@ -201,22 +273,35 @@ export default function Draw() {
                 } catch (err) {
                     console.error('Error parsing pipeline output:', err);
                     setError('Failed to parse diagram data');
-                    break;
+                } finally {
+                    // Always reset these states, regardless of parsing success or failure
+                    setPipelineRunId('');
+                    setIsGenerating(false);
                 }
                 break;
             }
             case 'FAILED': {
-                console.log('Pipeline response:', pipelineResponse);
                 console.error('Pipeline failed');
                 setError('Failed to generate diagram');
+                
+                // Reset states
+                setPipelineRunId('');
+                setIsGenerating(false);
                 break;
             }
             default:
+                // For states like RUNNING or others, just log and don't reset
+                console.log('Pipeline in progress, state:', pipelineResponse.state);
                 return;
         }
-        setPipelineRunId('');
-        setIsGenerating(false);
     }, [pipelineResponse, excalidrawApi]);
+
+    // This function is called by the "Generate" button
+    const handleManualGenerate = useCallback(() => {
+        // This is a manual generation
+        isManualGeneration.current = true;
+        handleGenerate();
+    }, [handleGenerate]);
 
     const handleExcalidrawMount = useCallback(
         (api: {
@@ -326,7 +411,7 @@ export default function Draw() {
                             </div>
                         </div>
                         <button
-                            onClick={handleGenerate}
+                            onClick={handleManualGenerate}
                             disabled={isGenerating}
                             className={`px-5 py-2.5 bg-[#993CF6] text-white border-none rounded-none font-bold ${
                                 isGenerating
