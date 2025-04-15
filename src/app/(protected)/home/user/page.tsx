@@ -44,6 +44,17 @@ export default function UserDashboard() {
     const { data: allInvitations } = useOrgInvitation(user?.email || '');
     const queryClient = useQueryClient();
 
+    const refetchOrganizations = useCallback(() => {
+        queryClient.invalidateQueries({
+            queryKey: queryKeys.organizations.byMembership(user?.id || ''),
+        });
+    }, [queryClient, user?.id]);
+
+    // Re-fetch organizations on component mount
+    useEffect(() => {
+        refetchOrganizations();
+    }, [refetchOrganizations]);
+
     // Filter the invitations to only include pending ones
     const invitations = allInvitations?.filter(
         (invitation) => invitation.status === InvitationStatus.pending,
@@ -338,9 +349,9 @@ export default function UserDashboard() {
 
                 {activeTab === 'invites' ? (
                     <div className="col-span-full flex flex-col">
-                        {/* Render UserInvitations component */}
+                        {/* Pass refetchOrganizations to UserInvitations */}
                         <div>
-                            <UserInvitations />
+                            <UserInvitations onAccept={refetchOrganizations} />
                         </div>
                     </div>
                 ) : (

@@ -17,10 +17,12 @@ import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { InvitationStatus } from '@/types/base/enums.types';
 import { Invitation } from '@/types/base/invitations.types';
+import { useRouter } from 'next/navigation'; // Import useRouter
 
-export default function UserInvitations() {
+export default function UserInvitations({ onAccept }: { onAccept?: () => void }) {
     const { user } = useUser();
     const queryClient = useQueryClient(); // Initialize queryClient
+    const router = useRouter(); // Initialize router
     const {
         data: allInvitations,
         isLoading,
@@ -119,6 +121,14 @@ export default function UserInvitations() {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.organizations.list(),
             }); // Refresh the list of organizations
+
+            // Call the onAccept callback if provided
+            if (onAccept) {
+                onAccept();
+            }
+
+            // Navigate to the organization's dashboard page
+            router.push(`/org/${invitation.organization_id}`);
         } catch (error) {
             console.error('Error accepting invitation:', error);
             toast({
