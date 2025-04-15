@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { MoreHorizontal, Users, Filter } from 'lucide-react';
+import { Filter, MoreHorizontal, Users } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -19,6 +19,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
 import { useCreateProjectMember } from '@/hooks/mutations/useProjectMutations';
@@ -26,7 +27,6 @@ import { getOrganizationMembers } from '@/lib/db/client';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { EProjectRole, EUserRoleType } from '@/types';
-import { Input } from '@/components/ui/input';
 
 interface OrgMembersProps {
     className?: string;
@@ -98,7 +98,9 @@ export default function OrgMembers({ className }: OrgMembersProps) {
 
     const filteredMembers = sortedMembers.filter((member) => {
         const matchesSearch =
-            member.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            member.full_name
+                ?.toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
             member.email?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesRoles =
             roleFilters.length === 0 || roleFilters.includes(member.role);
@@ -288,30 +290,42 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            {['owner', 'admin', 'member', 'super_admin'].map((role) => (
-                                <DropdownMenuItem
-                                    key={role}
-                                    onSelect={(e) => e.preventDefault()} // Prevent menu from closing
-                                    onClick={() =>
-                                        setRoleFilters((prev) =>
-                                            prev.includes(role as EUserRoleType)
-                                                ? prev.filter((r) => r !== role)
-                                                : [...prev, role as EUserRoleType]
-                                        )
-                                    }
-                                >
-                                    <span
-                                        className={`mr-2 inline-block w-4 h-4 rounded-full ${
-                                            roleFilters.includes(role as EUserRoleType)
-                                                ? 'bg-primary'
-                                                : 'bg-gray-200'
-                                        }`}
-                                    ></span>
-                                    {role === 'super_admin'
-                                        ? 'Super Admin'
-                                        : role.charAt(0).toUpperCase() + role.slice(1)}
-                                </DropdownMenuItem>
-                            ))}
+                            {['owner', 'admin', 'member', 'super_admin'].map(
+                                (role) => (
+                                    <DropdownMenuItem
+                                        key={role}
+                                        onSelect={(e) => e.preventDefault()} // Prevent menu from closing
+                                        onClick={() =>
+                                            setRoleFilters((prev) =>
+                                                prev.includes(
+                                                    role as EUserRoleType,
+                                                )
+                                                    ? prev.filter(
+                                                          (r) => r !== role,
+                                                      )
+                                                    : [
+                                                          ...prev,
+                                                          role as EUserRoleType,
+                                                      ],
+                                            )
+                                        }
+                                    >
+                                        <span
+                                            className={`mr-2 inline-block w-4 h-4 rounded-full ${
+                                                roleFilters.includes(
+                                                    role as EUserRoleType,
+                                                )
+                                                    ? 'bg-primary'
+                                                    : 'bg-gray-200'
+                                            }`}
+                                        ></span>
+                                        {role === 'super_admin'
+                                            ? 'Super Admin'
+                                            : role.charAt(0).toUpperCase() +
+                                              role.slice(1)}
+                                    </DropdownMenuItem>
+                                ),
+                            )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -362,56 +376,55 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                     >
                                         {member.role}
                                     </span>
-                                    {isOwner &&
-                                        member.id !== user?.id && (
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-8 w-8 p-0"
-                                                    >
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem
-                                                        onClick={() => {
-                                                            setActiveMemberId(
-                                                                member.id,
-                                                            );
-                                                            setIsRolePromptOpen(
-                                                                true,
-                                                            );
-                                                        }}
-                                                    >
-                                                        Change role
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={() => {
-                                                            setActiveMemberId(
-                                                                member.id,
-                                                            );
-                                                            setIsAssignPromptOpen(
-                                                                true,
-                                                            );
-                                                        }}
-                                                    >
-                                                        Assign to Project
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={() => {
-                                                            handleRemoveMember(
-                                                                member.id,
-                                                            );
-                                                        }}
-                                                        className="text-red-600"
-                                                    >
-                                                        Remove
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        )}
+                                    {isOwner && member.id !== user?.id && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0"
+                                                >
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        setActiveMemberId(
+                                                            member.id,
+                                                        );
+                                                        setIsRolePromptOpen(
+                                                            true,
+                                                        );
+                                                    }}
+                                                >
+                                                    Change role
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        setActiveMemberId(
+                                                            member.id,
+                                                        );
+                                                        setIsAssignPromptOpen(
+                                                            true,
+                                                        );
+                                                    }}
+                                                >
+                                                    Assign to Project
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        handleRemoveMember(
+                                                            member.id,
+                                                        );
+                                                    }}
+                                                    className="text-red-600"
+                                                >
+                                                    Remove
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
                                 </div>
                             </div>
                         ))}

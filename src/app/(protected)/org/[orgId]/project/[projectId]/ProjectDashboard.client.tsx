@@ -1,13 +1,12 @@
 'use client';
 
+import { ArrowDown, ArrowUp, FileBox, FolderArchive } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { FileBox, FolderArchive, ArrowUp, ArrowDown } from 'lucide-react';
-import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
     Card,
     CardContent,
@@ -15,11 +14,18 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useProjectDocuments } from '@/hooks/queries/useDocument';
 import { useProject } from '@/lib/providers/project.provider';
 import { Document } from '@/types/base/documents.types';
+
 import ProjectMembers from './ProjectMembers';
 
 // Dynamically import the CreatePanel with no SSR
@@ -44,9 +50,12 @@ export default function ProjectPage() {
     const { project } = useProject();
     const [activeTab, setActiveTab] = useState('overview');
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState<'created_at' | 'updated_at' | null>(null);
+    const [sortBy, setSortBy] = useState<'created_at' | 'updated_at' | null>(
+        null,
+    );
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-    const [showCreateDocumentPanel, setShowCreateDocumentPanel] = useState(false);
+    const [showCreateDocumentPanel, setShowCreateDocumentPanel] =
+        useState(false);
     const { data: documents, isLoading: documentsLoading } =
         useProjectDocuments(project?.id || '');
 
@@ -64,7 +73,7 @@ export default function ProjectPage() {
     });
 
     const filteredDocuments = sortedDocuments.filter((doc) =>
-        doc.name.toLowerCase().includes(searchQuery.toLowerCase())
+        doc.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
     return (
@@ -182,35 +191,51 @@ export default function ProjectPage() {
                             />
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="default" className="w-9 h-9">
+                                    <Button
+                                        variant="default"
+                                        className="w-9 h-9"
+                                    >
                                         <FolderArchive className="w-4 h-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    {['created_at', 'updated_at'].map((field) => (
-                                        <DropdownMenuItem
-                                            key={field}
-                                            onSelect={(e) => e.preventDefault()} // Prevent menu from closing
-                                            onClick={() => {
-                                                setSortBy(field as 'created_at' | 'updated_at');
-                                                setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
-                                            }}
-                                        >
-                                            <span
-                                                className={`mr-2 inline-block w-4 h-4 rounded-full ${
-                                                    sortBy === field ? 'bg-primary' : 'bg-gray-200'
-                                                }`}
-                                            ></span>
-                                            {field.replace('_', ' ')}
-                                            {sortBy === field && (
-                                                sortOrder === 'desc' ? (
-                                                    <ArrowUp className="ml-2 w-4 h-4 text-primary" />
-                                                ) : (
-                                                    <ArrowDown className="ml-2 w-4 h-4 text-primary" />
-                                                )
-                                            )}
-                                        </DropdownMenuItem>
-                                    ))}
+                                    {['created_at', 'updated_at'].map(
+                                        (field) => (
+                                            <DropdownMenuItem
+                                                key={field}
+                                                onSelect={(e) =>
+                                                    e.preventDefault()
+                                                } // Prevent menu from closing
+                                                onClick={() => {
+                                                    setSortBy(
+                                                        field as
+                                                            | 'created_at'
+                                                            | 'updated_at',
+                                                    );
+                                                    setSortOrder((prev) =>
+                                                        prev === 'desc'
+                                                            ? 'asc'
+                                                            : 'desc',
+                                                    );
+                                                }}
+                                            >
+                                                <span
+                                                    className={`mr-2 inline-block w-4 h-4 rounded-full ${
+                                                        sortBy === field
+                                                            ? 'bg-primary'
+                                                            : 'bg-gray-200'
+                                                    }`}
+                                                ></span>
+                                                {field.replace('_', ' ')}
+                                                {sortBy === field &&
+                                                    (sortOrder === 'desc' ? (
+                                                        <ArrowUp className="ml-2 w-4 h-4 text-primary" />
+                                                    ) : (
+                                                        <ArrowDown className="ml-2 w-4 h-4 text-primary" />
+                                                    ))}
+                                            </DropdownMenuItem>
+                                        ),
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
@@ -238,11 +263,12 @@ export default function ProjectPage() {
                                 )}
                             </div>
                         ))}
-                        {filteredDocuments?.length === 0 && !documentsLoading && (
-                            <div className="col-span-full text-center py-8 text-muted-foreground">
-                                No documents found
-                            </div>
-                        )}
+                        {filteredDocuments?.length === 0 &&
+                            !documentsLoading && (
+                                <div className="col-span-full text-center py-8 text-muted-foreground">
+                                    No documents found
+                                </div>
+                            )}
                     </div>
                 </TabsContent>
             </Tabs>

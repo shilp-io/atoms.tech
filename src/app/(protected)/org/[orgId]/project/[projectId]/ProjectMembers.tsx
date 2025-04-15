@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { MoreHorizontal, Users, Filter } from 'lucide-react';
+import { Filter, MoreHorizontal, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { getProjectMembers } from '@/lib/db/client/projects.client';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { EProjectRole } from '@/types';
-import { Input } from '@/components/ui/input';
 
 interface ProjectMembersProps {
     projectId: string;
@@ -75,10 +75,14 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
 
     const filteredMembers = sortedMembers.filter((member) => {
         const matchesSearch =
-            member.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            member.full_name
+                ?.toLowerCase()
+                .includes(searchQuery.toLowerCase()) ||
             member.email?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesRoles =
-            roleFilters.length > 0 ? roleFilters.includes(member.role as EProjectRole) : true;
+            roleFilters.length > 0
+                ? roleFilters.includes(member.role as EProjectRole)
+                : true;
         return matchesSearch && matchesRoles;
     });
 
@@ -161,7 +165,13 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            {['admin', 'maintainer', 'editor', 'viewer', 'owner'].map((role) => (
+                            {[
+                                'admin',
+                                'maintainer',
+                                'editor',
+                                'viewer',
+                                'owner',
+                            ].map((role) => (
                                 <DropdownMenuItem
                                     key={role}
                                     onSelect={(e) => e.preventDefault()} // Prevent menu from closing
@@ -169,18 +179,24 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                                         setRoleFilters((prev) =>
                                             prev.includes(role as EProjectRole)
                                                 ? prev.filter((r) => r !== role)
-                                                : [...prev, role as EProjectRole]
+                                                : [
+                                                      ...prev,
+                                                      role as EProjectRole,
+                                                  ],
                                         );
                                     }}
                                 >
                                     <span
                                         className={`mr-2 inline-block w-4 h-4 rounded-full ${
-                                            roleFilters.includes(role as EProjectRole)
+                                            roleFilters.includes(
+                                                role as EProjectRole,
+                                            )
                                                 ? 'bg-primary'
                                                 : 'bg-gray-200'
                                         }`}
                                     ></span>
-                                    {role.charAt(0).toUpperCase() + role.slice(1)}
+                                    {role.charAt(0).toUpperCase() +
+                                        role.slice(1)}
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>

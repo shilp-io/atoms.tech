@@ -13,7 +13,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,6 +20,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
@@ -47,7 +47,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
     const [activeTab, setActiveTab] = useState('projects');
     const [isCreatePanelOpen, setIsCreatePanelOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [visibilityFilter, setVisibilityFilter] = useState<string | null>(null);
+    const [visibilityFilter, setVisibilityFilter] = useState<string | null>(
+        null,
+    );
     const [statusFilter, setStatusFilter] = useState<string | null>(null);
     const { mutateAsync: setOrgMemberCount } = useSetOrgMemberCount();
 
@@ -278,47 +280,61 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                             />
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="default" className="w-9 h-9">
+                                    <Button
+                                        variant="default"
+                                        className="w-9 h-9"
+                                    >
                                         <FolderArchive className="w-4 h-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuItem
                                         onSelect={(e) => e.preventDefault()} // Prevent menu from closing
-                                        onClick={() => setVisibilityFilter(null)}
+                                        onClick={() =>
+                                            setVisibilityFilter(null)
+                                        }
                                     >
                                         <span
                                             className={`mr-2 inline-block w-4 h-4 rounded-full ${
-                                                visibilityFilter === null ? 'bg-primary' : 'bg-gray-200'
+                                                visibilityFilter === null
+                                                    ? 'bg-primary'
+                                                    : 'bg-gray-200'
                                             }`}
                                         ></span>
                                         All Visibility
                                     </DropdownMenuItem>
-                                    {['private', 'team', 'organization', 'public'].map(
-                                        (visibility) => (
-                                            <DropdownMenuItem
-                                                key={visibility}
-                                                onSelect={(e) => e.preventDefault()} // Prevent menu from closing
-                                                onClick={() =>
-                                                    setVisibilityFilter(
-                                                        visibilityFilter === visibility
-                                                            ? null
-                                                            : visibility,
-                                                    )
-                                                }
-                                            >
-                                                <span
-                                                    className={`mr-2 inline-block w-4 h-4 rounded-full ${
-                                                        visibilityFilter === visibility
-                                                            ? 'bg-primary'
-                                                            : 'bg-gray-200'
-                                                    }`}
-                                                ></span>
-                                                {visibility.charAt(0).toUpperCase() +
-                                                    visibility.slice(1)}
-                                            </DropdownMenuItem>
-                                        ),
-                                    )}
+                                    {[
+                                        'private',
+                                        'team',
+                                        'organization',
+                                        'public',
+                                    ].map((visibility) => (
+                                        <DropdownMenuItem
+                                            key={visibility}
+                                            onSelect={(e) => e.preventDefault()} // Prevent menu from closing
+                                            onClick={() =>
+                                                setVisibilityFilter(
+                                                    visibilityFilter ===
+                                                        visibility
+                                                        ? null
+                                                        : visibility,
+                                                )
+                                            }
+                                        >
+                                            <span
+                                                className={`mr-2 inline-block w-4 h-4 rounded-full ${
+                                                    visibilityFilter ===
+                                                    visibility
+                                                        ? 'bg-primary'
+                                                        : 'bg-gray-200'
+                                                }`}
+                                            ></span>
+                                            {visibility
+                                                .charAt(0)
+                                                .toUpperCase() +
+                                                visibility.slice(1)}
+                                        </DropdownMenuItem>
+                                    ))}
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                         onSelect={(e) => e.preventDefault()} // Prevent menu from closing
@@ -326,27 +342,39 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                     >
                                         <span
                                             className={`mr-2 inline-block w-4 h-4 rounded-full ${
-                                                statusFilter === null ? 'bg-primary' : 'bg-gray-200'
+                                                statusFilter === null
+                                                    ? 'bg-primary'
+                                                    : 'bg-gray-200'
                                             }`}
                                         ></span>
                                         All Status
                                     </DropdownMenuItem>
-                                    {['active', 'archived', 'draft', 'deleted'].map((status) => (
+                                    {[
+                                        'active',
+                                        'archived',
+                                        'draft',
+                                        'deleted',
+                                    ].map((status) => (
                                         <DropdownMenuItem
                                             key={status}
                                             onSelect={(e) => e.preventDefault()} // Prevent menu from closing
                                             onClick={() =>
                                                 setStatusFilter(
-                                                    statusFilter === status ? null : status,
+                                                    statusFilter === status
+                                                        ? null
+                                                        : status,
                                                 )
                                             }
                                         >
                                             <span
                                                 className={`mr-2 inline-block w-4 h-4 rounded-full ${
-                                                    statusFilter === status ? 'bg-primary' : 'bg-gray-200'
+                                                    statusFilter === status
+                                                        ? 'bg-primary'
+                                                        : 'bg-gray-200'
                                                 }`}
                                             ></span>
-                                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                                            {status.charAt(0).toUpperCase() +
+                                                status.slice(1)}
                                         </DropdownMenuItem>
                                     ))}
                                 </DropdownMenuContent>
@@ -381,27 +409,37 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                     (project) =>
                                         project.name
                                             .toLowerCase()
-                                            .includes(searchQuery.toLowerCase()) &&
+                                            .includes(
+                                                searchQuery.toLowerCase(),
+                                            ) &&
                                         (!visibilityFilter ||
-                                            project.visibility === visibilityFilter) &&
-                                        (!statusFilter || project.status === statusFilter),
+                                            project.visibility ===
+                                                visibilityFilter) &&
+                                        (!statusFilter ||
+                                            project.status === statusFilter),
                                 )
                                 .map((project) => (
                                     <Card
                                         key={project.id}
                                         className="cursor-pointer hover:shadow-md transition-shadow"
-                                        onClick={() => props.onProjectClick(project)}
+                                        onClick={() =>
+                                            props.onProjectClick(project)
+                                        }
                                     >
                                         <CardHeader>
-                                            <CardTitle>{project.name}</CardTitle>
+                                            <CardTitle>
+                                                {project.name}
+                                            </CardTitle>
                                             <CardDescription>
                                                 <span
                                                     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                        project.status === 'active'
+                                                        project.status ===
+                                                        'active'
                                                             ? 'bg-green-100 text-green-800'
-                                                            : project.status === 'archived'
-                                                            ? 'bg-gray-100 text-gray-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
+                                                            : project.status ===
+                                                                'archived'
+                                                              ? 'bg-gray-100 text-gray-800'
+                                                              : 'bg-yellow-100 text-yellow-800'
                                                     }`}
                                                 >
                                                     {project.status}
@@ -410,7 +448,8 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                         </CardHeader>
                                         <CardContent>
                                             <p className="text-sm text-muted-foreground line-clamp-2">
-                                                {project.description || 'No description provided'}
+                                                {project.description ||
+                                                    'No description provided'}
                                             </p>
                                         </CardContent>
                                     </Card>
@@ -419,7 +458,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                     ) : (
                         <div className="text-center py-12 border rounded-lg">
                             <FolderArchive className="h-12 w-12 mx-auto text-muted-foreground" />
-                            <h3 className="mt-4 text-lg font-medium">No projects found</h3>
+                            <h3 className="mt-4 text-lg font-medium">
+                                No projects found
+                            </h3>
                             <p className="mt-2 text-sm text-muted-foreground">
                                 Get started by creating your first project
                             </p>

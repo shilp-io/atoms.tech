@@ -4,7 +4,7 @@ import { Maximize2, Minimize2 } from 'lucide-react';
 import { memo, useEffect, useState } from 'react';
 
 import BaseToggle from '@/components/custom/toggles/BaseToggle';
-import { useLayout, LayoutViewMode } from '@/lib/providers/layout.provider';
+import { LayoutViewMode, useLayout } from '@/lib/providers/layout.provider';
 
 export const LayoutViewToggle = memo(() => {
     const [mounted, setMounted] = useState(false);
