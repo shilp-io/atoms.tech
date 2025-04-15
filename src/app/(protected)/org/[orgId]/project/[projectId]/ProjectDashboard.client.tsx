@@ -11,7 +11,7 @@ import { useProjectDocuments } from '@/hooks/queries/useDocument';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useProject } from '@/lib/providers/project.provider';
 import { Document } from '@/types/base/documents.types';
-import { Requirement } from '@/types/base/requirements.types';
+
 import ProjectMembers from './ProjectMembers';
 
 // Dynamically import the CreatePanel with no SSR

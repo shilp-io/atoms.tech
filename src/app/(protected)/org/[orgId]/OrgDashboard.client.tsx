@@ -1,7 +1,7 @@
 'use client';
 
 import { Building, File, FileBox, FolderArchive, ListTodo } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import OrgMembers from '@/app/(protected)/org/[orgId]/OrgMembers.client';
 import { CreatePanel } from '@/components/base/panels/CreatePanel';
@@ -14,11 +14,11 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { ExternalDocument } from '@/types/base/documents.types';
 import { Organization } from '@/types/base/organizations.types';
 import { Project } from '@/types/base/projects.types';
-import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
 
 import OrgInvitations from './OrgInvitations.client';
 
@@ -46,7 +46,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                 console.error('Failed to refresh member count:', error);
             });
         }
-    }, [props.orgId]);
+    }, [props.orgId, setOrgMemberCount]);
 
     console.log('projects: ', props.projects);
 

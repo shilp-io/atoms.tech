@@ -20,13 +20,12 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/use-toast';
+import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
+import { useCreateProjectMember } from '@/hooks/mutations/useProjectMutations';
 import { getOrganizationMembers } from '@/lib/db/client';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
-import { EUserRoleType, EProjectRole } from '@/types';
-import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
-import { useCreateProjectMember } from '@/hooks/mutations/useProjectMutations';
-
+import { EProjectRole, EUserRoleType } from '@/types';
 
 interface OrgMembersProps {
     className?: string;
@@ -39,11 +38,17 @@ export default function OrgMembers({ className }: OrgMembersProps) {
     const { mutateAsync: setOrgMemberCount } = useSetOrgMemberCount();
     const { mutateAsync: createProjectMember } = useCreateProjectMember();
     const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
-    const [selectedRole, setSelectedRole] = useState<EUserRoleType | null>(null);
+    const [selectedRole, setSelectedRole] = useState<EUserRoleType | null>(
+        null,
+    );
     const [isRolePromptOpen, setIsRolePromptOpen] = useState(false);
     const [isAssignPromptOpen, setIsAssignPromptOpen] = useState(false);
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-    const [assignRole, setAssignRole] = useState<EUserRoleType | EProjectRole |null>(null);
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+        null,
+    );
+    const [assignRole, setAssignRole] = useState<
+        EUserRoleType | EProjectRole | null
+    >(null);
 
     const {
         data: members = [],
@@ -74,7 +79,6 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         },
         enabled: !!params?.orgId,
     });
-
 
     // Sort members to display the owner first
     const sortedMembers = [...members].sort((a, b) => {
@@ -166,7 +170,10 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                 .eq('user_id', activeMemberId);
 
             if (error) {
-                console.error('Error updating organization member role:', error);
+                console.error(
+                    'Error updating organization member role:',
+                    error,
+                );
                 throw error;
             }
 
@@ -317,23 +324,33 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem
                                                         onClick={() => {
-                                                            setActiveMemberId(member.id);
-                                                            setIsRolePromptOpen(true);
+                                                            setActiveMemberId(
+                                                                member.id,
+                                                            );
+                                                            setIsRolePromptOpen(
+                                                                true,
+                                                            );
                                                         }}
                                                     >
                                                         Change role
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => {
-                                                            setActiveMemberId(member.id);
-                                                            setIsAssignPromptOpen(true);
+                                                            setActiveMemberId(
+                                                                member.id,
+                                                            );
+                                                            setIsAssignPromptOpen(
+                                                                true,
+                                                            );
                                                         }}
                                                     >
                                                         Assign to Project
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         onClick={() => {
-                                                            handleRemoveMember(member.id);
+                                                            handleRemoveMember(
+                                                                member.id,
+                                                            );
                                                         }}
                                                         className="text-red-600"
                                                     >
@@ -374,21 +391,33 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline">
                                             {selectedRole
-                                                ? selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)
+                                                ? selectedRole
+                                                      .charAt(0)
+                                                      .toUpperCase() +
+                                                  selectedRole.slice(1)
                                                 : 'Choose a role'}
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        {['member', 'admin', 'super_admin'].map((role) => (
-                                            <DropdownMenuItem
-                                                key={role}
-                                                onClick={() => setSelectedRole(role as EUserRoleType)}
-                                            >
-                                                {role === 'super_admin'
-                                                    ? 'Super Admin'
-                                                    : role.charAt(0).toUpperCase() + role.slice(1)}
-                                            </DropdownMenuItem>
-                                        ))}
+                                        {['member', 'admin', 'super_admin'].map(
+                                            (role) => (
+                                                <DropdownMenuItem
+                                                    key={role}
+                                                    onClick={() =>
+                                                        setSelectedRole(
+                                                            role as EUserRoleType,
+                                                        )
+                                                    }
+                                                >
+                                                    {role === 'super_admin'
+                                                        ? 'Super Admin'
+                                                        : role
+                                                              .charAt(0)
+                                                              .toUpperCase() +
+                                                          role.slice(1)}
+                                                </DropdownMenuItem>
+                                            ),
+                                        )}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>
@@ -434,7 +463,11 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline">
                                             {selectedProjectId
-                                                ? projects.find((p) => p.id === selectedProjectId)?.name
+                                                ? projects.find(
+                                                      (p) =>
+                                                          p.id ===
+                                                          selectedProjectId,
+                                                  )?.name
                                                 : 'Choose a project'}
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -442,7 +475,11 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                         {projects.map((project) => (
                                             <DropdownMenuItem
                                                 key={project.id}
-                                                onClick={() => setSelectedProjectId(project.id)}
+                                                onClick={() =>
+                                                    setSelectedProjectId(
+                                                        project.id,
+                                                    )
+                                                }
                                             >
                                                 {project.name}
                                             </DropdownMenuItem>
@@ -456,26 +493,37 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                 </label>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="w-half">
+                                        <Button
+                                            variant="outline"
+                                            className="w-half"
+                                        >
                                             {assignRole
-                                                ? assignRole.charAt(0).toUpperCase() +
+                                                ? assignRole
+                                                      .charAt(0)
+                                                      .toUpperCase() +
                                                   assignRole.slice(1)
                                                 : 'Choose a role'}
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        {['admin', 'maintainer', 'editor', 'viewer'].map(
-                                            (role) => (
-                                                <DropdownMenuItem
-                                                    key={role}
-                                                    onClick={() =>
-                                                        setAssignRole(role as EProjectRole)
-                                                    }
-                                                >
-                                                    {role.charAt(0).toUpperCase() + role.slice(1)}
-                                                </DropdownMenuItem>
-                                            ),
-                                        )}
+                                        {[
+                                            'admin',
+                                            'maintainer',
+                                            'editor',
+                                            'viewer',
+                                        ].map((role) => (
+                                            <DropdownMenuItem
+                                                key={role}
+                                                onClick={() =>
+                                                    setAssignRole(
+                                                        role as EProjectRole,
+                                                    )
+                                                }
+                                            >
+                                                {role.charAt(0).toUpperCase() +
+                                                    role.slice(1)}
+                                            </DropdownMenuItem>
+                                        ))}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>

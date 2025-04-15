@@ -18,10 +18,10 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { getProjectMembers } from '@/lib/db/client/projects.client';
-import { EProjectRole } from '@/types';
 import { useUser } from '@/lib/providers/user.provider';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { EProjectRole } from '@/types';
 
 interface ProjectMembersProps {
     projectId: string;
@@ -51,13 +51,17 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     const [isRolePromptOpen, setIsRolePromptOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-    const { data: members = [], isLoading, refetch } = useQuery({
+    const {
+        data: members = [],
+        isLoading,
+        refetch,
+    } = useQuery({
         queryKey: ['project-members', projectId],
         queryFn: () => getProjectMembers(projectId),
     });
 
     const isOwner = members.some(
-        (member) => member.id === user?.id && member.role === 'owner', 
+        (member) => member.id === user?.id && member.role === 'owner',
     );
 
     const sortedMembers = [...members].sort((a, b) => {
@@ -126,14 +130,14 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
                     <CardTitle className="text-xl">Members</CardTitle>
-                    <CardDescription>
-                        Manage project members
-                    </CardDescription>
+                    <CardDescription>Manage project members</CardDescription>
                 </div>
             </CardHeader>
             <CardContent>
                 {errorMessage && (
-                    <div className="text-red-600 text-sm mb-4">{errorMessage}</div>
+                    <div className="text-red-600 text-sm mb-4">
+                        {errorMessage}
+                    </div>
                 )}
                 {isLoading ? (
                     <div className="space-y-3">
@@ -194,15 +198,21 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem
                                                     onClick={() => {
-                                                        setActiveMemberId(member.id);
-                                                        setIsRolePromptOpen(true);
+                                                        setActiveMemberId(
+                                                            member.id,
+                                                        );
+                                                        setIsRolePromptOpen(
+                                                            true,
+                                                        );
                                                     }}
                                                 >
                                                     Change role
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={() => {
-                                                        handleRemoveMember(member.id);
+                                                        handleRemoveMember(
+                                                            member.id,
+                                                        );
                                                     }}
                                                     className="text-red-600"
                                                 >
@@ -243,17 +253,30 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline">
                                             {selectedRole
-                                                ? selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)
+                                                ? selectedRole
+                                                      .charAt(0)
+                                                      .toUpperCase() +
+                                                  selectedRole.slice(1)
                                                 : 'Choose a role'}
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        {['admin', 'maintainer', 'editor', 'viewer'].map((role) => (
+                                        {[
+                                            'admin',
+                                            'maintainer',
+                                            'editor',
+                                            'viewer',
+                                        ].map((role) => (
                                             <DropdownMenuItem
                                                 key={role}
-                                                onClick={() => setSelectedRole(role as EProjectRole)}
+                                                onClick={() =>
+                                                    setSelectedRole(
+                                                        role as EProjectRole,
+                                                    )
+                                                }
                                             >
-                                                {role.charAt(0).toUpperCase() + role.slice(1)}
+                                                {role.charAt(0).toUpperCase() +
+                                                    role.slice(1)}
                                             </DropdownMenuItem>
                                         ))}
                                     </DropdownMenuContent>

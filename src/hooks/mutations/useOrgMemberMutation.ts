@@ -62,7 +62,10 @@ export function useSetOrgMemberCount() {
                 .eq('organization_id', orgId);
 
             if (countError) {
-                console.error('Failed to count organization members', countError);
+                console.error(
+                    'Failed to count organization members',
+                    countError,
+                );
                 throw countError;
             }
 
@@ -73,7 +76,10 @@ export function useSetOrgMemberCount() {
                 .eq('id', orgId);
 
             if (updateError) {
-                console.error('Failed to update member count in organizations', updateError);
+                console.error(
+                    'Failed to update member count in organizations',
+                    updateError,
+                );
                 throw updateError;
             }
 
@@ -109,7 +115,10 @@ export function useSetOrgMemberRole() {
                 .eq('user_id', userId);
 
             if (error) {
-                console.error('Failed to update organization member role', error);
+                console.error(
+                    'Failed to update organization member role',
+                    error,
+                );
                 throw error;
             }
 

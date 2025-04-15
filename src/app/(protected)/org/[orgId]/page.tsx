@@ -9,8 +9,8 @@ import { OrgDashboardSkeleton } from '@/components/custom/skeletons/OrgDashboard
 import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
 import { useOrganization as useOrgQuery } from '@/hooks/queries/useOrganization';
 import { useProjectsByMembershipForOrg } from '@/hooks/queries/useProject';
-import { useUser } from '@/lib/providers/user.provider';
 import { useOrganization } from '@/lib/providers/organization.provider';
+import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { Project } from '@/types/base/projects.types';
 

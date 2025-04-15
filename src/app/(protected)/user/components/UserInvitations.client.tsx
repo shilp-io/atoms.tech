@@ -6,7 +6,10 @@ import { Check, X } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { useCreateOrgMember, useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation'; // Import useCreateOrgMember and useSetOrgMemberCount
+import {
+    useCreateOrgMember,
+    useSetOrgMemberCount,
+} from '@/hooks/mutations/useOrgMemberMutation'; // Import useCreateOrgMember and useSetOrgMemberCount
 import { useOrgInvitation } from '@/hooks/queries/useOrganization';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { useUser } from '@/lib/providers/user.provider';
@@ -99,7 +102,7 @@ export default function UserInvitations() {
 
             // Update the member count for the organization
             await setOrgMemberCount(invitation.organization_id);
-      
+
             toast({
                 title: 'Success',
                 description: 'Invitation accepted successfully!',
@@ -111,11 +114,10 @@ export default function UserInvitations() {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.organizations.byMembership(user.id),
             }); // Refresh organizations
-      
+
             queryClient.invalidateQueries({
                 queryKey: queryKeys.organizations.list(),
             }); // Refresh the list of organizations
-
         } catch (error) {
             console.error('Error accepting invitation:', error);
             toast({
