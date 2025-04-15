@@ -11,6 +11,7 @@ import { useProjectDocuments } from '@/hooks/queries/useDocument';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useProject } from '@/lib/providers/project.provider';
 import { Document } from '@/types/base/documents.types';
+import { PenTool } from 'lucide-react';
 
 // Dynamically import the CreatePanel with no SSR
 const CreatePanel = dynamic(
@@ -44,6 +45,10 @@ export default function ProjectPage() {
         );
     };
 
+    const handleGoToCanvas = () => {
+        router.push(`/org/${params.orgId}/project/${params.projectId}/canvas`);
+    };
+
     const isLoading = documentsLoading;
 
     return (
@@ -69,6 +74,17 @@ export default function ProjectPage() {
                     </Badge>
                     <Badge variant="outline">{project?.visibility}</Badge>
                 </div>
+            </div>
+
+            <div className="space-y-4">
+                <Button
+                    variant="outline"
+                    className="bg-primary text-primary-foreground text-md hover:bg-primary/90"
+                    onClick={handleGoToCanvas}
+                >
+                    Go to Canvas
+                    <PenTool className="w-4 h-4 ml-2" />
+                </Button>
             </div>
 
             {/* Documents List */}
