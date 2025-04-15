@@ -13,6 +13,7 @@ import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { Project } from '@/types/base/projects.types';
+import LayoutView from '@/components/views/LayoutView';
 
 export default function OrgPage() {
     const router = useRouter();
@@ -54,6 +55,7 @@ export default function OrgPage() {
     };
 
     return (
+        <LayoutView>
         <Suspense fallback={<OrgDashboardSkeleton />}>
             <OrgDashboard
                 organization={organization}
@@ -68,5 +70,6 @@ export default function OrgPage() {
                 orgId={orgId}
             />
         </Suspense>
+        </LayoutView>
     );
 }

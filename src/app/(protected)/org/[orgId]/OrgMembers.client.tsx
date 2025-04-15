@@ -303,7 +303,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-0">
                                     <span
                                         className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(member.role as EUserRoleType)}`}
                                     >

@@ -34,6 +34,8 @@ import { useUser } from '@/lib/providers/user.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { InvitationStatus, OrganizationType } from '@/types/base/enums.types';
 import { Organization } from '@/types/base/organizations.types';
+import LayoutView from '@/components/views/LayoutView';
+
 
 export default function UserDashboard() {
     const { user, profile } = useUser();
@@ -172,7 +174,8 @@ export default function UserDashboard() {
     };
 
     return (
-        <div className="container mx-auto p-6 max-w-7xl">
+        <LayoutView>
+        <div className="container mx-auto p-6">
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -436,5 +439,6 @@ export default function UserDashboard() {
                 initialTab={createPanelType}
             />
         </div>
+        </LayoutView>
     );
 }
