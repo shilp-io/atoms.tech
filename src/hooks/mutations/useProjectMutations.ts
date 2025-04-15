@@ -71,3 +71,46 @@ export function useCreateProject() {
         },
     });
 }
+
+export function useCreateProjectMember() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            userId,
+            projectId,
+            role,
+            orgId,
+        }: {
+            userId: string;
+            projectId: string;
+            role: 'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer';
+            orgId: string; // Add orgId to the parameters
+        }) => {
+            const { data, error } = await supabase
+                .from('project_members')
+                .insert({
+                    user_id: userId,
+                    project_id: projectId,
+                    role,
+                    org_id: orgId, // Include org_id in the insert
+                    status: 'active',
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Failed to assign user to project', error);
+                throw error;
+            }
+
+            return data;
+        },
+        onSuccess: (_, { projectId }) => {
+            // Invalidate relevant queries
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.projects.detail(projectId),
+            });
+        },
+    });
+}
