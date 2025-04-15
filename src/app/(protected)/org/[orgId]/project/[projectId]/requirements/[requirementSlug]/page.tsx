@@ -122,6 +122,7 @@ export default function RequirementPage() {
         }
 
         setAnalysisData(null);
+        await updateRequirementWithHistory(reqText);
 
         // check if the requirement is empty
         if (!reqText) {
