@@ -333,9 +333,6 @@ export default function UserDashboard() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full md:w-64"
                         />
-                        <Button variant="default" className="w-9 h-9">
-                            <FilterIcon className="w-4 h-4" />
-                        </Button>
                     </div>
                 </div>
 
