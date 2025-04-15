@@ -109,21 +109,6 @@ export default function ProjectPage() {
                 </div>
             </div>
 
-
-            {/* Requirements List */}
-            <div className="space-y-4">
-                <h2 className="text-xl font-semibold">
-                    Recently Modified Requirements
-                </h2>
-                <DashboardView
-                    data={requirements || []}
-                    columns={columns}
-                    isLoading={isLoading}
-                    onRowClick={handleRowClick}
-                    emptyMessage="No requirements found for this project."
-                />
-            </div>
-
             {/* Project Management */}
             <div className="space-y-4">
                 <h2 className="text-xl font-semibold">Project Management</h2>

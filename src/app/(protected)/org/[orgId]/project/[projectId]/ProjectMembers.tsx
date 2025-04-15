@@ -18,22 +18,38 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { getProjectMembers } from '@/lib/db/client/projects.client';
-import { EUserRoleType } from '@/types';
+import { EProjectRole } from '@/types';
 import { useUser } from '@/lib/providers/user.provider';
 
 interface ProjectMembersProps {
     projectId: string;
 }
 
+const getRoleColor = (role: EProjectRole) => {
+    switch (role) {
+        case 'admin':
+            return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+        case 'maintainer':
+            return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+        case 'editor':
+            return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+        case 'viewer':
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+        case 'owner':
+            return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+        default:
+            return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+};
+
 export default function ProjectMembers({ projectId }: ProjectMembersProps) {
-    const { toast } = useToast();
     const { user } = useUser();
     const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
-    const [selectedRole, setSelectedRole] = useState<EUserRoleType | null>(null);
+    const [selectedRole, setSelectedRole] = useState<EProjectRole | null>(null);
     const [isRolePromptOpen, setIsRolePromptOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const { data: members = [], isLoading, refetch } = useQuery({
         queryKey: ['project-members', projectId],
@@ -41,7 +57,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     });
 
     const isOwner = members.some(
-        (member) => member.id === user?.id && member.role === 'owner',
+        (member) => member.id === user?.id && member.role === 'owner', 
     );
 
     const sortedMembers = [...members].sort((a, b) => {
@@ -51,6 +67,11 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     });
 
     const handleRemoveMember = async (memberId: string) => {
+        if (!user?.id) {
+            setErrorMessage('User not authenticated.');
+            return;
+        }
+
         try {
             const { error } = await supabase
                 .from('project_members')
@@ -63,21 +84,17 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                 throw error;
             }
 
-            alert('Member removed successfully!');
-
+            setErrorMessage(null); // Clear error message on success
             refetch();
         } catch (error) {
-            alert('Failed to remove member.');
+            console.error('Error removing member:', error);
+            setErrorMessage('Failed to remove member.');
         }
     };
 
     const handleChangeRole = async () => {
         if (!activeMemberId || !selectedRole) {
-            toast({
-                title: 'Error',
-                description: 'Invalid operation. Please select a role.',
-                variant: 'destructive',
-            });
+            setErrorMessage('Invalid operation. Please select a role.');
             return;
         }
 
@@ -86,29 +103,21 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                 .from('project_members')
                 .update({ role: selectedRole })
                 .eq('project_id', projectId)
-                .eq('id', activeMemberId);
+                .eq('user_id', activeMemberId);
 
             if (error) {
                 console.error('Error updating project member role:', error);
                 throw error;
             }
 
-            toast({
-                title: 'Success',
-                description: `Role updated to ${selectedRole} successfully!`,
-                variant: 'default',
-            });
-
+            setErrorMessage(null); // Clear error message on success
             refetch();
             setIsRolePromptOpen(false);
             setActiveMemberId(null);
             setSelectedRole(null);
         } catch (error) {
-            toast({
-                title: 'Error',
-                description: 'Failed to change role. Please try again.',
-                variant: 'destructive',
-            });
+            console.error('Error changing role:', error);
+            setErrorMessage('Failed to change role. Please try again.');
         }
     };
 
@@ -123,6 +132,9 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                 </div>
             </CardHeader>
             <CardContent>
+                {errorMessage && (
+                    <div className="text-red-600 text-sm mb-4">{errorMessage}</div>
+                )}
                 {isLoading ? (
                     <div className="space-y-3">
                         {[1, 2, 3].map((i) => (
@@ -164,13 +176,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span
-                                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            member.role === 'owner'
-                                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
-                                                : member.role === 'admin'
-                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                        }`}
+                                        className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(member.role as EProjectRole)}`}
                                     >
                                         {member.role}
                                     </span>
@@ -242,10 +248,10 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        {['member', 'admin'].map((role) => (
+                                        {['admin', 'maintainer', 'editor', 'viewer'].map((role) => (
                                             <DropdownMenuItem
                                                 key={role}
-                                                onClick={() => setSelectedRole(role as EUserRoleType)}
+                                                onClick={() => setSelectedRole(role as EProjectRole)}
                                             >
                                                 {role.charAt(0).toUpperCase() + role.slice(1)}
                                             </DropdownMenuItem>

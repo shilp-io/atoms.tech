@@ -7,7 +7,6 @@ import { Check, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { useCreateOrgMember, useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation'; // Import useCreateOrgMember and useSetOrgMemberCount
-import { useCreateOrgMember } from '@/hooks/mutations/useOrgMemberMutation';
 import { useOrgInvitation } from '@/hooks/queries/useOrganization';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { useUser } from '@/lib/providers/user.provider';

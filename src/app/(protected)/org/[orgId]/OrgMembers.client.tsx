@@ -24,7 +24,7 @@ import { getOrganizationMembers } from '@/lib/db/client';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { EUserRoleType, EProjectRole } from '@/types';
-import { useSetOrgMemberCount, useSetOrgMemberRole } from '@/hooks/mutations/useOrgMemberMutation';
+import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
 import { useCreateProjectMember } from '@/hooks/mutations/useProjectMutations';
 
 
@@ -37,7 +37,6 @@ export default function OrgMembers({ className }: OrgMembersProps) {
     const { user } = useUser();
     const { toast } = useToast();
     const { mutateAsync: setOrgMemberCount } = useSetOrgMemberCount();
-    const { mutateAsync: setOrgMemberRole } = useSetOrgMemberRole();
     const { mutateAsync: createProjectMember } = useCreateProjectMember();
     const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
     const [selectedRole, setSelectedRole] = useState<EUserRoleType | null>(null);
@@ -224,7 +223,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
             await createProjectMember({
                 userId: activeMemberId,
                 projectId: selectedProjectId,
-                role: assignRole,
+                role: assignRole as EProjectRole,
             });
 
             toast({
@@ -242,52 +241,6 @@ export default function OrgMembers({ className }: OrgMembersProps) {
             toast({
                 title: 'Error',
                 description: 'Failed to assign user to project.',
-                variant: 'destructive',
-            });
-        }
-    };
-
-    // Check if the current user is the owner
-    const isOwner = members.some(
-        (member) => member.id === user?.id && member.role === 'owner',
-    );
-
-    const handleRemoveMember = async (memberId: string) => {
-        if (!user?.id) {
-            toast({
-                title: 'Error',
-                description: 'User not authenticated.',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        try {
-            // Remove the member from the database
-            const { error } = await supabase
-                .from('organization_members')
-                .delete()
-                .eq('organization_id', params?.orgId || '')
-                .eq('user_id', memberId);
-
-            if (error) {
-                console.error('Error removing member:', error);
-                throw error;
-            }
-
-            toast({
-                title: 'Success',
-                description: 'Member removed successfully!',
-                variant: 'default',
-            });
-
-            // Refresh the members list
-            refetch();
-        } catch (error) {
-            console.error('Error removing member:', error);
-            toast({
-                title: 'Error',
-                description: 'Failed to remove member.',
                 variant: 'destructive',
             });
         }
