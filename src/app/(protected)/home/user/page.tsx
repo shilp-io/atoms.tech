@@ -2,14 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import {
-    Building,
-    FilterIcon,
-    Folder,
-    Plus,
-    Sparkles,
-    Users,
-} from 'lucide-react';
+import { Building, Folder, Plus, Sparkles, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 

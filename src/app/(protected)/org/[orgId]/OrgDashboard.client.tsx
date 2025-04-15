@@ -175,7 +175,8 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                 <CardHeader>
                                     <CardTitle>Organization Details</CardTitle>
                                     <CardDescription>
-                                        Basic information about your organization
+                                        Basic information about your
+                                        organization
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent>
@@ -207,8 +208,8 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                                     Members:
                                                 </span>
                                                 <span className="font-medium">
-                                                    {props.organization?.member_count ||
-                                                        0}
+                                                    {props.organization
+                                                        ?.member_count || 0}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
@@ -216,7 +217,10 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                                     Plan:
                                                 </span>
                                                 <span className="font-medium">
-                                                    {props.organization?.billing_plan}
+                                                    {
+                                                        props.organization
+                                                            ?.billing_plan
+                                                    }
                                                 </span>
                                             </div>
                                         </div>
@@ -245,7 +249,8 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                                     style={{
                                                         width: `${Math.min(
                                                             ((props.organization
-                                                                ?.storage_used || 0) /
+                                                                ?.storage_used ||
+                                                                0) /
                                                                 1000) *
                                                                 100,
                                                             100,
@@ -255,7 +260,8 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span>
-                                                    {props.organization?.storage_used ||
+                                                    {props.organization
+                                                        ?.storage_used ||
                                                         0}{' '}
                                                     MB used
                                                 </span>
@@ -444,9 +450,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                                         'active'
                                                             ? 'bg-green-100 text-green-800'
                                                             : project.status ===
-                                                              'archived'
-                                                            ? 'bg-gray-100 text-gray-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
+                                                                'archived'
+                                                              ? 'bg-gray-100 text-gray-800'
+                                                              : 'bg-yellow-100 text-yellow-800'
                                                     }`}
                                                 >
                                                     {project.status}
@@ -457,15 +463,15 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                                         'private'
                                                             ? 'bg-red-100 text-red-800'
                                                             : project.visibility ===
-                                                              'team'
-                                                            ? 'bg-blue-100 text-blue-800'
-                                                            : project.visibility ===
-                                                              'organization'
-                                                            ? 'bg-purple-100 text-purple-800'
-                                                            : project.visibility ===
-                                                              'public'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-gray-100 text-gray-800'
+                                                                'team'
+                                                              ? 'bg-blue-100 text-blue-800'
+                                                              : project.visibility ===
+                                                                  'organization'
+                                                                ? 'bg-purple-100 text-purple-800'
+                                                                : project.visibility ===
+                                                                    'public'
+                                                                  ? 'bg-green-100 text-green-800'
+                                                                  : 'bg-gray-100 text-gray-800'
                                                     }`}
                                                 >
                                                     {project.visibility}

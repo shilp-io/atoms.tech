@@ -3,6 +3,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'; // Import useQuery and useQueryClient
 
 import { Check, X } from 'lucide-react';
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
@@ -17,9 +18,12 @@ import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { InvitationStatus } from '@/types/base/enums.types';
 import { Invitation } from '@/types/base/invitations.types';
-import { useRouter } from 'next/navigation'; // Import useRouter
 
-export default function UserInvitations({ onAccept }: { onAccept?: () => void }) {
+export default function UserInvitations({
+    onAccept,
+}: {
+    onAccept?: () => void;
+}) {
     const { user } = useUser();
     const queryClient = useQueryClient(); // Initialize queryClient
     const router = useRouter(); // Initialize router
