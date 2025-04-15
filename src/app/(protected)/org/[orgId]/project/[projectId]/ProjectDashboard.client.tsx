@@ -67,8 +67,10 @@ export default function ProjectPage() {
 
     const sortedDocuments = [...(documents || [])].sort((a, b) => {
         if (!sortBy) return 0;
-        const dateA = new Date(a[sortBy]).getTime();
-        const dateB = new Date(b[sortBy]).getTime();
+        const dateA =
+            sortBy && a[sortBy] ? new Date(a[sortBy] as string).getTime() : 0;
+        const dateB =
+            sortBy && b[sortBy] ? new Date(b[sortBy] as string).getTime() : 0;
         return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
     });
 
