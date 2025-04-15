@@ -246,6 +246,46 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         [projectId, isDarkMode],
     );
 
+    // Function to refresh just the diagram name from the database
+    const refreshDiagramName = useCallback(async () => {
+        if (!diagramId) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('excalidraw_diagrams')
+                .select('name')
+                .eq('id', diagramId)
+                .single();
+
+            if (error) {
+                console.error('Error refreshing diagram name:', error);
+                return;
+            }
+
+            if (data && data.name !== diagramName) {
+                console.log('Updating diagram name from database:', data.name);
+                setDiagramName(data.name || 'Untitled Diagram');
+            }
+        } catch (err) {
+            console.error('Error in refreshDiagramName:', err);
+        }
+    }, [diagramId, diagramName]);
+
+    // Periodically check for name updates in the database
+    useEffect(() => {
+        if (!diagramId) return;
+
+        // Initial refresh
+        refreshDiagramName();
+
+        // Set up interval to check for name updates
+        const intervalId = setInterval(refreshDiagramName, 5000); // Check every 5 seconds
+
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [diagramId, refreshDiagramName]);
+
     const createNewDiagram = useCallback(() => {
         // Generate a UUID v4
         const newId = uuidv4();

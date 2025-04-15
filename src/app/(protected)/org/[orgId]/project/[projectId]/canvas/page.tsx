@@ -118,7 +118,8 @@ export default function Draw() {
             activeTab === 'editor' &&
             selectedDiagramId
         ) {
-            setInstanceKey(`diagram-${selectedDiagramId}`);
+            // Add timestamp to force remount and refresh diagram data including name
+            setInstanceKey(`diagram-${selectedDiagramId}-${Date.now()}`);
         }
 
         // Update last active tab
