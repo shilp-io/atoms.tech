@@ -1,6 +1,12 @@
 'use client';
 
-import {PenTool, ArrowDown, ArrowUp, FileBox, FolderArchive } from 'lucide-react';
+import {
+    ArrowDown,
+    ArrowUp,
+    FileBox,
+    FolderArchive,
+    PenTool,
+} from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -65,7 +71,6 @@ export default function ProjectPage() {
         );
     };
 
-
     const handleGoToCanvas = () => {
         router.push(`/org/${params.orgId}/project/${params.projectId}/canvas`);
     };
@@ -82,7 +87,6 @@ export default function ProjectPage() {
     const filteredDocuments = sortedDocuments.filter((doc) =>
         doc.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-
 
     return (
         <div className="container mx-auto p-6 space-y-6">
@@ -109,7 +113,6 @@ export default function ProjectPage() {
                     <PenTool className="w-4 h-4 ml-2" />
                 </Button>
             </div>
-
 
             {/* Tabs Menu */}
             <Tabs

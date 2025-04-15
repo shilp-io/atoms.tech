@@ -22,7 +22,7 @@ interface DiagramItem {
     name: string;
     thumbnail_url: string | null;
     updated_at: string;
-    created_by: string;
+    created_by: string | null;
 }
 
 // Define the database response structure
@@ -31,7 +31,7 @@ interface DiagramDatabaseRow {
     name: string | null;
     thumbnail_url: string | null;
     updated_at: string | null;
-    created_by: string;
+    created_by: string | null;
 }
 
 interface DiagramGalleryProps {
