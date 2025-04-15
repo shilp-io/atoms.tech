@@ -238,7 +238,7 @@ export function DataTableRow<
 
                                                     return (
                                                         <div
-                                                            key={index}
+                                                            key={historyItem.createdAt}
                                                             className="flex mb-6 last:mb-0 relative"
                                                         >
                                                             <div className="mr-4 z-10">
