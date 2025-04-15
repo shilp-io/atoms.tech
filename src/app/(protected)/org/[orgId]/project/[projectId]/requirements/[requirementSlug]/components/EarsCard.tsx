@@ -1,7 +1,13 @@
-import { Target } from 'lucide-react';
+import { Copy, Target } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { FoldingCard } from '@/components/ui/folding-card';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface EarsCardProps {
     earsPattern?: string;
@@ -31,17 +37,28 @@ export function EarsCard({
                 </p>
                 <div className="flex justify-between items-center mt-2">
                     <p>
-                        <strong>Requirement:</strong> {earsRequirement}
+                        <strong>EARS Format:</strong> {earsRequirement}
                     </p>
-                    <Button
-                        size="sm"
-                        onClick={() =>
-                            earsRequirement && onAccept(earsRequirement)
-                        }
-                        disabled={!earsRequirement}
-                    >
-                        Accept Pattern
-                    </Button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() =>
+                                        earsRequirement &&
+                                        onAccept(earsRequirement)
+                                    }
+                                    disabled={!earsRequirement}
+                                >
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Copy to clipboard</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
                 <p>
                     <strong>Template:</strong> {earsTemplate}

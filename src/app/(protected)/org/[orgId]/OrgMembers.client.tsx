@@ -27,6 +27,7 @@ import { EUserRoleType, EProjectRole } from '@/types';
 import { useSetOrgMemberCount, useSetOrgMemberRole } from '@/hooks/mutations/useOrgMemberMutation';
 import { useCreateProjectMember } from '@/hooks/mutations/useProjectMutations';
 
+
 interface OrgMembersProps {
     className?: string;
 }
@@ -75,6 +76,8 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         enabled: !!params?.orgId,
     });
 
+
+    // Sort members to display the owner first
     const sortedMembers = [...members].sort((a, b) => {
         if (a.role === 'owner') return -1;
         if (b.role === 'owner') return 1;
@@ -244,6 +247,52 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         }
     };
 
+    // Check if the current user is the owner
+    const isOwner = members.some(
+        (member) => member.id === user?.id && member.role === 'owner',
+    );
+
+    const handleRemoveMember = async (memberId: string) => {
+        if (!user?.id) {
+            toast({
+                title: 'Error',
+                description: 'User not authenticated.',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        try {
+            // Remove the member from the database
+            const { error } = await supabase
+                .from('organization_members')
+                .delete()
+                .eq('organization_id', params?.orgId || '')
+                .eq('user_id', memberId);
+
+            if (error) {
+                console.error('Error removing member:', error);
+                throw error;
+            }
+
+            toast({
+                title: 'Success',
+                description: 'Member removed successfully!',
+                variant: 'default',
+            });
+
+            // Refresh the members list
+            refetch();
+        } catch (error) {
+            console.error('Error removing member:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to remove member.',
+                variant: 'destructive',
+            });
+        }
+    };
+
     return (
         <Card className={className}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -301,7 +350,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                         {member.role}
                                     </span>
                                     {isOwner &&
-                                        member.id !== user?.id && (
+                                        member.id !== user?.id && ( // Allow removal only if the current user is the owner and not removing themselves
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button

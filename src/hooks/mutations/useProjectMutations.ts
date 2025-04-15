@@ -60,6 +60,14 @@ export function useCreateProject() {
             queryClient.invalidateQueries({
                 queryKey: queryKeys.projects.byOrg(data.organization_id),
             });
+            // Invalidate the specific project detail query to ensure ProjectDashboard updates correctly
+            queryClient.invalidateQueries({
+                queryKey: queryKeys.projects.detail(data.id),
+            });
+            // Also invalidate any project member queries that might be affected
+            queryClient.invalidateQueries({
+                queryKey: ['project_members'],
+            });
         },
     });
 }

@@ -10,6 +10,7 @@ import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments'
 import { useOrganization as useOrgQuery } from '@/hooks/queries/useOrganization';
 import { useProjectsByMembershipForOrg } from '@/hooks/queries/useProject';
 import { useUser } from '@/lib/providers/user.provider';
+import { useOrganizationProjects } from '@/hooks/queries/useProject';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useContextStore } from '@/lib/store/context.store';
 import { Project } from '@/types/base/projects.types';
@@ -41,7 +42,6 @@ export default function OrgPage() {
     // Fetch projects data
     const { data: projects, isLoading: projectsLoading } =
         useProjectsByMembershipForOrg(orgId, user?.id || '');
-
     const { data: externalDocuments, isLoading: documentsLoading } =
         useExternalDocumentsByOrg(params?.orgId || '');
 

@@ -1,26 +1,37 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { useCookies } from 'next-client-cookies';
+// Dynamic import to avoid loading the CreatePanel until needed
+import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-import { setCookie as _setCookie } from '@/app/(protected)/org/actions';
-import DashboardView, { Column } from '@/components/base/DashboardView';
-import { CreatePanel } from '@/components/base/panels/CreatePanel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useProjectDocuments } from '@/hooks/queries/useDocument';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useProject } from '@/lib/providers/project.provider';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Document } from '@/types/base/documents.types';
 import { Requirement } from '@/types/base/requirements.types';
 import ProjectMembers from './ProjectMembers';
 
+// Dynamically import the CreatePanel with no SSR
+const CreatePanel = dynamic(
+    () =>
+        import('@/components/base/panels/CreatePanel').then(
+            (mod) => mod.CreatePanel,
+        ),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="fixed inset-0 bg-black/20 flex items-center justify-center">
+                Loading...
+            </div>
+        ),
+    },
+);
+
 export default function ProjectPage() {
     const router = useRouter();
-    const _cookies = useCookies();
     const params = useParams<{ orgId: string; projectId: string }>();
     const { project } = useProject();
     const { currentOrganization: _currentOrganization } = useOrganization();
@@ -29,103 +40,13 @@ export default function ProjectPage() {
     const { data: documents, isLoading: documentsLoading } =
         useProjectDocuments(params.projectId);
 
-    const { data: requirements, isLoading: requirementsLoading } = useQuery({
-        queryKey: ['requirements', params.projectId],
-        queryFn: async () => {
-            // Get all documents belonging to the project
-            const { data: docIds } = await supabase
-                .from('documents')
-                .select('id')
-                .eq('project_id', params.projectId);
-
-            console.log('Documents', docIds);
-
-            // If no documents found, return empty array
-            if (!docIds?.length) {
-                return [];
-            }
-
-            // Get last 5 modified requirements belonging to the documents
-            const { data: requirements } = await supabase
-                .from('requirements')
-                .select('*')
-                .in(
-                    'document_id',
-                    docIds.map((doc) => doc.id),
-                )
-                .order('updated_at', { ascending: false })
-                .limit(5);
-
-            console.log('Requirements', requirements);
-
-            if (!requirements) {
-                return [];
-            }
-
-            return requirements;
-        },
-    });
-
-    const columns: Column<Requirement>[] = [
-        {
-            header: 'Name',
-            accessor: (item: Requirement) => item.name,
-        },
-        {
-            header: 'Priority',
-            accessor: (item: Requirement) => item.priority,
-            renderCell: (item: Requirement) => (
-                <Badge
-                    variant="outline"
-                    className={
-                        item.priority === 'high'
-                            ? 'border-red-500 text-red-500'
-                            : item.priority === 'medium'
-                              ? 'border-yellow-500 text-yellow-500'
-                              : 'border-blue-500 text-blue-500'
-                    }
-                >
-                    {item.priority}
-                </Badge>
-            ),
-        },
-        {
-            header: 'Status',
-            accessor: (item: Requirement) => item.status,
-            renderCell: (item: Requirement) => (
-                <Badge
-                    variant="outline"
-                    className={
-                        item.status === 'active'
-                            ? 'border-green-500 text-green-500'
-                            : item.status === 'draft'
-                              ? 'border-gray-500 text-gray-500'
-                              : 'border-yellow-500 text-yellow-500'
-                    }
-                >
-                    {item.status}
-                </Badge>
-            ),
-        },
-        {
-            header: 'Format',
-            accessor: (item: Requirement) => item.format,
-        },
-    ];
-
-    const handleRowClick = (item: Requirement) => {
-        router.push(
-            `/org/${params.orgId}/project/${params.projectId}/requirements/${item.id}`,
-        );
-    };
-
     const handleDocumentClick = (doc: Document) => {
         router.push(
             `/org/${params.orgId}/project/${params.projectId}/documents/${doc.id}`,
         );
     };
 
-    const isLoading = documentsLoading || requirementsLoading;
+    const isLoading = documentsLoading;
 
     return (
         <div className="p-6 space-y-8">
@@ -155,12 +76,14 @@ export default function ProjectPage() {
             {/* Documents List */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold">Documents</h2>
+                    <h2 className="text-xl font-semibold">
+                        Requirement Documents
+                    </h2>
                     <Button
                         variant="outline"
                         onClick={() => setShowCreateDocumentPanel(true)}
                     >
-                        Add Document
+                        Add Requirement Document
                     </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -186,6 +109,7 @@ export default function ProjectPage() {
                 </div>
             </div>
 
+
             {/* Requirements List */}
             <div className="space-y-4">
                 <h2 className="text-xl font-semibold">
@@ -205,10 +129,9 @@ export default function ProjectPage() {
                 <h2 className="text-xl font-semibold">Project Management</h2>
                 <ProjectMembers projectId={params.projectId} />
             </div>
-
             {showCreateDocumentPanel && (
                 <CreatePanel
-                    isOpen={showCreateDocumentPanel}
+                    isOpen={true}
                     projectId={project?.id || ''}
                     onClose={() => setShowCreateDocumentPanel(false)}
                     showTabs="document"

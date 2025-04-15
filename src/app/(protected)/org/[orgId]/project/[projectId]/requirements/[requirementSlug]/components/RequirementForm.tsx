@@ -4,6 +4,7 @@ import {
     CircleAlert,
     FilePlus,
     Pencil,
+    Save,
     Trash,
     Upload,
     Wand,
@@ -51,6 +52,7 @@ interface RequirementFormProps {
         id: string;
         name?: string;
     };
+    origReqText: string;
     reqText: string;
     setReqText: Dispatch<SetStateAction<string>>;
     systemName: string;
@@ -61,9 +63,11 @@ interface RequirementFormProps {
     setIsReasoning: Dispatch<SetStateAction<boolean>>;
     isAnalysing: boolean;
     handleAnalyze: () => void;
+    handleSave: () => void;
+    isSaving: boolean;
     missingReqError: string;
-    // missingFilesError: string;
-    // setMissingFilesError: Dispatch<SetStateAction<string>>;
+    missingFilesError: string;
+    setMissingFilesError: Dispatch<SetStateAction<string>>;
     selectedFiles: { [key: string]: RegulationFile };
     setSelectedFiles: Dispatch<
         SetStateAction<{ [key: string]: RegulationFile }>
@@ -73,27 +77,26 @@ interface RequirementFormProps {
 export function RequirementForm({
     organizationId,
     requirement,
+    origReqText,
     reqText,
     setReqText,
-    systemName,
-    setSystemName,
-    objective,
-    setObjective,
+    // systemName,
+    // setSystemName,
+    // objective,
+    // setObjective,
     isReasoning,
     setIsReasoning,
     isAnalysing,
     handleAnalyze,
+    handleSave,
+    isSaving,
     missingReqError,
-    // missingFilesError,
-    // setMissingFilesError,
+    missingFilesError,
+    setMissingFilesError,
     selectedFiles,
     setSelectedFiles,
 }: RequirementFormProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-        setReqText(e.target.value);
-    };
 
     const [isUploading, setIsUploading] = useState(false);
     const [processingPdfFiles, setProcessingPdfFiles] = useState<
@@ -110,13 +113,18 @@ export function RequirementForm({
     const [ocrPipelineTaskIds, setOcrPipelineTaskIds] = useState<string[]>([]);
     const taskStatusQueries = getTaskStatuses(ocrPipelineTaskIds);
 
+    // Check if there are unsaved changes
+    const hasUnsavedChanges = useMemo(() => {
+        return origReqText !== reqText && reqText !== '';
+    }, [origReqText, reqText]);
+
     const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length) return;
 
         try {
             const files = Array.from(e.target.files);
             setIsUploading(true);
-            // setMissingFilesError('');
+            setMissingFilesError('');
 
             // upload to Supabase
             const uploadPromises = files.map((file) =>
@@ -300,7 +308,7 @@ export function RequirementForm({
     const [existingDocsValue, setExistingDocsValue] = useState<string>('');
 
     const handleExistingDocSelect = (supabaseId: string) => {
-        // setMissingFilesError('');
+        setMissingFilesError('');
         setSelectedFiles((prev) => ({
             ...prev,
             [supabaseId]: unusedDocsNameMap[supabaseId],
@@ -390,44 +398,44 @@ export function RequirementForm({
             <textarea
                 className="w-full h-32 p-2 border rounded-md text-muted-foreground"
                 value={reqText}
-                onChange={handleInputChange}
+                onChange={(e) => setReqText(e.target.value)}
                 placeholder="Enter requirement text"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                    <label
-                        htmlFor="systemName"
-                        className="text-sm font-medium text-muted-foreground block mb-1"
-                    >
-                        System Name - Optional
-                    </label>
-                    <input
-                        id="systemName"
-                        type="text"
-                        className="w-full p-2 border rounded-md text-muted-foreground"
-                        value={systemName}
-                        onChange={(e) => setSystemName(e.target.value)}
-                        placeholder="e.g. Backup Camera"
-                    />
-                </div>
-                <div>
-                    <label
-                        htmlFor="objective"
-                        className="text-sm font-medium text-muted-foreground block mb-1"
-                    >
-                        System Objective - Optional
-                    </label>
-                    <input
-                        id="objective"
-                        type="text"
-                        className="w-full p-2 border rounded-md text-muted-foreground"
-                        value={objective}
-                        onChange={(e) => setObjective(e.target.value)}
-                        placeholder="e.g. Provide rear visibility"
-                    />
-                </div>
-            </div>
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"> */}
+            {/*     <div> */}
+            {/*         <label */}
+            {/*             htmlFor="systemName" */}
+            {/*             className="text-sm font-medium text-muted-foreground block mb-1" */}
+            {/*         > */}
+            {/*             System Name - Optional */}
+            {/*         </label> */}
+            {/*         <input */}
+            {/*             id="systemName" */}
+            {/*             type="text" */}
+            {/*             className="w-full p-2 border rounded-md text-muted-foreground" */}
+            {/*             value={systemName} */}
+            {/*             onChange={(e) => setSystemName(e.target.value)} */}
+            {/*             placeholder="e.g. Backup Camera" */}
+            {/*         /> */}
+            {/*     </div> */}
+            {/*     <div> */}
+            {/*         <label */}
+            {/*             htmlFor="objective" */}
+            {/*             className="text-sm font-medium text-muted-foreground block mb-1" */}
+            {/*         > */}
+            {/*             System Objective - Optional */}
+            {/*         </label> */}
+            {/*         <input */}
+            {/*             id="objective" */}
+            {/*             type="text" */}
+            {/*             className="w-full p-2 border rounded-md text-muted-foreground" */}
+            {/*             value={objective} */}
+            {/*             onChange={(e) => setObjective(e.target.value)} */}
+            {/*             placeholder="e.g. Provide rear visibility" */}
+            {/*         /> */}
+            {/*     </div> */}
+            {/* </div> */}
             <div className="mt-4 space-y-2">
                 <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 sm:gap-0">
                     <div className="flex items-center gap-2">
@@ -439,31 +447,48 @@ export function RequirementForm({
                             labelClassName="hidden md:block"
                         />
                     </div>
-                    <Button
-                        className="gap-2"
-                        onClick={handleAnalyze}
-                        disabled={isAnalysing}
-                    >
-                        {isAnalysing ? (
-                            <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                        ) : (
-                            <Wand className="h-4 w-4" />
-                        )}
-                        Analyze with AI
-                    </Button>
-                </div>
-                {missingReqError && (
-                    // || missingFilesError
-                    <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded">
-                        <CircleAlert className="h-4 w-4" />
-                        <span>
-                            {
-                                missingReqError
-                                // || missingFilesError
-                            }
-                        </span>
+                    <div className="flex gap-2">
+                        <Button
+                            className="gap-2"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                        >
+                            {isSaving ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                            ) : (
+                                <Save className="h-4 w-4" />
+                            )}
+                            {hasUnsavedChanges ? 'Save*' : 'Save'}
+                        </Button>
+                        <Button
+                            className="gap-2"
+                            onClick={handleAnalyze}
+                            disabled={isAnalysing}
+                        >
+                            {isAnalysing ? (
+                                <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                            ) : (
+                                <Wand className="h-4 w-4" />
+                            )}
+                            Analyze with AI
+                        </Button>
                     </div>
-                )}
+                </div>
+
+                {/* {hasUnsavedChanges && (
+                    <div className="flex items-center gap-2 text-amber-500 bg-amber-50 p-2 rounded">
+                        <Info className="h-4 w-4" />
+                        <span>You have unsaved changes</span>
+                    </div>
+                )} */}
+
+                {missingReqError ||
+                    (missingFilesError && (
+                        <div className="flex items-center gap-2 text-red-500 bg-red-50 p-2 rounded">
+                            <CircleAlert className="h-4 w-4" />
+                            <span>{missingReqError || missingFilesError}</span>
+                        </div>
+                    ))}
                 <input
                     type="file"
                     ref={fileInputRef}
@@ -485,7 +510,6 @@ export function RequirementForm({
                     {uploadButtonText}
                 </Button>
 
-                {/* {Object.keys(unusedDocsNameMap).length > 0 && ( */}
                 <div className="mt-2">
                     <Select
                         value={existingDocsValue}
@@ -508,7 +532,6 @@ export function RequirementForm({
                         </SelectContent>
                     </Select>
                 </div>
-                {/* )} */}
 
                 {Object.keys(selectedFiles).length > 0 && (
                     <div className="mt-4">

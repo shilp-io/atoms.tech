@@ -22,6 +22,8 @@ import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
 
 import OrgInvitations from './OrgInvitations.client';
 
+import OrgInvitations from './OrgInvitations.client';
+
 interface OrgDashboardProps {
     organization: Organization | null | undefined;
     orgLoading: boolean;
@@ -47,6 +49,8 @@ export default function OrgDashboard(props: OrgDashboardProps) {
             });
         }
     }, [props.orgId]);
+
+    console.log('projects: ', props.projects);
 
     console.log('projects: ', props.projects);
 
