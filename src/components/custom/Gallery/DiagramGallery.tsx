@@ -31,9 +31,15 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
     const [diagrams, setDiagrams] = useState<DiagramItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedDiagramId, setSelectedDiagramId] = useState<string | null>(null);
-    const [isRenaming, setIsRenaming] = useState(false);
-    const [newName, setNewName] = useState('');
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [renameDialog, setRenameDialog] = useState<{ isOpen: boolean; diagramId: string | null; name: string }>({
+        isOpen: false,
+        diagramId: null,
+        name: ''
+    });
+    const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; diagramId: string | null }>({
+        isOpen: false,
+        diagramId: null
+    });
     const [error, setError] = useState<string | null>(null);
 
     const { user } = useUser();
@@ -96,7 +102,7 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
         window.history.pushState({}, '', newUrl);
     };
 
-    const handleRenameDiagram = async (diagramId: string) => {
+    const handleRenameDiagram = async (diagramId: string, newName: string) => {
         if (!newName.trim()) return;
 
         try {
@@ -117,8 +123,7 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
                     d.id === diagramId ? { ...d, name: newName.trim() } : d
                 )
             );
-            setIsRenaming(false);
-            setNewName('');
+            setRenameDialog({ isOpen: false, diagramId: null, name: '' });
         } catch (err) {
             console.error('Error in handleRenameDiagram:', err);
             setError('An unexpected error occurred');
@@ -140,7 +145,7 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
 
             // Remove from local state
             setDiagrams((prev) => prev.filter((d) => d.id !== diagramId));
-            setIsDeleting(false);
+            setDeleteDialog({ isOpen: false, diagramId: null });
 
             // If the deleted diagram was selected, clear selection
             if (selectedDiagramId === diagramId) {
@@ -225,13 +230,23 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
                                         {diagram.name || 'Untitled Diagram'}
                                     </h3>
                                     <div className="flex gap-1">
-                                        <Dialog open={isRenaming} onOpenChange={setIsRenaming}>
+                                        <Dialog 
+                                            open={renameDialog.isOpen && renameDialog.diagramId === diagram.id} 
+                                            onOpenChange={(open) => {
+                                                if (!open) {
+                                                    setRenameDialog({ isOpen: false, diagramId: null, name: '' });
+                                                }
+                                            }}
+                                        >
                                             <DialogTrigger asChild>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setIsRenaming(true);
-                                                        setNewName(diagram.name || 'Untitled Diagram');
+                                                        setRenameDialog({ 
+                                                            isOpen: true, 
+                                                            diagramId: diagram.id,
+                                                            name: diagram.name || 'Untitled Diagram'
+                                                        });
                                                     }}
                                                     className="p-1 text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400"
                                                 >
@@ -244,20 +259,28 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
                                                 </DialogHeader>
                                                 <div className="py-4">
                                                     <Input
-                                                        value={newName}
-                                                        onChange={(e) => setNewName(e.target.value)}
+                                                        value={renameDialog.name}
+                                                        onChange={(e) => setRenameDialog({
+                                                            ...renameDialog,
+                                                            name: e.target.value
+                                                        })}
                                                         placeholder="Diagram name"
                                                         className="mb-4"
                                                     />
                                                     <div className="flex justify-end gap-2">
                                                         <Button
                                                             variant="outline"
-                                                            onClick={() => setIsRenaming(false)}
+                                                            onClick={() => setRenameDialog({ isOpen: false, diagramId: null, name: '' })}
                                                         >
                                                             Cancel
                                                         </Button>
                                                         <Button
-                                                            onClick={() => handleRenameDiagram(diagram.id)}
+                                                            onClick={() => {
+                                                                if (renameDialog.diagramId) {
+                                                                    handleRenameDiagram(renameDialog.diagramId, renameDialog.name);
+                                                                }
+                                                            }}
+                                                            disabled={!renameDialog.name.trim()}
                                                         >
                                                             Save
                                                         </Button>
@@ -266,12 +289,19 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
                                             </DialogContent>
                                         </Dialog>
 
-                                        <Dialog open={isDeleting} onOpenChange={setIsDeleting}>
+                                        <Dialog 
+                                            open={deleteDialog.isOpen && deleteDialog.diagramId === diagram.id} 
+                                            onOpenChange={(open) => {
+                                                if (!open) {
+                                                    setDeleteDialog({ isOpen: false, diagramId: null });
+                                                }
+                                            }}
+                                        >
                                             <DialogTrigger asChild>
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        setIsDeleting(true);
+                                                        setDeleteDialog({ isOpen: true, diagramId: diagram.id });
                                                     }}
                                                     className="p-1 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
                                                 >
@@ -288,13 +318,17 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
                                                     <div className="flex justify-end gap-2 mt-4">
                                                         <Button
                                                             variant="outline"
-                                                            onClick={() => setIsDeleting(false)}
+                                                            onClick={() => setDeleteDialog({ isOpen: false, diagramId: null })}
                                                         >
                                                             Cancel
                                                         </Button>
                                                         <Button
                                                             variant="destructive"
-                                                            onClick={() => handleDeleteDiagram(diagram.id)}
+                                                            onClick={() => {
+                                                                if (deleteDialog.diagramId) {
+                                                                    handleDeleteDiagram(deleteDialog.diagramId);
+                                                                }
+                                                            }}
                                                         >
                                                             Delete
                                                         </Button>
