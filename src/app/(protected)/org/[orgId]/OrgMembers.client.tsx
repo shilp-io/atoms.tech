@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { MoreHorizontal, Users } from 'lucide-react';
+import { MoreHorizontal, Users, Filter } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 
@@ -26,6 +26,7 @@ import { getOrganizationMembers } from '@/lib/db/client';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { EProjectRole, EUserRoleType } from '@/types';
+import { Input } from '@/components/ui/input';
 
 interface OrgMembersProps {
     className?: string;
@@ -50,6 +51,8 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         EUserRoleType | EProjectRole | null
     >(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [roleFilters, setRoleFilters] = useState<EUserRoleType[]>([]);
 
     const {
         data: members = [],
@@ -92,6 +95,15 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         full_name?: string;
         email?: string;
     }[];
+
+    const filteredMembers = sortedMembers.filter((member) => {
+        const matchesSearch =
+            member.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            member.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesRoles =
+            roleFilters.length === 0 || roleFilters.includes(member.role);
+        return matchesSearch && matchesRoles;
+    });
 
     const getRoleColor = (role: EUserRoleType) => {
         switch (role) {
@@ -254,12 +266,54 @@ export default function OrgMembers({ className }: OrgMembersProps) {
 
     return (
         <Card className={className}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-col gap-4 pb-2">
                 <div>
                     <CardTitle className="text-xl">Members</CardTitle>
                     <CardDescription>
                         Manage organization members
                     </CardDescription>
+                </div>
+                <div className="flex w-full md:w-auto space-x-2 pb-3">
+                    <Input
+                        type="text"
+                        placeholder="Search by name or email"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full md:w-64"
+                    />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="default" className="w-9 h-9">
+                                <Filter className="w-4 h-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {['owner', 'admin', 'member', 'super_admin'].map((role) => (
+                                <DropdownMenuItem
+                                    key={role}
+                                    onSelect={(e) => e.preventDefault()} // Prevent menu from closing
+                                    onClick={() =>
+                                        setRoleFilters((prev) =>
+                                            prev.includes(role as EUserRoleType)
+                                                ? prev.filter((r) => r !== role)
+                                                : [...prev, role as EUserRoleType]
+                                        )
+                                    }
+                                >
+                                    <span
+                                        className={`mr-2 inline-block w-4 h-4 rounded-full ${
+                                            roleFilters.includes(role as EUserRoleType)
+                                                ? 'bg-primary'
+                                                : 'bg-gray-200'
+                                        }`}
+                                    ></span>
+                                    {role === 'super_admin'
+                                        ? 'Super Admin'
+                                        : role.charAt(0).toUpperCase() + role.slice(1)}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </CardHeader>
             <CardContent>
@@ -281,9 +335,9 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                             </div>
                         ))}
                     </div>
-                ) : sortedMembers.length > 0 ? (
+                ) : filteredMembers.length > 0 ? (
                     <div className="space-y-3">
-                        {sortedMembers.map((member) => (
+                        {filteredMembers.map((member) => (
                             <div
                                 key={member.id}
                                 className="flex items-center justify-between"
@@ -309,7 +363,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                         {member.role}
                                     </span>
                                     {isOwner &&
-                                        member.id !== user?.id && ( // Allow removal only if the current user is the owner and not removing themselves
+                                        member.id !== user?.id && (
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button
