@@ -165,11 +165,24 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
 
     // Watch for external diagramId changes
     useEffect(() => {
-        if (externalDiagramId && externalDiagramId !== diagramId) {
+        if (externalDiagramId !== undefined) {
             setDiagramId(externalDiagramId);
-            loadDiagram(externalDiagramId);
+            
+            if (externalDiagramId) {
+                loadDiagram(externalDiagramId);
+            } else {
+                // If null was passed, create a new diagram
+                createNewDiagram();
+            }
         }
     }, [externalDiagramId]);
+
+    // Reset loading state when component unmounts or when diagram ID changes
+    useEffect(() => {
+        return () => {
+            setIsLoading(false);
+        };
+    }, [diagramId]);
 
     // Function to load a diagram by ID
     const loadDiagram = async (id: string) => {
@@ -606,7 +619,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     }
 
     return (
-        <div className="h-[720px] w-[1280px] relative">
+        <div className="h-full w-full min-h-[500px] relative">
             <div className="absolute top-2.5 left-2.5 flex items-center gap-2.5 z-[1000]">
                 <div className="bg-white dark:bg-sidebar px-2.5 py-1 rounded border border-gray-200 dark:border-sidebar-foreground flex items-center gap-2">
                     <span className="font-medium text-sm">{diagramName}</span>

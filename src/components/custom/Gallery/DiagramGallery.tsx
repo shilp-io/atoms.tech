@@ -188,7 +188,7 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
                     <div className="w-6 h-6 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
                 </div>
             ) : diagrams.length === 0 ? (
-                <div className="text-center py-10 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-center py-10 bg-gray-50 dark:bg-sidebar rounded-lg">
                     <p className="text-gray-500 dark:text-gray-400 mb-4">No diagrams found</p>
                     <Button onClick={onNewDiagram}>Create Your First Diagram</Button>
                 </div>
@@ -197,14 +197,14 @@ const DiagramGallery: React.FC<DiagramGalleryProps> = ({
                     {diagrams.map((diagram) => (
                         <div
                             key={diagram.id}
-                            className={`bg-white dark:bg-gray-800 rounded-lg overflow-hidden border ${
+                            className={`bg-white dark:bg-sidebar rounded-lg overflow-hidden border ${
                                 selectedDiagramId === diagram.id
                                     ? 'border-indigo-500 ring-2 ring-indigo-300'
-                                    : 'border-gray-200 dark:border-gray-700'
+                                    : 'border-gray-200 dark:border-sidebar-foreground'
                             } shadow-sm hover:shadow-md transition-all cursor-pointer`}
                         >
                             <div 
-                                className="h-40 bg-gray-100 dark:bg-gray-900 flex items-center justify-center"
+                                className="h-40 bg-gray-100 dark:bg-sidebar flex items-center justify-center"
                                 onClick={() => handleSelectDiagram(diagram.id)}
                             >
                                 {diagram.thumbnail_url ? (

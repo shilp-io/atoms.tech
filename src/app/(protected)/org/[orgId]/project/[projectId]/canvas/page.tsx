@@ -3,7 +3,7 @@
 import { ChevronDown, CircleAlert, Grid, PenTool } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 
 import { useGumloop } from '@/hooks/useGumloop';
 import { Button } from '@/components/ui/button';
@@ -39,14 +39,35 @@ export default function Draw() {
 
     // Gallery/editor state management
     const [activeTab, setActiveTab] = useState<string>('editor');
+    const [lastActiveTab, setLastActiveTab] = useState<string>('editor');
     const [selectedDiagramId, setSelectedDiagramId] = useState<string | null>(null);
     const [shouldRefreshGallery, setShouldRefreshGallery] = useState<boolean>(false);
+    const [instanceKey, setInstanceKey] = useState<string>('initial');
+    const isInitialRender = useRef(true);
 
     // Gumloop state management
     const { startPipeline, getPipelineRun } = useGumloop();
     const [pipelineRunId, setPipelineRunId] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState<string>('');
+
+    // Handle tab changes
+    useEffect(() => {
+        // Skip first render
+        if (isInitialRender.current) {
+            isInitialRender.current = false;
+            return;
+        }
+        
+        // If we're coming from gallery to editor AND we have a selected diagram,
+        // update the instance key to force remount
+        if (lastActiveTab === 'gallery' && activeTab === 'editor' && selectedDiagramId) {
+            setInstanceKey(`diagram-${selectedDiagramId}`);
+        }
+        
+        // Update last active tab
+        setLastActiveTab(activeTab);
+    }, [activeTab, lastActiveTab, selectedDiagramId]);
 
     // Get pipeline run data
     const { data: pipelineResponse } = getPipelineRun(
@@ -179,12 +200,14 @@ export default function Draw() {
     const handleNewDiagram = useCallback(() => {
         setSelectedDiagramId(null);
         setActiveTab('editor');
+        setInstanceKey(`new-diagram-${Date.now()}`);
     }, []);
 
     // Handle selecting a diagram from gallery
     const handleSelectDiagram = useCallback((diagramId: string) => {
         setSelectedDiagramId(diagramId);
         setActiveTab('editor');
+        setInstanceKey(`diagram-${diagramId}`);
     }, []);
 
     // Handle diagram saved callback
@@ -202,12 +225,13 @@ export default function Draw() {
     return (
         <div className="flex flex-col gap-4 p-5 h-full">
             <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-bold">Diagrams</h1>
                 <Tabs 
                     value={activeTab} 
                     onValueChange={setActiveTab} 
                     className="w-auto"
                 >
-                    <TabsList>                        
+                    <TabsList>
                         <TabsTrigger value="editor" className="flex items-center gap-1.5">
                             <PenTool size={16} />
                             Editor
@@ -227,15 +251,16 @@ export default function Draw() {
                     key={shouldRefreshGallery ? 'refresh' : 'default'}
                 />
             ) : (
-                <div className="flex gap-5">
-                    <div className="flex-shrink-0">
+                <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-150px)]">
+                    <div className="flex-grow h-full min-h-[500px] overflow-hidden">
                         <ExcalidrawWithClientOnly 
                             onMounted={handleExcalidrawMount} 
                             diagramId={selectedDiagramId}
                             onDiagramSaved={handleDiagramSaved}
+                            key={instanceKey}
                         />
                     </div>
-                    <div className="flex flex-col gap-2.5 p-5 bg-gray-100 dark:bg-sidebar rounded-lg h-fit">
+                    <div className="flex-shrink-0 flex flex-col gap-2.5 p-5 bg-gray-100 dark:bg-sidebar rounded-lg h-fit">
                         <h3 className="text-xl text-BLACK dark:text-white">
                             Text to Diagram
                         </h3>
