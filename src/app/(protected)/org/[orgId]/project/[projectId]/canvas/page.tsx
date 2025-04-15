@@ -3,11 +3,10 @@
 import { ChevronDown, CircleAlert, Grid, PenTool } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { usePathname, useSearchParams } from 'next/navigation';
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useGumloop } from '@/hooks/useGumloop';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ExcalidrawWithClientOnly = dynamic(
     async () =>
@@ -41,8 +40,11 @@ export default function Draw() {
     // Gallery/editor state management
     const [activeTab, setActiveTab] = useState<string>('editor');
     const [lastActiveTab, setLastActiveTab] = useState<string>('editor');
-    const [selectedDiagramId, setSelectedDiagramId] = useState<string | null>(null);
-    const [shouldRefreshGallery, setShouldRefreshGallery] = useState<boolean>(false);
+    const [selectedDiagramId, setSelectedDiagramId] = useState<string | null>(
+        null,
+    );
+    const [shouldRefreshGallery, setShouldRefreshGallery] =
+        useState<boolean>(false);
     const [instanceKey, setInstanceKey] = useState<string>('initial');
     const isInitialRender = useRef(true);
     // Track generation status with refs to avoid re-renders triggering effects
@@ -81,14 +83,18 @@ export default function Draw() {
             const projectId = window.location.pathname.split('/')[4];
             const projectStorageKey = `lastExcalidrawDiagramId_${projectId}`;
             const lastDiagramId = localStorage.getItem(projectStorageKey);
-            
+
             if (lastDiagramId) {
-                console.log('Found last used diagram ID in localStorage:', lastDiagramId);
+                console.log(
+                    'Found last used diagram ID in localStorage:',
+                    lastDiagramId,
+                );
                 setSelectedDiagramId(lastDiagramId);
                 setInstanceKey(`diagram-${lastDiagramId}`);
-                
+
                 const newUrl = new URL(window.location.href);
-                if (!newUrl.searchParams.has('id')) { // Only set if ID is not already in URL
+                if (!newUrl.searchParams.has('id')) {
+                    // Only set if ID is not already in URL
                     newUrl.searchParams.set('id', lastDiagramId);
                     window.history.pushState({}, '', newUrl);
                 }
@@ -104,13 +110,17 @@ export default function Draw() {
             isInitialRender.current = false;
             return;
         }
-        
+
         // If we're coming from gallery to editor AND we have a selected diagram,
         // update the instance key to force remount
-        if (lastActiveTab === 'gallery' && activeTab === 'editor' && selectedDiagramId) {
+        if (
+            lastActiveTab === 'gallery' &&
+            activeTab === 'editor' &&
+            selectedDiagramId
+        ) {
             setInstanceKey(`diagram-${selectedDiagramId}`);
         }
-        
+
         // Update last active tab
         setLastActiveTab(activeTab);
     }, [activeTab, lastActiveTab, selectedDiagramId]);
@@ -143,7 +153,9 @@ export default function Draw() {
 
         // Safety timeout to ensure the button doesn't get stuck in "generating" state
         const safetyTimer = setTimeout(() => {
-            console.log('Safety timeout triggered - resetting generation state');
+            console.log(
+                'Safety timeout triggered - resetting generation state',
+            );
             setIsGenerating(false);
             setPipelineRunId('');
         }, 15000); // 15 seconds timeout
@@ -175,47 +187,64 @@ export default function Draw() {
             // Clear the safety timeout since we're handling the error
             clearTimeout(safetyTimer);
         }
-    }, [excalidrawApi, prompt, diagramType, startPipeline, isGenerating, pipelineRunId]);
+    }, [
+        excalidrawApi,
+        prompt,
+        diagramType,
+        startPipeline,
+        isGenerating,
+        pipelineRunId,
+    ]);
 
     // Separate auto-generation from manual generation
     // This effect only handles auto-generation from URL parameters
     useEffect(() => {
         const diagramPromptFromUrl = searchParams.get('diagramPrompt');
-        
+
         // Only auto-generate when:
         // 1. We have a URL prompt that hasn't been processed
         // 2. ExcalidrawApi is initialized
         // 3. We're not already generating
         // 4. We have a prompt value set
-        if (diagramPromptFromUrl && 
-            !hasProcessedUrlPrompt.current && 
-            excalidrawApi && 
-            !isGenerating && 
-            !pipelineRunId && 
-            prompt) {
-            
-            console.log('Auto-generating diagram from URL prompt (one-time)...');
+        if (
+            diagramPromptFromUrl &&
+            !hasProcessedUrlPrompt.current &&
+            excalidrawApi &&
+            !isGenerating &&
+            !pipelineRunId &&
+            prompt
+        ) {
+            console.log(
+                'Auto-generating diagram from URL prompt (one-time)...',
+            );
             // Mark that we've handled this URL prompt
             hasProcessedUrlPrompt.current = true;
-            
+
             // Not a manual generation
             isManualGeneration.current = false;
-            
+
             // Call generate
             handleGenerate();
-            
+
             // Remove the diagramPrompt parameter from the URL
             // to prevent regeneration on refresh
             const newUrl = new URL(window.location.href);
             newUrl.searchParams.delete('diagramPrompt');
             window.history.replaceState({}, '', newUrl);
         }
-    }, [excalidrawApi, prompt, searchParams, handleGenerate, isGenerating, pipelineRunId]);
+    }, [
+        excalidrawApi,
+        prompt,
+        searchParams,
+        handleGenerate,
+        isGenerating,
+        pipelineRunId,
+    ]);
 
     // Handle the pipeline response
     useEffect(() => {
         if (!pipelineResponse) return;
-        
+
         switch (pipelineResponse.state) {
             case 'DONE': {
                 console.log('Pipeline response: DONE');
@@ -283,7 +312,7 @@ export default function Draw() {
             case 'FAILED': {
                 console.error('Pipeline failed');
                 setError('Failed to generate diagram');
-                
+
                 // Reset states
                 setPipelineRunId('');
                 setIsGenerating(false);
@@ -291,7 +320,10 @@ export default function Draw() {
             }
             default:
                 // For states like RUNNING or others, just log and don't reset
-                console.log('Pipeline in progress, state:', pipelineResponse.state);
+                console.log(
+                    'Pipeline in progress, state:',
+                    pipelineResponse.state,
+                );
                 return;
         }
     }, [pipelineResponse, excalidrawApi]);
@@ -327,7 +359,7 @@ export default function Draw() {
     }, []);
 
     // Handle diagram saved callback
-    const handleDiagramSaved = useCallback((diagramId: string) => {
+    const handleDiagramSaved = useCallback(() => {
         setShouldRefreshGallery(true);
     }, []);
 
@@ -342,17 +374,23 @@ export default function Draw() {
         <div className="flex flex-col gap-4 p-5 h-full">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">Diagrams</h1>
-                <Tabs 
-                    value={activeTab} 
-                    onValueChange={setActiveTab} 
+                <Tabs
+                    value={activeTab}
+                    onValueChange={setActiveTab}
                     className="w-auto"
                 >
                     <TabsList>
-                        <TabsTrigger value="editor" className="flex items-center gap-1.5">
+                        <TabsTrigger
+                            value="editor"
+                            className="flex items-center gap-1.5"
+                        >
                             <PenTool size={16} />
                             Editor
                         </TabsTrigger>
-                        <TabsTrigger value="gallery" className="flex items-center gap-1.5">
+                        <TabsTrigger
+                            value="gallery"
+                            className="flex items-center gap-1.5"
+                        >
                             <Grid size={16} />
                             Gallery
                         </TabsTrigger>
@@ -361,7 +399,7 @@ export default function Draw() {
             </div>
 
             {activeTab === 'gallery' ? (
-                <DiagramGallery 
+                <DiagramGallery
                     onNewDiagram={handleNewDiagram}
                     onSelectDiagram={handleSelectDiagram}
                     key={shouldRefreshGallery ? 'refresh' : 'default'}
@@ -369,8 +407,8 @@ export default function Draw() {
             ) : (
                 <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-150px)]">
                     <div className="flex-grow h-full min-h-[500px] overflow-hidden">
-                        <ExcalidrawWithClientOnly 
-                            onMounted={handleExcalidrawMount} 
+                        <ExcalidrawWithClientOnly
+                            onMounted={handleExcalidrawMount}
                             diagramId={selectedDiagramId}
                             onDiagramSaved={handleDiagramSaved}
                             key={instanceKey}
@@ -397,7 +435,9 @@ export default function Draw() {
                                 <select
                                     value={diagramType}
                                     onChange={(e) =>
-                                        setDiagramType(e.target.value as DiagramType)
+                                        setDiagramType(
+                                            e.target.value as DiagramType,
+                                        )
                                     }
                                     className="w-full p-2.5 bg-white dark:bg-[#121212] border border-[#454545] appearance-none cursor-pointer"
                                 >

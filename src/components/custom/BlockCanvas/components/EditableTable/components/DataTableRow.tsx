@@ -77,11 +77,11 @@ export function DataTableRow<
     const handleNavigateToDiagram = () => {
         // Use the property name (column header/accessor) for the description.
         // Update 'Description' if your property is named differently.
-        const description = String(item['Description'] || ''); 
+        const description = String(item['Description'] || '');
         router.push(
-            `/org/${orgId}/project/${projectId}/canvas?diagramPrompt=${encodeURIComponent(description)}`
+            `/org/${orgId}/project/${projectId}/canvas?diagramPrompt=${encodeURIComponent(description)}`,
         );
-    }
+    };
 
     return (
         <>

@@ -8,26 +8,36 @@ import type {
     ExcalidrawImperativeAPI,
     ExcalidrawInitialDataState,
 } from '@excalidraw/excalidraw/types';
-import { File, Pencil, Save, Share } from 'lucide-react';
+import { Pencil, Save } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 
 import '@excalidraw/excalidraw/index.css';
 
-import { convertToExcalidrawElements } from '@excalidraw/excalidraw';
-import { exportToSvg } from '@excalidraw/excalidraw';
+import {
+    convertToExcalidrawElements,
+    exportToSvg,
+} from '@excalidraw/excalidraw';
 import { parseMermaidToExcalidraw } from '@excalidraw/mermaid-to-excalidraw';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@/lib/providers/user.provider';
 
 const LAST_DIAGRAM_ID_KEY = 'lastExcalidrawDiagramId';
+
+// Define Supabase JSON-compatible type
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
 
 // Add a type definition for diagram data from Supabase
 interface ExcalidrawDiagramData {
@@ -36,17 +46,17 @@ interface ExcalidrawDiagramData {
     files: BinaryFiles;
 }
 
-// Add interface for the diagram database record
+// Define the type for diagram records in the database
 interface DiagramRecord {
     id: string;
-    diagram_data: ExcalidrawDiagramData;
-    project_id: string;
-    name?: string;
-    thumbnail_url?: string;
-    updated_at?: string;
-    created_by?: string;
-    updated_by?: string;
-    organization_id?: string;
+    diagram_data: Json; // Changed to match Supabase's JSON type
+    updated_at: string;
+    updated_by: string | undefined;
+    created_by: string | undefined;
+    organization_id: string | undefined;
+    project_id: string | undefined;
+    name: string;
+    thumbnail_url: string | null;
 }
 
 // Get the type for NormalizedZoomValue from @excalidraw/excalidraw
@@ -60,12 +70,14 @@ interface ExcalidrawWrapperProps {
     onDiagramSaved?: (id: string) => void;
 }
 
-const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({ 
-    onMounted, 
+const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
+    onMounted,
     diagramId: externalDiagramId,
-    onDiagramSaved 
+    onDiagramSaved,
 }) => {
-    const [diagramId, setDiagramId] = useState<string | null>(externalDiagramId || null);
+    const [diagramId, setDiagramId] = useState<string | null>(
+        externalDiagramId || null,
+    );
     const [diagramName, setDiagramName] = useState<string>('Untitled Diagram');
     const [isAutoSaving, setIsAutoSaving] = useState(false);
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -77,7 +89,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     const [isSaveAsDialogOpen, setIsSaveAsDialogOpen] = useState(false);
     const [newDiagramName, setNewDiagramName] = useState('');
     const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
-    
+
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
         undefined,
     );
@@ -99,6 +111,173 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     const { user } = useUser();
     const organizationId = usePathname().split('/')[2];
     const projectId = usePathname().split('/')[4];
+
+    // Function to generate a thumbnail of the current diagram
+    const generateThumbnail = useCallback(
+        async (
+            elements: readonly ExcalidrawElement[],
+            appState: AppState,
+        ): Promise<string | null> => {
+            try {
+                if (!excalidrawApiRef.current || elements.length === 0) {
+                    return null;
+                }
+
+                // Generate SVG
+                const svgElement = await exportToSvg({
+                    elements,
+                    appState: {
+                        ...appState,
+                        exportWithDarkMode: isDarkMode,
+                        exportBackground: true,
+                        viewBackgroundColor: appState.viewBackgroundColor,
+                    },
+                    files: excalidrawApiRef.current.getFiles(),
+                });
+
+                // Convert SVG to data URL
+                const svgString = new XMLSerializer().serializeToString(
+                    svgElement,
+                );
+                const dataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
+
+                return dataUrl;
+            } catch (error) {
+                console.error('Error generating thumbnail:', error);
+                return null;
+            }
+        },
+        [isDarkMode],
+    );
+
+    // Function to load a diagram by ID
+    const loadDiagram = useCallback(
+        async (id: string) => {
+            setIsLoading(true);
+            setAuthError(null);
+
+            try {
+                // Fetch existing diagram data with authorization check
+                const { data, error } = await supabase
+                    .from('excalidraw_diagrams')
+                    .select('diagram_data, project_id, name')
+                    .eq('id', id)
+                    .single();
+
+                if (error) {
+                    console.error('Error loading diagram:', error);
+                    setAuthError('Error loading diagram: ' + error.message);
+                    return false;
+                }
+
+                if (data && data.diagram_data) {
+                    // Verify diagram belongs to current project
+                    if (data.project_id !== projectId) {
+                        console.error(
+                            'Unauthorized: Diagram does not belong to current project',
+                        );
+                        setAuthError(
+                            'Unauthorized: Diagram does not belong to current project',
+                        );
+                        return false;
+                    }
+
+                    // Set diagram name
+                    setDiagramName(data.name || 'Untitled Diagram');
+
+                    // Parse diagram data from Supabase
+                    const diagramData =
+                        typeof data.diagram_data === 'string'
+                            ? (JSON.parse(
+                                  data.diagram_data,
+                              ) as unknown as ExcalidrawDiagramData)
+                            : (data.diagram_data as unknown as ExcalidrawDiagramData);
+
+                    // Extract the properties we need
+                    const elements = diagramData.elements || [];
+                    const appState = diagramData.appState || {};
+                    const files = diagramData.files || {};
+
+                    const initialDataState: ExcalidrawInitialDataState = {
+                        elements: elements,
+                        appState: {
+                            ...appState,
+                            collaborators: new Map(),
+                            currentItemFontFamily:
+                                appState?.currentItemFontFamily || 1,
+                            viewBackgroundColor:
+                                appState?.viewBackgroundColor || '#ffffff',
+                            zoom: appState?.zoom || {
+                                value: 1 as NormalizedZoomValue,
+                            },
+                            theme: isDarkMode ? 'dark' : 'light',
+                        },
+                        files: files,
+                    };
+                    setInitialData(initialDataState);
+                    lastSavedDataRef.current = {
+                        elements:
+                            initialDataState.elements as readonly ExcalidrawElement[],
+                        appState: initialDataState.appState as AppState,
+                    };
+
+                    setIsExistingDiagram(true);
+                    setIsLoading(false);
+
+                    // Update URL and localStorage
+                    const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
+                    localStorage.setItem(projectStorageKey, id);
+
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('id', id);
+                    window.history.pushState({}, '', newUrl);
+
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('Error loading diagram:', error);
+                setAuthError('Failed to load diagram');
+                return false;
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [projectId, isDarkMode],
+    );
+
+    const createNewDiagram = useCallback(() => {
+        // Generate a UUID v4
+        const newId = uuidv4();
+        setDiagramId(newId);
+        setDiagramName('Untitled Diagram');
+        setInitialData(null);
+        lastSavedDataRef.current = null;
+        setIsExistingDiagram(false);
+
+        const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
+        localStorage.setItem(projectStorageKey, newId);
+
+        // Clear auth error since we're starting with a fresh diagram
+        setAuthError(null);
+
+        // Update URL with the new ID
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set('id', newId);
+        window.history.pushState({}, '', newUrl);
+
+        // Reset the Excalidraw canvas
+        if (excalidrawApiRef.current) {
+            excalidrawApiRef.current.updateScene({
+                elements: [],
+                appState: {
+                    theme: isDarkMode ? 'dark' : 'light',
+                },
+            });
+        }
+
+        setIsLoading(false);
+    }, [projectId, isDarkMode]);
 
     // Function to add mermaid diagram to canvas
     const addMermaidDiagram = async (mermaidSyntax: string) => {
@@ -123,39 +302,6 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         }
     };
 
-    // Function to generate a thumbnail of the current diagram
-    const generateThumbnail = async (
-        elements: readonly ExcalidrawElement[],
-        appState: AppState
-    ): Promise<string | null> => {
-        try {
-            if (!excalidrawApiRef.current || elements.length === 0) {
-                return null;
-            }
-
-            // Generate SVG
-            const svgElement = await exportToSvg({
-                elements,
-                appState: {
-                    ...appState,
-                    exportWithDarkMode: isDarkMode,
-                    exportBackground: true,
-                    viewBackgroundColor: appState.viewBackgroundColor,
-                },
-                files: excalidrawApiRef.current.getFiles(),
-            });
-
-            // Convert SVG to data URL
-            const svgString = new XMLSerializer().serializeToString(svgElement);
-            const dataUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
-            
-            return dataUrl;
-        } catch (error) {
-            console.error('Error generating thumbnail:', error);
-            return null;
-        }
-    };
-
     // Expose the addMermaidDiagram function to parent
     useEffect(() => {
         if (onMounted) {
@@ -167,12 +313,12 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     useEffect(() => {
         if (externalDiagramId !== undefined) {
             setDiagramId(externalDiagramId);
-            
+
             if (externalDiagramId) {
                 loadDiagram(externalDiagramId);
             }
         }
-    }, [externalDiagramId]);
+    }, [externalDiagramId, loadDiagram]);
 
     // Reset loading state when component unmounts or when diagram ID changes
     useEffect(() => {
@@ -181,94 +327,16 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         };
     }, [diagramId]);
 
-    // Function to load a diagram by ID
-    const loadDiagram = async (id: string) => {
-        setIsLoading(true);
-        setAuthError(null);
-        
-        try {
-            // Fetch existing diagram data with authorization check
-            const { data, error } = await supabase
-                .from('excalidraw_diagrams')
-                .select('diagram_data, project_id, name')
-                .eq('id', id)
-                .single();
-
-            if (error) {
-                console.error('Error loading diagram:', error);
-                setAuthError('Error loading diagram: ' + error.message);
-                return false;
-            }
-
-            if (data && data.diagram_data) {
-                // Verify diagram belongs to current project
-                if (data.project_id !== projectId) {
-                    console.error('Unauthorized: Diagram does not belong to current project');
-                    setAuthError('Unauthorized: Diagram does not belong to current project');
-                    return false;
-                }
-
-                // Set diagram name
-                setDiagramName(data.name || 'Untitled Diagram');
-                
-                // Parse diagram data from Supabase
-                const diagramData =
-                    typeof data.diagram_data === 'string'
-                        ? (JSON.parse(
-                              data.diagram_data,
-                          ) as unknown as ExcalidrawDiagramData)
-                        : (data.diagram_data as unknown as ExcalidrawDiagramData);
-
-                // Extract the properties we need
-                const elements = diagramData.elements || [];
-                const appState = diagramData.appState || {};
-                const files = diagramData.files || {};
-
-                const initialDataState: ExcalidrawInitialDataState = {
-                    elements: elements,
-                    appState: {
-                        ...appState,
-                        collaborators: new Map(),
-                        currentItemFontFamily:
-                            appState?.currentItemFontFamily || 1,
-                        viewBackgroundColor:
-                            appState?.viewBackgroundColor || '#ffffff',
-                        zoom: appState?.zoom || {
-                            value: 1 as NormalizedZoomValue,
-                        },
-                        theme: isDarkMode ? 'dark' : 'light',
-                    },
-                    files: files,
-                };
-                setInitialData(initialDataState);
-                lastSavedDataRef.current = {
-                    elements:
-                        initialDataState.elements as readonly ExcalidrawElement[],
-                    appState: initialDataState.appState as AppState,
-                };
-                
-                setIsExistingDiagram(true);
-                setIsLoading(false);
-                
-                // Update URL and localStorage
-                const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
-                localStorage.setItem(projectStorageKey, id);
-                
-                const newUrl = new URL(window.location.href);
-                newUrl.searchParams.set('id', id);
-                window.history.pushState({}, '', newUrl);
-                
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Error loading diagram:', error);
-            setAuthError('Failed to load diagram');
-            return false;
-        } finally {
-            setIsLoading(false);
+    // Update theme in Excalidraw when dark mode changes
+    useEffect(() => {
+        if (excalidrawApiRef.current) {
+            excalidrawApiRef.current.updateScene({
+                appState: {
+                    theme: isDarkMode ? 'dark' : 'light',
+                },
+            });
         }
-    };
+    }, [isDarkMode]);
 
     // Initialize diagram ID and load data on mount
     useEffect(() => {
@@ -280,16 +348,22 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     if (!externalDiagramId) {
                         // Use a project-specific storage key to prevent leakage between projects
                         const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
-                        const urlParams = new URLSearchParams(window.location.search);
+                        const urlParams = new URLSearchParams(
+                            window.location.search,
+                        );
                         const idFromUrl = urlParams.get('id');
-                        const lastDiagramId = localStorage.getItem(projectStorageKey);
+                        const lastDiagramId =
+                            localStorage.getItem(projectStorageKey);
 
                         // Priority: URL param > localStorage > new diagram
                         let id: string | null = null;
 
                         if (idFromUrl && isValidUuid(idFromUrl)) {
                             id = idFromUrl;
-                        } else if (lastDiagramId && isValidUuid(lastDiagramId)) {
+                        } else if (
+                            lastDiagramId &&
+                            isValidUuid(lastDiagramId)
+                        ) {
                             id = lastDiagramId;
                             // Update URL with the stored ID
                             const newUrl = new URL(window.location.href);
@@ -324,51 +398,13 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         };
 
         initializeDiagram();
-    }, [isDarkMode, projectId, externalDiagramId]);
-
-    const createNewDiagram = () => {
-        // Generate a UUID v4
-        const newId = uuidv4();
-        setDiagramId(newId);
-        setDiagramName('Untitled Diagram');
-        setInitialData(null);
-        lastSavedDataRef.current = null;
-        setIsExistingDiagram(false);
-        
-        const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
-        localStorage.setItem(projectStorageKey, newId);
-        
-        // Clear auth error since we're starting with a fresh diagram
-        setAuthError(null);
-
-        // Update URL with the new ID
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.set('id', newId);
-        window.history.pushState({}, '', newUrl);
-        
-        // Reset the Excalidraw canvas
-        if (excalidrawApiRef.current) {
-            excalidrawApiRef.current.updateScene({
-                elements: [],
-                appState: {
-                    theme: isDarkMode ? 'dark' : 'light',
-                },
-            });
-        }
-        
-        setIsLoading(false);
-    };
-
-    // Update theme in Excalidraw when dark mode changes
-    useEffect(() => {
-        if (excalidrawApiRef.current) {
-            excalidrawApiRef.current.updateScene({
-                appState: {
-                    theme: isDarkMode ? 'dark' : 'light',
-                },
-            });
-        }
-    }, [isDarkMode]);
+    }, [
+        isDarkMode,
+        projectId,
+        externalDiagramId,
+        loadDiagram,
+        createNewDiagram,
+    ]);
 
     const hasChanges = useCallback(
         (elements: readonly ExcalidrawElement[], appState: AppState) => {
@@ -408,21 +444,29 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             files: BinaryFiles,
             customDiagramId?: string,
             customName?: string,
-            forceSave = false
+            forceSave = false,
         ) => {
             const idToUse = customDiagramId || diagramId;
             const nameToUse = customName || diagramName;
-            
+
             if (!idToUse || isAutoSaving) return;
 
             // Only prevent saving if it's a new diagram and there are no elements
-            if (!forceSave && !isExistingDiagram && (!elements || elements.length === 0)) {
+            if (
+                !forceSave &&
+                !isExistingDiagram &&
+                (!elements || elements.length === 0)
+            ) {
                 console.log('New diagram with no elements - skipping save');
                 return;
             }
 
             // Check if there are actual changes to save
-            if (!forceSave && !customDiagramId && !hasChanges(elements, appState)) {
+            if (
+                !forceSave &&
+                !customDiagramId &&
+                !hasChanges(elements, appState)
+            ) {
                 console.log('No changes detected - skipping save');
                 return;
             }
@@ -441,13 +485,16 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                 const now = new Date().toISOString();
 
                 // Generate thumbnail
-                const thumbnailUrl = await generateThumbnail(elements, appState);
+                const thumbnailUrl = await generateThumbnail(
+                    elements,
+                    appState,
+                );
 
                 // Serialize the diagram data to ensure it's JSON compatible
                 const serializedData = JSON.stringify(diagramData);
 
                 // Create the record to upsert
-                const diagramRecord: any = {
+                const diagramRecord: DiagramRecord = {
                     id: idToUse,
                     diagram_data: JSON.parse(serializedData),
                     updated_at: now,
@@ -472,16 +519,16 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                 if (customDiagramId) {
                     setDiagramId(customDiagramId);
                     setDiagramName(customName || 'Untitled Diagram');
-                    
+
                     // Update URL with the new ID
                     const newUrl = new URL(window.location.href);
                     newUrl.searchParams.set('id', customDiagramId);
                     window.history.pushState({}, '', newUrl);
-                    
+
                     // Update localStorage
                     const projectStorageKey = `${LAST_DIAGRAM_ID_KEY}_${projectId}`;
                     localStorage.setItem(projectStorageKey, customDiagramId);
-                    
+
                     // Notify parent component if callback is provided
                     if (onDiagramSaved) {
                         onDiagramSaved(customDiagramId);
@@ -518,24 +565,31 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             projectId,
             user?.id,
             onDiagramSaved,
-            isDarkMode
+            generateThumbnail,
         ],
     );
 
     // Handle Save As operation
     const handleSaveAs = async () => {
         if (!excalidrawApiRef.current || !newDiagramName.trim()) return;
-        
+
         const elements = excalidrawApiRef.current.getSceneElements();
         const appState = excalidrawApiRef.current.getAppState();
         const files = excalidrawApiRef.current.getFiles();
-        
+
         // Generate a new UUID
         const newId = uuidv4();
-        
+
         // Save with the new ID and name
-        await saveDiagram(elements, appState, files, newId, newDiagramName.trim(), true);
-        
+        await saveDiagram(
+            elements,
+            appState,
+            files,
+            newId,
+            newDiagramName.trim(),
+            true,
+        );
+
         // Close the dialog
         setIsSaveAsDialogOpen(false);
         setNewDiagramName('');
@@ -546,38 +600,51 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         if (!diagramId || !newDiagramName.trim()) return;
 
         console.log('Renaming diagram:', diagramId, newDiagramName.trim());
-        
+
         try {
             // Store the trimmed name value
             const trimmedName = newDiagramName.trim();
-            
+
             // Get current diagram state
             if (excalidrawApiRef.current) {
                 // Get current diagram data
                 const elements = excalidrawApiRef.current.getSceneElements();
                 const appState = excalidrawApiRef.current.getAppState();
                 const files = excalidrawApiRef.current.getFiles();
-                
+
                 // Use saveDiagram directly with the new name - one operation for everything
-                await saveDiagram(elements, appState, files, undefined, trimmedName, true);
-                console.log('Diagram renamed and saved successfully with name:', trimmedName);
+                await saveDiagram(
+                    elements,
+                    appState,
+                    files,
+                    undefined,
+                    trimmedName,
+                    true,
+                );
+                console.log(
+                    'Diagram renamed and saved successfully with name:',
+                    trimmedName,
+                );
             } else {
                 // Fallback if we can't get excalidraw state
                 const { error } = await supabase
                     .from('excalidraw_diagrams')
                     .update({ name: trimmedName })
                     .eq('id', diagramId);
-                    
+
                 if (error) {
                     console.error('Error renaming diagram:', error);
                     return;
                 }
-                
+
                 // Update local state
                 setDiagramName(trimmedName);
-                console.log('Diagram renamed with name-only update:', trimmedName);
+                console.log(
+                    'Diagram renamed with name-only update:',
+                    trimmedName,
+                );
             }
-            
+
             // Close dialog and reset input
             setIsRenameDialogOpen(false);
             setNewDiagramName('');
@@ -632,9 +699,9 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             <div className="absolute top-2.5 left-2.5 flex items-center gap-2.5 z-[1000]">
                 <div className="bg-white dark:bg-sidebar px-2.5 py-1 rounded border border-gray-200 dark:border-sidebar-foreground flex items-center gap-2">
                     <span className="font-medium text-sm">{diagramName}</span>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                             setNewDiagramName(diagramName);
                             setIsRenameDialogOpen(true);
@@ -644,7 +711,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                         <Pencil size={14} />
                     </Button>
                 </div>
-                
+
                 <Button
                     variant="outline"
                     size="sm"
@@ -654,22 +721,23 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                         setIsSaveAsDialogOpen(true);
                     }}
                 >
-                    <Save size={14} className="mr-1 dark:hover:text-white" /> Save As
+                    <Save size={14} className="mr-1 dark:hover:text-white" />{' '}
+                    Save As
                 </Button>
             </div>
-            
+
             {lastSaved && (
                 <div className="absolute top-2.5 right-2.5 text-xs text-gray-400 dark:text-gray-400 z-[1000]">
                     Last saved: {lastSaved.toLocaleTimeString()}
                 </div>
             )}
-            
+
             {authError && (
                 <div className="absolute top-12 left-2.5 text-sm text-red-600 bg-red-100 bg-opacity-80 p-2 rounded z-[1000]">
                     {authError}
                 </div>
             )}
-            
+
             <Excalidraw
                 onChange={handleChange}
                 initialData={{
@@ -684,9 +752,12 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     excalidrawApiRef.current = api;
                 }}
             />
-            
+
             {/* Rename Dialog */}
-            <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+            <Dialog
+                open={isRenameDialogOpen}
+                onOpenChange={setIsRenameDialogOpen}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Rename Diagram</DialogTitle>
@@ -715,9 +786,12 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     </div>
                 </DialogContent>
             </Dialog>
-            
+
             {/* Save As Dialog */}
-            <Dialog open={isSaveAsDialogOpen} onOpenChange={setIsSaveAsDialogOpen}>
+            <Dialog
+                open={isSaveAsDialogOpen}
+                onOpenChange={setIsSaveAsDialogOpen}
+            >
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Save Diagram As</DialogTitle>

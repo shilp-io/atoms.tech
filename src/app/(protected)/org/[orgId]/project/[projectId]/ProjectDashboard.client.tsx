@@ -1,6 +1,7 @@
 'use client';
 
 // Dynamic import to avoid loading the CreatePanel until needed
+import { PenTool } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -11,7 +12,6 @@ import { useProjectDocuments } from '@/hooks/queries/useDocument';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useProject } from '@/lib/providers/project.provider';
 import { Document } from '@/types/base/documents.types';
-import { PenTool } from 'lucide-react';
 
 // Dynamically import the CreatePanel with no SSR
 const CreatePanel = dynamic(
