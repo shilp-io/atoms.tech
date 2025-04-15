@@ -49,6 +49,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
     const [assignRole, setAssignRole] = useState<
         EUserRoleType | EProjectRole | null
     >(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const {
         data: members = [],
@@ -61,7 +62,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         enabled: params?.orgId ? true : false,
     });
 
-    const { data: projects = [] } = useQuery({
+    const { data: projects = [], refetch: refetchProjects } = useQuery({
         queryKey: ['organization-projects', params?.orgId || ''],
         queryFn: async () => {
             const { data, error } = await supabase
@@ -199,30 +200,27 @@ export default function OrgMembers({ className }: OrgMembersProps) {
 
     const handleAssignToProject = async () => {
         if (!activeMemberId || !selectedProjectId || !assignRole) {
-            toast({
-                title: 'Error',
-                description: 'Please select a project and role.',
-                variant: 'destructive',
-            });
+            setErrorMessage('Please select a project and role.');
             return;
         }
 
         try {
             // Check if the user is already part of the project
-            const { data: existingMember, error: checkError } = await supabase
+            const { data: existingMember, error: checkError, status } = await supabase
                 .from('project_members')
                 .select('id')
                 .eq('user_id', activeMemberId)
                 .eq('project_id', selectedProjectId)
                 .single();
 
-            if (checkError && checkError.code !== 'PGRST116') {
+            if (checkError && status !== 406) {
+                // Only throw an error if it's not a 406 (Not Acceptable)
                 console.error('Error checking project membership:', checkError);
                 throw checkError;
             }
 
             if (existingMember) {
-                alert('User is already a part of this project.');
+                setErrorMessage('User is already a part of this project.');
                 return;
             }
 
@@ -231,6 +229,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                 userId: activeMemberId,
                 projectId: selectedProjectId,
                 role: assignRole as EProjectRole,
+                orgId: params?.orgId || '',
             });
 
             toast({
@@ -245,11 +244,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
             setAssignRole(null);
         } catch (error) {
             console.error('Error assigning user to project:', error);
-            toast({
-                title: 'Error',
-                description: 'Failed to assign user to project.',
-                variant: 'destructive',
-            });
+            setErrorMessage('Failed to assign user to project.');
         }
     };
 
@@ -455,6 +450,11 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                             Assign to Project
                         </h3>
                         <div className="space-y-4">
+                            {errorMessage && (
+                                <div className="text-primary text-sm mb-4">
+                                    {errorMessage}
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-gray-100">
                                     Select Project
@@ -536,6 +536,7 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                     setIsAssignPromptOpen(false);
                                     setSelectedProjectId(null);
                                     setAssignRole(null);
+                                    setErrorMessage(null); // Clear error message on cancel
                                 }}
                             >
                                 Cancel

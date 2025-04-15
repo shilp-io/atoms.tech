@@ -178,6 +178,24 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
         }
     };
 
+    const openFile = async (documentId: string) => {
+        if (!orgId) {
+            setErrorMessage('Organization ID is missing. Cannot open file.');
+            return;
+        }
+
+        const filePath = `${orgId}/${documentId}`;
+        const { data: publicUrl } = supabase.storage
+            .from('external_documents')
+            .getPublicUrl(filePath);
+
+        if (publicUrl) {
+            window.open(publicUrl.publicUrl, '_blank');
+        } else {
+            setErrorMessage('Failed to get file URL. Please try again.');
+        }
+    };
+
     return (
         <div className="flex flex-col md:flex-row md:space-x-6">
             {/* Invite Users Section */}
@@ -225,6 +243,11 @@ export default function OrgInvitations({ orgId }: OrgInvitationsProps) {
                         <CardTitle>Outgoing Invitations</CardTitle>
                     </CardHeader>
                     <CardContent>
+                        {errorMessage && (
+                            <div className="text-red-600 text-sm mb-4">
+                                {errorMessage}
+                            </div>
+                        )}
                         {outgoingLoading ? (
                             <p>Loading outgoing invitations...</p>
                         ) : outgoingInvitations?.length ? (
