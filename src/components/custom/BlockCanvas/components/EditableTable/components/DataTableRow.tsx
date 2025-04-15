@@ -220,7 +220,7 @@ export function DataTableRow<
                                                     .descriptionHistory,
                                             ]
                                                 .reverse()
-                                                .map((historyItem, index) => {
+                                                .map((historyItem) => {
                                                     const date = new Date(
                                                         historyItem.createdAt,
                                                     );
@@ -238,7 +238,9 @@ export function DataTableRow<
 
                                                     return (
                                                         <div
-                                                            key={historyItem.createdAt}
+                                                            key={
+                                                                historyItem.createdAt
+                                                            }
                                                             className="flex mb-6 last:mb-0 relative"
                                                         >
                                                             <div className="mr-4 z-10">
