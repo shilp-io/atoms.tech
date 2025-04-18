@@ -1,11 +1,6 @@
 'use client';
 
-import {
-    ArrowDown,
-    ArrowUp,
-    FileBox,
-    FolderArchive,
-} from 'lucide-react';
+import { ArrowDown, ArrowUp, FileBox, FolderArchive } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';

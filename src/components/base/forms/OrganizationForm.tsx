@@ -171,7 +171,7 @@ export default function OrganizationForm({ onSuccess }: OrganizationFormProps) {
         form.setValue('name', name);
 
         // Generate slug from name (lowercase, replace spaces with hyphens, remove special chars)
-        let slug = name
+        const slug = name
             .toLowerCase()
             .replace(/\s+/g, '-')
             .replace(/[^a-z0-9-]/g, '');

@@ -1,6 +1,15 @@
 'use client';
 
-import { Building, FileBox, FolderArchive, ListTodo, PenTool, Folder, Brain } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import {
+    Brain,
+    Building,
+    FileBox,
+    Folder,
+    FolderArchive,
+    ListTodo,
+    PenTool,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import OrgMembers from '@/app/(protected)/org/[orgId]/OrgMembers.client';
@@ -24,14 +33,13 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
 import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
-import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { ExternalDocument } from '@/types/base/documents.types';
 import { Organization } from '@/types/base/organizations.types';
 import { Project } from '@/types/base/projects.types';
 
-import OrgInvitations from './OrgInvitations.client';
 import ExternalDocsPages from './(files)/externalDocs/ExternalDocs.client';
+import OrgInvitations from './OrgInvitations.client';
 
 interface OrgDashboardProps {
     organization: Organization | null | undefined;
@@ -58,11 +66,17 @@ export default function OrgDashboard(props: OrgDashboardProps) {
     const { mutateAsync: setOrgMemberCount } = useSetOrgMemberCount();
 
     const [isAiAnalysisDialogOpen, setIsAiAnalysisDialogOpen] = useState(false);
-    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-    const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
-    const [selectedRequirementId, setSelectedRequirementId] = useState<string | null>(null);
+    const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+        null,
+    );
+    const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(
+        null,
+    );
+    const [selectedRequirementId, setSelectedRequirementId] = useState<
+        string | null
+    >(null);
 
-    const { data: documents, isLoading: documentsLoading } = useQuery({
+    const { data: documents } = useQuery({
         queryKey: ['documents', selectedProjectId],
         queryFn: async () => {
             if (!selectedProjectId) return [];
@@ -76,7 +90,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
         enabled: !!selectedProjectId,
     });
 
-    const { data: requirements, isLoading: requirementsLoading } = useQuery({
+    const { data: requirements } = useQuery({
         queryKey: ['requirements', selectedDocumentId],
         queryFn: async () => {
             if (!selectedDocumentId) return [];
@@ -91,11 +105,16 @@ export default function OrgDashboard(props: OrgDashboardProps) {
     });
 
     // Fetch external documents to calculate total usage
-    const { data: externalDocuments } = useExternalDocumentsByOrg(props.orgId || '');
+    const { data: externalDocuments } = useExternalDocumentsByOrg(
+        props.orgId || '',
+    );
 
     useEffect(() => {
         if (externalDocuments) {
-            const usage = externalDocuments.reduce((sum, file) => sum + (file.size || 0), 0);
+            const usage = externalDocuments.reduce(
+                (sum, file) => sum + (file.size || 0),
+                0,
+            );
             setTotalUsage(usage);
         }
     }, [externalDocuments]);
@@ -125,24 +144,6 @@ export default function OrgDashboard(props: OrgDashboardProps) {
     const handleStartAnalysis = () => {
         if (selectedProjectId && selectedRequirementId) {
             window.location.href = `/org/${props.orgId}/project/${selectedProjectId}/requirements/${selectedRequirementId}`;
-        }
-    };
-
-    const openFile = async (documentId: string) => {
-        if (!props.orgId) {
-            alert('Organization ID is missing. Cannot open file.');
-            return;
-        }
-
-        const filePath = `${props.orgId}/${documentId}`;
-        const { data: publicUrl } = supabase.storage
-            .from('external_documents')
-            .getPublicUrl(filePath);
-
-        if (publicUrl) {
-            window.open(publicUrl.publicUrl, '_blank');
-        } else {
-            alert('Failed to get file URL. Please try again.');
         }
     };
 
@@ -297,7 +298,11 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                                     className="bg-primary h-2.5 rounded-full"
                                                     style={{
                                                         width: `${Math.min(
-                                                            (totalUsage / (1000 * 1024 * 1024)) * 100, // Convert bytes to MB and calculate percentage
+                                                            (totalUsage /
+                                                                (1000 *
+                                                                    1024 *
+                                                                    1024)) *
+                                                                100, // Convert bytes to MB and calculate percentage
                                                             100,
                                                         )}%`,
                                                     }}
@@ -305,7 +310,12 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span>
-                                                    {(totalUsage / 1024 / 1024).toFixed(2)} MB used
+                                                    {(
+                                                        totalUsage /
+                                                        1024 /
+                                                        1024
+                                                    ).toFixed(2)}{' '}
+                                                    MB used
                                                 </span>
                                                 <span>1000 MB total</span>
                                             </div>
@@ -594,7 +604,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                         <Button variant="outline">
                                             {selectedProjectId
                                                 ? props.projects?.find(
-                                                      (p) => p.id === selectedProjectId,
+                                                      (p) =>
+                                                          p.id ===
+                                                          selectedProjectId,
                                                   )?.name
                                                 : 'Choose a project'}
                                         </Button>
@@ -604,9 +616,13 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                             <DropdownMenuItem
                                                 key={project.id}
                                                 onClick={() => {
-                                                    setSelectedProjectId(project.id);
+                                                    setSelectedProjectId(
+                                                        project.id,
+                                                    );
                                                     setSelectedDocumentId(null); // Reset document selection
-                                                    setSelectedRequirementId(null); // Reset requirement selection
+                                                    setSelectedRequirementId(
+                                                        null,
+                                                    ); // Reset requirement selection
                                                 }}
                                             >
                                                 {project.name}
@@ -624,7 +640,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                         <Button variant="outline">
                                             {selectedDocumentId
                                                 ? documents?.find(
-                                                      (d) => d.id === selectedDocumentId,
+                                                      (d) =>
+                                                          d.id ===
+                                                          selectedDocumentId,
                                                   )?.name
                                                 : 'Choose a document'}
                                         </Button>
@@ -634,8 +652,12 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                             <DropdownMenuItem
                                                 key={document.id}
                                                 onClick={() => {
-                                                    setSelectedDocumentId(document.id);
-                                                    setSelectedRequirementId(null); // Reset requirement selection
+                                                    setSelectedDocumentId(
+                                                        document.id,
+                                                    );
+                                                    setSelectedRequirementId(
+                                                        null,
+                                                    ); // Reset requirement selection
                                                 }}
                                             >
                                                 {document.name}
@@ -653,7 +675,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                         <Button variant="outline">
                                             {selectedRequirementId
                                                 ? requirements?.find(
-                                                      (r) => r.id === selectedRequirementId,
+                                                      (r) =>
+                                                          r.id ===
+                                                          selectedRequirementId,
                                                   )?.name
                                                 : 'Choose a requirement'}
                                         </Button>
@@ -663,7 +687,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                             <DropdownMenuItem
                                                 key={requirement.id}
                                                 onClick={() =>
-                                                    setSelectedRequirementId(requirement.id)
+                                                    setSelectedRequirementId(
+                                                        requirement.id,
+                                                    )
                                                 }
                                             >
                                                 {requirement.name}
@@ -689,7 +715,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                             <Button
                                 className="bg-primary text-white hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/80"
                                 onClick={handleStartAnalysis}
-                                disabled={!selectedProjectId || !selectedRequirementId}
+                                disabled={
+                                    !selectedProjectId || !selectedRequirementId
+                                }
                             >
                                 Start Analysis
                             </Button>

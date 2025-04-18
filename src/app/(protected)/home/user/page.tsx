@@ -2,7 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Building, Folder, Plus, Sparkles, Users, Pin } from 'lucide-react'; // Import Pin icon
+import { Building, Folder, Pin, Plus, Sparkles, Users } from 'lucide-react'; // Import Pin icon
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -64,7 +64,9 @@ export default function UserDashboard() {
     const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
     const [inviteCount, setInviteCount] = useState(0);
     const [pinnedOrgId, setPinnedOrgId] = useState<string | null>(null);
-    const [safeOrganizations, setSafeOrganizations] = useState<Organization[]>([]);
+    const [safeOrganizations, setSafeOrganizations] = useState<Organization[]>(
+        [],
+    );
 
     // Fetch organizations and update safeOrganizations
     useEffect(() => {
@@ -73,7 +75,9 @@ export default function UserDashboard() {
                 (queryClient.getQueryData(
                     queryKeys.organizations.byMembership(user?.id || ''),
                 ) as Organization[]) || [];
-            setSafeOrganizations(Array.isArray(organizations) ? organizations : []);
+            setSafeOrganizations(
+                Array.isArray(organizations) ? organizations : [],
+            );
         };
 
         fetchOrganizations();
@@ -112,13 +116,19 @@ export default function UserDashboard() {
                         // If no pinned organization, set it to personal_organization_id by default
                         const { error: updateError } = await supabase
                             .from('profiles')
-                            .update({ pinned_organization_id: data.personal_organization_id })
+                            .update({
+                                pinned_organization_id:
+                                    data.personal_organization_id,
+                            })
                             .eq('id', user?.id || '');
 
                         if (!updateError) {
                             setPinnedOrgId(data.personal_organization_id);
                         } else {
-                            console.error('Error updating pinned organization:', updateError);
+                            console.error(
+                                'Error updating pinned organization:',
+                                updateError,
+                            );
                         }
                     }
                 }
@@ -135,11 +145,12 @@ export default function UserDashboard() {
         async (orgId: string) => {
             try {
                 // Fetch the current user's profile to get their ID
-                const { data: profileData, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('email', user?.email || '')
-                    .single();
+                const { data: profileData, error: profileError } =
+                    await supabase
+                        .from('profiles')
+                        .select('id')
+                        .eq('email', user?.email || '')
+                        .single();
 
                 if (profileError || !profileData?.id) {
                     console.error('Error fetching user profile:', profileError);
@@ -155,7 +166,10 @@ export default function UserDashboard() {
                 if (!updateError) {
                     setPinnedOrgId(orgId);
                 } else {
-                    console.error('Error updating pinned organization:', updateError);
+                    console.error(
+                        'Error updating pinned organization:',
+                        updateError,
+                    );
                 }
             } catch (err) {
                 console.error('Unexpected error:', err);
@@ -474,7 +488,8 @@ export default function UserDashboard() {
                                                 <div className="flex items-center space-x-2">
                                                     <Pin
                                                         className={`h-5 w-5 cursor-pointer ${
-                                                            org.id === pinnedOrgId
+                                                            org.id ===
+                                                            pinnedOrgId
                                                                 ? 'text-primary'
                                                                 : 'text-muted-foreground'
                                                         }`}
@@ -516,9 +531,9 @@ export default function UserDashboard() {
                                                     org.status === 'active'
                                                         ? 'border-green-500 text-green-500'
                                                         : org.status ===
-                                                          'inactive'
-                                                        ? 'border-gray-500 text-gray-500'
-                                                        : 'border-yellow-500 text-yellow-500'
+                                                            'inactive'
+                                                          ? 'border-gray-500 text-gray-500'
+                                                          : 'border-yellow-500 text-yellow-500'
                                                 }
                                             >
                                                 {org.status}
@@ -528,9 +543,9 @@ export default function UserDashboard() {
                                                 OrganizationType.personal
                                                     ? 'Playground'
                                                     : org.type ===
-                                                      OrganizationType.enterprise
-                                                    ? 'Enterprise'
-                                                    : 'Team'}
+                                                        OrganizationType.enterprise
+                                                      ? 'Enterprise'
+                                                      : 'Team'}
                                             </Badge>
                                         </CardFooter>
                                     </Card>

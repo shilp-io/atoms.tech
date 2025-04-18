@@ -34,8 +34,8 @@ import {
 import { useSignOut } from '@/hooks/useSignOut';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
-import { OrganizationType } from '@/types';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { OrganizationType } from '@/types';
 
 interface MenuItem {
     title: string;
@@ -96,17 +96,6 @@ function AppSidebar() {
         }
     }, [personalOrg, router, enterpriseOrg]);
 
-    const navigateToEnterprise = useCallback(() => {
-        if (primaryEnterpriseOrg) {
-            console.log('Navigating to enterprise:', primaryEnterpriseOrg.id);
-            // Always set preferred_org_id for enterprise org
-            setCookie('preferred_org_id', primaryEnterpriseOrg.id);
-            router.push(`/org/${primaryEnterpriseOrg.id}`);
-        } else {
-            console.log('No enterprise organization found');
-        }
-    }, [primaryEnterpriseOrg, router]);
-
     const navigateToPinnedOrganization = useCallback(async () => {
         try {
             // Fetch the user's profile to get pinned_organization_id and personal_organization_id
@@ -128,19 +117,28 @@ function AppSidebar() {
                     // If no pinned organization, set it to personal_organization_id by default
                     const { error: updateError } = await supabase
                         .from('profiles')
-                        .update({ pinned_organization_id: data.personal_organization_id })
+                        .update({
+                            pinned_organization_id:
+                                data.personal_organization_id,
+                        })
                         .eq('id', user?.id || '');
 
                     if (!updateError) {
                         targetOrgId = data.personal_organization_id;
                     } else {
-                        console.error('Error updating pinned organization:', updateError);
+                        console.error(
+                            'Error updating pinned organization:',
+                            updateError,
+                        );
                         return;
                     }
                 }
 
                 if (targetOrgId) {
-                    console.log('Navigating to pinned organization:', targetOrgId);
+                    console.log(
+                        'Navigating to pinned organization:',
+                        targetOrgId,
+                    );
                     router.push(`/org/${targetOrgId}`);
                 } else {
                     console.log('No pinned or personal organization found');
@@ -202,7 +200,9 @@ function AppSidebar() {
                                         <Button
                                             variant="ghost"
                                             className="w-full justify-start"
-                                            onClick={navigateToPinnedOrganization}
+                                            onClick={
+                                                navigateToPinnedOrganization
+                                            }
                                         >
                                             <LayoutDashboard className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                                             <span className="text-xs font-medium">

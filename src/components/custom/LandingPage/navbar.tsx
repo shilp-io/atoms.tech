@@ -31,7 +31,7 @@ export function Navbar() {
         signIn: false,
         billing: false,
     });
-    const [preferredOrgId, setPreferredOrgId] = useState<string | null>(null);
+    const [, setPreferredOrgId] = useState<string | null>(null);
 
     useEffect(() => {
         const cookieOrgId = cookies.get('preferred_org_id');
@@ -103,20 +103,29 @@ export function Navbar() {
                     // If no pinned organization, set it to personal_organization_id by default
                     const { error: updateError } = await supabase
                         .from('profiles')
-                        .update({ pinned_organization_id: data.personal_organization_id })
+                        .update({
+                            pinned_organization_id:
+                                data.personal_organization_id,
+                        })
                         .eq('id', userProfile?.id || '');
 
                     if (!updateError) {
                         targetOrgId = data.personal_organization_id;
                     } else {
-                        console.error('Error updating pinned organization:', updateError);
+                        console.error(
+                            'Error updating pinned organization:',
+                            updateError,
+                        );
                         setLoading('dashboard', false);
                         return;
                     }
                 }
 
                 if (targetOrgId) {
-                    console.log('Navigating to pinned organization:', targetOrgId);
+                    console.log(
+                        'Navigating to pinned organization:',
+                        targetOrgId,
+                    );
                     router.push(`/org/${targetOrgId}`);
                 } else {
                     console.log('No pinned or personal organization found');
