@@ -37,6 +37,12 @@ import { useDocumentStore } from '@/lib/store/document.store';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
 
+
+const dropAnimationConfig = {
+    ...defaultDropAnimation,
+    dragSourceOpacity: 0.5,
+};
+
 export function BlockCanvas({ documentId }: BlockCanvasProps) {
     const {
         blocks: originalBlocks,
@@ -56,7 +62,6 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     const { currentOrganization } = useOrganization();
     const params = useParams();
 
-    // Define rolePermissions with explicit type
     const rolePermissions: Record<
         'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
         string[]
@@ -98,6 +103,10 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
 
         fetchUserRole();
     }, [params?.projectId, userProfile?.id]);
+          
+    // Use a ref to track if we're in the middle of adding a block
+    // This helps prevent unnecessary re-renders
+    const isAddingBlockRef = React.useRef(false);
 
     // Get org_id and project_id from URL params for new blocks
     const orgId = currentOrganization?.id as string;
@@ -110,6 +119,12 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
 
     // Adapt the blocks to include order property
     useEffect(() => {
+        // Skip re-processing if we're in the middle of adding a block
+        // This prevents unnecessary re-renders
+        if (isAddingBlockRef.current) {
+            return;
+        }
+
         if (originalBlocks) {
             const blocksWithOrder = originalBlocks.map(
                 (block: BlockWithRequirements, index: number) => {
@@ -153,7 +168,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     );
 
     const {
-        handleAddBlock,
+        handleAddBlock: originalHandleAddBlock,
         handleUpdateBlock,
         handleDeleteBlock,
         handleReorder,
@@ -166,6 +181,32 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
         orgId,
         projectId,
     });
+
+    // Wrap handleAddBlock to manage the isAddingBlock flag
+    const handleAddBlock = useCallback(
+        async (type: BlockType, content: Json) => {
+            console.log(
+                'Adding block of type:',
+                type,
+                'with content:',
+                content,
+            );
+            // Set flag to prevent re-renders during block addition
+            isAddingBlockRef.current = true;
+            try {
+                const result = await originalHandleAddBlock(type, content);
+                console.log('Block added successfully:', result);
+                return result;
+            } catch (error) {
+                console.error('Error adding block:', error);
+                throw error;
+            } finally {
+                // Reset flag after block is added
+                isAddingBlockRef.current = false;
+            }
+        },
+        [originalHandleAddBlock],
+    );
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -224,6 +265,11 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             canPerformAction,
         ],
     );
+
+    // Memoize the blocks to prevent unnecessary re-renders
+    const memoizedBlocks = React.useMemo(() => {
+        return enhancedBlocks?.map(renderBlock) || [];
+    }, [enhancedBlocks, renderBlock]);
 
     const handleDragStart = (event: DragStartEvent) => {
         setSelectedBlockId(event.active.id as string);
@@ -304,14 +350,9 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                     }
                     strategy={verticalListSortingStrategy}
                 >
-                    <div className="space-y-4">
-                        {enhancedBlocks?.map((block: BlockWithRequirements) =>
-                            renderBlock(block),
-                        )}
-                    </div>
+                    <div className="space-y-4">{memoizedBlocks}</div>
                 </SortableContext>
             </DndContext>
-
             {canPerformAction('addBlock') && (
                 <div className="flex gap-2 mt-4 z-10 relative">
                     <Button
