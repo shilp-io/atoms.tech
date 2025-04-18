@@ -166,6 +166,12 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
 
                 if (error) {
                     console.error('Error loading diagram:', error);
+                    if (error.message.includes("multiple (or no) rows returned")) {
+                        console.log('No diagram found with ID:', id, '- treating as new diagram');
+                        return false;
+                    }
+                    
+                    //handle it as a real error
                     setAuthError('Error loading diagram: ' + error.message);
                     return false;
                 }

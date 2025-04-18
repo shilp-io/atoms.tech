@@ -347,6 +347,16 @@ export default function Draw() {
 
     // Handle creating a new diagram from gallery
     const handleNewDiagram = useCallback(() => {
+        // Remove "id" from the URL so ExcalidrawWrapper won't try to load it
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('id');
+        window.history.pushState({}, '', newUrl);
+
+        // Also remove the old localStorage key so ExcalidrawWrapper doesn't load it again
+        const projectId = window.location.pathname.split('/')[4];
+        const projectStorageKey = `lastExcalidrawDiagramId_${projectId}`;
+        localStorage.removeItem(projectStorageKey);
+
         setSelectedDiagramId(null);
         setActiveTab('editor');
         setInstanceKey(`new-diagram-${Date.now()}`);
