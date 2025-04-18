@@ -67,6 +67,20 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         (member) => member.id === user?.id && member.role === 'owner',
     );
 
+    const userRole = members.find((member) => member.id === user?.id)?.role;
+
+    const canPerformAction = (action: string) => {
+        const rolePermissions = {
+            owner: ['changeRole', 'removeMember'],
+            admin: ['removeMember'],
+            maintainer: [],
+            editor: [],
+            viewer: [],
+        };
+
+        return rolePermissions[(userRole as keyof typeof rolePermissions) || 'viewer'].includes(action);
+    };
+
     const sortedMembers = [...members].sort((a, b) => {
         if (a.role === 'owner') return -1;
         if (b.role === 'owner') return 1;
@@ -87,6 +101,11 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     });
 
     const handleRemoveMember = async (memberId: string) => {
+        if (!canPerformAction('removeMember')) {
+            setErrorMessage('You do not have permission to remove members.');
+            return;
+        }
+
         if (!user?.id) {
             setErrorMessage('User not authenticated.');
             return;
@@ -113,6 +132,11 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     };
 
     const handleChangeRole = async () => {
+        if (!canPerformAction('changeRole')) {
+            setErrorMessage('You do not have permission to change roles.');
+            return;
+        }
+
         if (!activeMemberId || !selectedRole) {
             setErrorMessage('Invalid operation. Please select a role.');
             return;
@@ -254,7 +278,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                                     >
                                         {member.role}
                                     </span>
-                                    {isOwner && member.role !== 'owner' && (
+                                    {canPerformAction('changeRole') && member.role !== 'owner' && (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button
@@ -278,16 +302,18 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                                                 >
                                                     Change role
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => {
-                                                        handleRemoveMember(
-                                                            member.id,
-                                                        );
-                                                    }}
-                                                    className="text-red-600"
-                                                >
-                                                    Remove
-                                                </DropdownMenuItem>
+                                                {canPerformAction('removeMember') && (
+                                                    <DropdownMenuItem
+                                                        onClick={() => {
+                                                            handleRemoveMember(
+                                                                member.id,
+                                                            );
+                                                        }}
+                                                        className="text-red-600"
+                                                    >
+                                                        Remove
+                                                    </DropdownMenuItem>
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     )}

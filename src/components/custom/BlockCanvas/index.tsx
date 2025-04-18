@@ -42,6 +42,7 @@ import { Block } from '@/types';
 // Unused but might be needed in the future
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Json } from '@/types/base/database.types';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
 
 const dropAnimationConfig = {
     ...defaultDropAnimation,
@@ -67,6 +68,30 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     const { userProfile } = useAuth();
     const { currentOrganization } = useOrganization();
     const params = useParams();
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            const projectId = params?.projectId || ''; // Extract project_id from the URL
+            if (!projectId || !userProfile?.id) return;
+
+            const { data, error } = await supabase
+                .from('project_members')
+                .select('role')
+                .eq('project_id', projectId)
+                .eq('user_id', userProfile.id)
+                .single();
+
+            if (error) {
+                console.error('Error fetching user role:', error);
+                return;
+            }
+
+            setUserRole(data?.role || null);
+        };
+
+        fetchUserRole();
+    }, [params?.projectId, userProfile?.id]);
 
     // Get org_id and project_id from URL params for new blocks
     const orgId = currentOrganization?.id as string;
@@ -147,6 +172,18 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
         }),
     );
 
+    const canPerformAction = (action: string) => {
+        const rolePermissions = {
+            owner: ['editBlock', 'deleteBlock', 'addBlock'],
+            admin: ['editBlock', 'deleteBlock', 'addBlock'],
+            maintainer: ['editBlock', 'deleteBlock', 'addBlock'],
+            editor: ['editBlock', 'deleteBlock', 'addBlock'],
+            viewer: [],
+        };
+
+        return rolePermissions[(userRole || 'viewer') as keyof typeof rolePermissions].includes(action);
+    };
+
     const renderBlock = useCallback(
         (block: BlockWithRequirements) => {
             const isSelected = block.id === selectedBlockId;
@@ -156,13 +193,21 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                     key={block.id}
                     block={block}
                     _isSelected={isSelected}
-                    isEditMode={isEditMode}
+                    isEditMode={isEditMode && canPerformAction('editBlock')}
                     onSelect={() => setSelectedBlockId(block.id)}
-                    onUpdate={(content) => handleUpdateBlock(block.id, content)}
-                    onDelete={() => handleDeleteBlock(block.id)}
+                    onUpdate={(content) =>
+                        canPerformAction('editBlock') &&
+                        handleUpdateBlock(block.id, content)
+                    }
+                    onDelete={() =>
+                        canPerformAction('deleteBlock') &&
+                        handleDeleteBlock(block.id)
+                    }
                     onDoubleClick={() => {
-                        setSelectedBlockId(block.id);
-                        setIsEditMode(true);
+                        if (canPerformAction('editBlock')) {
+                            setSelectedBlockId(block.id);
+                            setIsEditMode(true);
+                        }
                     }}
                 />
             );
@@ -267,48 +312,35 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                         )}
                     </div>
                 </SortableContext>
-
-                <DragOverlay dropAnimation={dropAnimationConfig}>
-                    {activeId && activeBlock ? (
-                        <div className="opacity-100 w-full pointer-events-none">
-                            <SortableBlock
-                                block={activeBlock}
-                                _isSelected={false}
-                                isEditMode={isEditMode}
-                                onSelect={() => {}}
-                                onUpdate={() => {}}
-                                onDelete={() => {}}
-                            />
-                        </div>
-                    ) : null}
-                </DragOverlay>
             </DndContext>
 
-            <div className="flex gap-2 mt-4 z-10 relative">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                        handleAddBlock(BlockType.text, {
-                            format: 'markdown',
-                            text: '',
-                        })
-                    }
-                >
-                    <Type className="h-4 w-4" />
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                        handleAddBlock(BlockType.table, {
-                            requirements: [],
-                        })
-                    }
-                >
-                    <Table className="h-4 w-4" />
-                </Button>
-            </div>
+            {canPerformAction('addBlock') && (
+                <div className="flex gap-2 mt-4 z-10 relative">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                            handleAddBlock(BlockType.text, {
+                                format: 'markdown',
+                                text: '',
+                            })
+                        }
+                    >
+                        <Type className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                            handleAddBlock(BlockType.table, {
+                                requirements: [],
+                            })
+                        }
+                    >
+                        <Table className="h-4 w-4" />
+                    </Button>
+                </div>
+            )}
         </div>
     );
 }

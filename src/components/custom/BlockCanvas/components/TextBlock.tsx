@@ -221,6 +221,12 @@ export const TextBlock: React.FC<BlockProps> = ({
             const newContent = editor.getHTML();
             setLocalContent(newContent);
         },
+        editorProps: {
+            attributes: {
+                class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
+            },
+        },
+        immediatelyRender: false, // Explicitly set to avoid SSR hydration mismatch
     });
 
     // Update editor's editable state when isEditMode changes

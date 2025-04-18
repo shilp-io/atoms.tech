@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Columns, FilterIcon, Plus } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 import {
     EditableColumn,
@@ -58,8 +59,23 @@ export function TableControls<T extends Record<string, unknown>>({
     columns?: EditableColumn<T>[];
 }) {
     const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
+    const { userProfile } = useAuth();
 
-    if (!isVisible) return null;
+    const canPerformAction = (action: string) => {
+        const rolePermissions = {
+            owner: ['addColumn', 'addRow'],
+            admin: ['addColumn', 'addRow'],
+            maintainer: ['addColumn', 'addRow'],
+            editor: ['addRow'],
+            viewer: [],
+        };
+
+        const userRole = (userProfile as { role?: keyof typeof rolePermissions })?.role || 'viewer';
+        console.log('Project ID:', projectId); // Ensure projectId is logged for debugging
+        return rolePermissions[userRole].includes(action);
+    };
+
+    if (!isVisible || !canPerformAction('addRow')) return null;
 
     return (
         <>
@@ -93,7 +109,7 @@ export function TableControls<T extends Record<string, unknown>>({
                                 )}
                             </>
                         )}
-                        {onAddColumn && (
+                        {onAddColumn && canPerformAction('addColumn') && (
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Button

@@ -37,7 +37,7 @@ import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { ExternalDocument } from '@/types/base/documents.types';
 import { Organization } from '@/types/base/organizations.types';
 import { Project } from '@/types/base/projects.types';
-
+import { useUser } from '@/lib/providers/user.provider';
 import ExternalDocsPages from './(files)/externalDocs/ExternalDocs.client';
 import OrgInvitations from './OrgInvitations.client';
 
@@ -79,6 +79,11 @@ export default function OrgDashboard(props: OrgDashboardProps) {
 
     const [isCanvasDialogOpen, setIsCanvasDialogOpen] = useState(false);
     const [selectedCanvasProjectId, setSelectedCanvasProjectId] = useState<string | null>(null);
+    const { user } = useUser();
+
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    console.log(userRole, 'userRole');
 
     const { data: documents } = useQuery({
         queryKey: ['documents', selectedProjectId],
@@ -131,6 +136,26 @@ export default function OrgDashboard(props: OrgDashboardProps) {
         }
     }, [props.orgId, setOrgMemberCount]);
 
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            const { data, error } = await supabase
+                .from('organization_members')
+                .select('role')
+                .eq('organization_id', props.orgId)
+                .eq('user_id', user?.id || '')
+                .single();
+
+            if (error) {
+                console.error('Error fetching user role:', error);
+                return;
+            }
+
+            setUserRole(data?.role || null);
+        };
+
+        fetchUserRole();
+    }, [props.orgId]);
+
     const handleCreateProject = () => {
         setIsCreatePanelOpen(true);
     };
@@ -153,6 +178,45 @@ export default function OrgDashboard(props: OrgDashboardProps) {
         if (selectedProjectId && selectedRequirementId) {
             window.location.href = `/org/${props.orgId}/project/${selectedProjectId}/requirements/${selectedRequirementId}`;
         }
+    };
+
+    const canPerformAction = (action: string) => {
+        const rolePermissions = {
+            owner: [
+                'assignToProject',
+                'changeRole',
+                'uploadDeleteDocs',
+                'invitePeople',
+                'createProjects',
+                'goToCanvas',
+                'goToAiAnalysis',
+                'viewProjects',
+                'viewDocs',
+            ],
+            super_admin: [
+                'assignToProject',
+                'changeRole',
+                'uploadDeleteDocs',
+                'invitePeople',
+                'createProjects',
+                'goToCanvas',
+                'goToAiAnalysis',
+                'viewProjects',
+                'viewDocs',
+            ],
+            admin: [
+                'assignToProject',
+                'uploadDeleteDocs',
+                'createProjects',
+                'goToCanvas',
+                'goToAiAnalysis',
+                'viewProjects',
+                'viewDocs',
+            ],
+            member: ['viewProjects', 'viewDocs'],
+        };
+
+        return rolePermissions[(userRole as keyof typeof rolePermissions) || 'member'].includes(action);
     };
 
     return (
@@ -188,7 +252,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                 <TabsList
                     className={`grid ${
                         props.organization?.type === 'enterprise'
-                            ? 'grid-cols-4'
+                            ? ['admin', 'member'].includes(userRole || '')
+                                ? 'grid-cols-3'
+                                : 'grid-cols-4'
                             : 'grid-cols-3'
                     } w-full`}
                 >
@@ -213,15 +279,16 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                         <FileBox className="h-4 w-4" />
                         <span>Requirements Documents</span>
                     </TabsTrigger>
-                    {props.organization?.type === 'enterprise' && (
-                        <TabsTrigger
-                            value="invitations"
-                            className="flex items-center gap-2"
-                        >
-                            <ListTodo className="h-4 w-4" />
-                            <span>Invitations</span>
-                        </TabsTrigger>
-                    )}
+                    {props.organization?.type === 'enterprise' &&
+                        !['admin', 'member'].includes(userRole || '') && (
+                            <TabsTrigger
+                                value="invitations"
+                                className="flex items-center gap-2"
+                            >
+                                <ListTodo className="h-4 w-4" />
+                                <span>Invitations</span>
+                            </TabsTrigger>
+                        )}
                 </TabsList>
 
                 {/* Organization Overview Tab */}
@@ -453,29 +520,35 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
-                        <Button
-                            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium"
-                            onClick={handleCreateProject}
-                        >
-                            Create Project
-                            <Folder className="w-4 h-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
-                            onClick={handleGoToCanvas}
-                        >
-                            Canvas
-                            <PenTool className="w-4 h-4" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
-                            onClick={handleGoToAiAnalysis}
-                        >
-                            AI Analysis
-                            <Brain className="w-4 h-4" />
-                        </Button>
+                        {canPerformAction('createProjects') && (
+                            <Button
+                                className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium"
+                                onClick={handleCreateProject}
+                            >
+                                Create Project
+                                <Folder className="w-4 h-4" />
+                            </Button>
+                        )}
+                        {canPerformAction('goToCanvas') && (
+                            <Button
+                                variant="outline"
+                                className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
+                                onClick={handleGoToCanvas}
+                            >
+                                Canvas
+                                <PenTool className="w-4 h-4" />
+                            </Button>
+                        )}
+                        {props.organization?.type !== 'personal' && canPerformAction('goToAiAnalysis') && (
+                            <Button
+                                variant="outline"
+                                className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
+                                onClick={handleGoToAiAnalysis}
+                            >
+                                AI Analysis
+                                <Brain className="w-4 h-4" />
+                            </Button>
+                        )}
                         {props.organization?.type === 'personal' && (
                             <Button
                                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:from-blue-600 hover:to-purple-700 transition"
@@ -597,9 +670,10 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                 </TabsContent>
 
                 <TabsContent value="invitations" className="space-y-6">
-                    {props.organization?.type === 'enterprise' ? (
-                        <OrgInvitations orgId={props.orgId} />
-                    ) : null}
+                    {props.organization?.type === 'enterprise' &&
+                        !['admin', 'member'].includes(userRole || '') && (
+                            <OrgInvitations orgId={props.orgId} />
+                        )}
                 </TabsContent>
             </Tabs>
 

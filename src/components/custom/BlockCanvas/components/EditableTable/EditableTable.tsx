@@ -2,9 +2,11 @@
 
 import * as React from 'react';
 import { useCallback, useEffect, useReducer, useState } from 'react';
+import { useParams } from 'next/navigation';
 
 import { Table, TableBody } from '@/components/ui/table';
 import { RequirementAiAnalysis } from '@/types/base/requirements.types';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
 
 import {
     AddRowPlaceholder,
@@ -18,6 +20,8 @@ import {
 import { useTableSort } from './hooks/useTableSort';
 import { TableState, tableReducer } from './reducers/tableReducer';
 import { CellValue, EditableTableProps } from './types';
+import { useUser } from '@/lib/providers/user.provider';
+import { UserRoleType } from '@/types';
 
 export function EditableTable<
     T extends Record<string, CellValue> & {
@@ -73,6 +77,54 @@ export function EditableTable<
 
     // Use the extracted custom hooks
     const { sortedData, handleSort } = useTableSort(data, sortKey);
+    const { user } = useUser();
+    const userId = user?.id || ''; // Ensure userId is extracted correctly
+    const params = useParams();
+    const projectId = params?.projectId || ''; // Ensure projectId is extracted correctly
+
+    if (!projectId) {
+        console.error('Project ID is missing from the URL.');
+    }
+
+    if (!userId) {
+        console.error('User ID is missing from the user context.');
+    }
+
+    // Define rolePermissions before using it
+    const rolePermissions = {
+        owner: ['editTable', 'deleteRow', 'addRow'],
+        admin: ['editTable', 'deleteRow', 'addRow'],
+        maintainer: ['editTable', 'deleteRow', 'addRow'],
+        editor: ['editTable', 'deleteRow', 'addRow'],
+        viewer: [],
+    };
+
+    const getUserRole = async (): Promise<keyof typeof rolePermissions> => {
+        try {
+            const { data, error } = await supabase
+                .from('project_members')
+                .select('role')
+                .eq('user_id', userId) // Use userId from useUser
+                .eq('project_id', Array.isArray(projectId) ? projectId[0] : projectId) // Ensure projectId is a string
+                .single();
+
+            if (error) {
+                console.error('Error fetching user role:', error);
+                return 'viewer'; // Default to 'viewer' if there's an error
+            }
+
+            return data?.role || 'viewer'; // Default to 'viewer' if role is undefined
+        } catch (err) {
+            console.error('Unexpected error fetching user role:', err);
+            return 'viewer';
+        }
+    };
+
+    const canPerformAction = async (action: string) => {
+        const userRole = await getUserRole();
+        console.log('User role:', userRole);
+        return rolePermissions[userRole].includes(action);
+    };
 
     // Effect to init edit data when entering edit mode
     useEffect(() => {
@@ -220,16 +272,25 @@ export function EditableTable<
 
     // Action handlers
     const handleCellChange = useCallback(
-        (itemId: string, accessor: keyof T, value: CellValue) => {
+        async (itemId: string, accessor: keyof T, value: CellValue) => {
+            const canEdit = await canPerformAction('editTable');
+            if (!canEdit) {
+                return; // Do nothing if the user does not have permission
+            }
             dispatch({
                 type: 'SET_CELL_VALUE',
                 payload: { itemId, accessor, value },
             });
         },
-        [],
+        [userId],
     );
 
-    const handleAddNewRow = useCallback(() => {
+    const handleAddNewRow = useCallback(async () => {
+        const canAdd = await canPerformAction('addRow');
+        if (!canAdd) {
+            return; // Do nothing if the user does not have permission
+        }
+
         // Create empty row
         const newItem = columns.reduce((acc, col) => {
             switch (col.type) {
@@ -283,9 +344,14 @@ export function EditableTable<
         dispatch({ type: 'CANCEL_ADD_ROW' });
     }, []);
 
-    const handleDeleteClick = useCallback((item: T) => {
+    const handleDeleteClick = useCallback(async (item: T) => {
+        const canDelete = await canPerformAction('deleteRow');
+        if (!canDelete) {
+            return; // Do nothing if the user does not have permission
+        }
+
         dispatch({ type: 'OPEN_DELETE_CONFIRM', payload: item });
-    }, []);
+    }, [userId]);
 
     const handleDeleteConfirm = useCallback(async () => {
         if (!itemToDelete || !onDelete) return;

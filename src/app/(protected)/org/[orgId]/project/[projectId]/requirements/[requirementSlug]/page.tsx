@@ -19,6 +19,7 @@ import {
     RegulationFile,
     RequirementForm,
 } from './components';
+import LayoutView from '@/components/views/LayoutView';
 
 interface AnalysisData {
     reqId: string;
@@ -36,10 +37,10 @@ interface AnalysisData {
 }
 
 export default function RequirementPage() {
-    const organizationId = usePathname().split('/')[2];
-    const { requirementSlug } = useParams<{
-        requirementSlug: string;
-    }>();
+    const pathname = usePathname();
+    const organizationId = pathname ? pathname.split('/')[2] : '';
+    const params = useParams<{ requirementSlug: string }>();
+    const requirementSlug = params?.requirementSlug || '';
     const { data: requirement, isLoading: isReqLoading } =
         useRequirement(requirementSlug);
     const [reqText, setReqText] = useState<string>('');
@@ -268,6 +269,7 @@ export default function RequirementPage() {
     }
 
     return (
+        <LayoutView>
         <div className="container mx-auto p-6">
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <div className="space-y-4">
@@ -341,5 +343,6 @@ export default function RequirementPage() {
                 </div>
             </div>
         </div>
+        </LayoutView>
     );
 }
