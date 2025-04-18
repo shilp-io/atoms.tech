@@ -515,7 +515,7 @@ export default function Draw() {
                                             e.target.value as DiagramType,
                                         )
                                     }
-                                    className="w-full p-2.5 bg-white dark:bg-[#121212] border border-[#454545] appearance-none cursor-pointer"
+                                    className="w-full p-2.5 bg-white dark:bg-secondary rounded-none border appearance-none cursor-pointer"
                                 >
                                     <option value="flowchart">Flowchart</option>
                                     <option value="sequence">Sequence</option>
