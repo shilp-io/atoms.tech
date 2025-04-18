@@ -284,7 +284,7 @@ export function EditableTable<
                 payload: { itemId, accessor, value },
             });
         },
-        [userId],
+        [canPerformAction], // Added `canPerformAction` to the dependency array
     );
 
     const handleAddNewRow = useCallback(async () => {
@@ -324,7 +324,7 @@ export function EditableTable<
             payload: { ...editingData, new: newItem },
         });
         dispatch({ type: 'START_ADD_ROW' });
-    }, [columns, editingData]);
+    }, [canPerformAction, columns, editingData]);
 
     const handleSaveNewRow = useCallback(async () => {
         const newItem = editingData['new'];
@@ -355,7 +355,7 @@ export function EditableTable<
 
             dispatch({ type: 'OPEN_DELETE_CONFIRM', payload: item });
         },
-        [userId],
+        [canPerformAction], // Added `canPerformAction` to the dependency array
     );
 
     const handleDeleteConfirm = useCallback(async () => {

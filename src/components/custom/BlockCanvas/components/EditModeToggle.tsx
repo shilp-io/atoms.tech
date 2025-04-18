@@ -10,37 +10,41 @@ import { useLayout } from '@/lib/providers/layout.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 
-const getUserRole = async (userId: string): Promise<string> => {
+function useUserRole(userId: string) {
     const params = useParams();
-    const projectId = params?.projectId || ''; // Ensure projectId is extracted correctly
+    const projectId = params?.projectId || '';
 
     if (!projectId) {
         console.error('Project ID is missing from the URL.');
-        return 'viewer'; // Default to 'viewer' if projectId is missing
+        return async () => 'viewer';
     }
 
-    try {
-        const { data, error } = await supabase
-            .from('project_members')
-            .select('role')
-            .eq('user_id', userId)
-            .eq(
-                'project_id',
-                Array.isArray(projectId) ? projectId[0] : projectId,
-            ) // Ensure projectId is a string
-            .single();
+    const getUserRole = async (): Promise<string> => {
+        try {
+            const { data, error } = await supabase
+                .from('project_members')
+                .select('role')
+                .eq('user_id', userId)
+                .eq(
+                    'project_id',
+                    Array.isArray(projectId) ? projectId[0] : projectId,
+                )
+                .single();
 
-        if (error) {
-            console.error('Error fetching user role!:', error);
-            return 'viewer'; // Default to 'viewer' if there's an error
+            if (error) {
+                console.error('Error fetching user role:', error);
+                return 'viewer';
+            }
+
+            return data?.role || 'viewer';
+        } catch (err) {
+            console.error('Unexpected error fetching user role:', err);
+            return 'viewer';
         }
+    };
 
-        return data?.role || 'viewer'; // Default to 'viewer' if role is undefined
-    } catch (err) {
-        console.error('Unexpected error fetching user role!:', err);
-        return 'viewer';
-    }
-};
+    return () => getUserRole();
+}
 
 // Floating action button version
 export const EditModeFloatingToggle = memo(() => {
@@ -48,8 +52,10 @@ export const EditModeFloatingToggle = memo(() => {
     const { user } = useUser(); // Fetch user using useUser()
     const userId = user?.id || ''; // Ensure userId is extracted correctly
 
+    const getUserRole = useUserRole(userId);
+
     const canPerformAction = async () => {
-        const userRole = await getUserRole(userId);
+        const userRole = await getUserRole();
         return ['owner', 'admin', 'maintainer'].includes(userRole);
     };
 
@@ -86,8 +92,10 @@ export const EditModeToggle = memo(() => {
     const { user } = useUser(); // Fetch user using useUser()
     const userId = user?.id || ''; // Ensure userId is extracted correctly
 
+    const getUserRole = useUserRole(userId);
+
     const canPerformAction = async () => {
-        const userRole = await getUserRole(userId);
+        const userRole = await getUserRole();
         return ['owner', 'admin', 'maintainer'].includes(userRole);
     };
 

@@ -7,7 +7,6 @@ import {
     KeyboardSensor,
     PointerSensor,
     closestCenter,
-    defaultDropAnimation,
     useSensor,
     useSensors,
 } from '@dnd-kit/core';
@@ -39,11 +38,6 @@ import { useDocumentStore } from '@/lib/store/document.store';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
 
-const dropAnimationConfig = {
-    ...defaultDropAnimation,
-    dragSourceOpacity: 0.5,
-};
-
 export function BlockCanvas({ documentId }: BlockCanvasProps) {
     const {
         blocks: originalBlocks,
@@ -73,7 +67,10 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             const { data, error } = await supabase
                 .from('project_members')
                 .select('role')
-                .eq('project_id', projectId)
+                .eq(
+                    'project_id',
+                    Array.isArray(projectId) ? projectId[0] : projectId,
+                )
                 .eq('user_id', userProfile.id)
                 .single();
 
@@ -215,6 +212,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             handleUpdateBlock,
             handleDeleteBlock,
             setIsEditMode,
+            canPerformAction,
         ],
     );
 
@@ -281,11 +279,6 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             </div>
         );
     }
-
-    // Get active block with order property
-    const activeBlock = enhancedBlocks?.find(
-        (block: BlockWithRequirements) => block.id === activeId,
-    );
 
     return (
         <div className="relative min-h-[500px] space-y-4">

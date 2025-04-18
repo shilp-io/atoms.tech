@@ -155,7 +155,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
         };
 
         fetchUserRole();
-    }, [props.orgId]);
+    }, [props.orgId, user?.id]);
 
     const handleCreateProject = () => {
         setIsCreatePanelOpen(true);

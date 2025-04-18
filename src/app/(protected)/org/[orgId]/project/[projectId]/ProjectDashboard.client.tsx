@@ -46,10 +46,6 @@ export default function ProjectPage() {
     const { project } = useProject();
     const [activeTab, setActiveTab] = useState('overview');
     const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState<'created_at' | 'updated_at' | null>(
-        null,
-    );
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [showCreateDocumentPanel, setShowCreateDocumentPanel] =
         useState(false);
     const [documentToDelete, setDocumentToDelete] = useState<Document | null>(
@@ -181,12 +177,7 @@ export default function ProjectPage() {
     };
 
     const sortedDocuments = [...(documents || [])].sort((a, b) => {
-        if (!sortBy) return 0;
-        const dateA =
-            sortBy && a[sortBy] ? new Date(a[sortBy] as string).getTime() : 0;
-        const dateB =
-            sortBy && b[sortBy] ? new Date(b[sortBy] as string).getTime() : 0;
-        return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+        return 0;
     });
 
     const filteredDocuments = sortedDocuments.filter((doc) =>
