@@ -4,7 +4,6 @@ import { RequirementTest, TestReq } from '@/components/custom/TestBed/types';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Database } from '@/types/base/database.types';
-import { Requirement } from '@/types/base/requirements.types';
 
 /**
  * Hook to fetch test cases by project ID
@@ -95,7 +94,7 @@ export function useLinkedRequirementsCount(testId: string) {
                 .select('*', { count: 'exact' })
                 .eq('test_id', testId);
 
-            if (error) throw error;
+            if (error || !data) throw error;
             return count || 0;
         },
         enabled: !!testId,
@@ -263,6 +262,7 @@ export function useCreateTestReq() {
             method: Database['public']['Enums']['test_method'];
             is_active: boolean;
             project_id: string;
+            test_id?: string;
         }) => {
             // Ensure required fields are present
             if (!newTestReq.title) {
@@ -281,6 +281,7 @@ export function useCreateTestReq() {
                     typeof newTestReq.is_active === 'boolean'
                         ? newTestReq.is_active
                         : true,
+                test_id: newTestReq.test_id || null,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             };

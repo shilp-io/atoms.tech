@@ -1,7 +1,3 @@
-import {
-    PaginationParams,
-    TestReqFilter,
-} from '@/components/custom/TestBed/types';
 import { QueryFilters } from '@/types/base/filters.types';
 
 /**

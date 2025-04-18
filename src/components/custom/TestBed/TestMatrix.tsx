@@ -11,15 +11,13 @@ import {
 } from '@/components/custom/TestBed/useTestReq';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import {
     useProjectRequirements,
     useRequirementsByIds,
@@ -27,6 +25,8 @@ import {
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Database } from '@/types/base/database.types';
+
+import { TestStatusIndicator } from './TestStatusIndicator';
 
 interface TraceabilityMatrixViewProps {
     projectId: string;
@@ -105,7 +105,7 @@ export default function TraceabilityMatrixView({
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error || !data) throw error;
 
             // Refetch requirement tests to update the UI
             await queryClient.invalidateQueries({
@@ -116,15 +116,15 @@ export default function TraceabilityMatrixView({
         }
     };
 
-    // Function to determine the status of a requirement-test relationship
-    const getRelationshipStatus = (reqId: string, testId: string) => {
-        const relationship = requirementTests.find(
-            (rt) => rt.requirementId === reqId && rt.testCaseId === testId,
-        );
+    // // Function to determine the status of a requirement-test relationship
+    // const getRelationshipStatus = (reqId: string, testId: string) => {
+    //     const relationship = requirementTests.find(
+    //         (rt) => rt.requirementId === reqId && rt.testCaseId === testId,
+    //     );
 
-        if (!relationship) return null;
-        return relationship.status;
-    };
+    //     if (!relationship) return null;
+    //     return relationship.status;
+    // };
 
     // Handle creating a new test and linking to requirement
     const handleCreateTest = async () => {
@@ -185,7 +185,7 @@ export default function TraceabilityMatrixView({
     }
 
     return (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
+        <div className="bg-background">
             <div className="p-4 flex justify-between items-center border-b">
                 <h2 className="text-lg font-medium">
                     Requirements Traceability Matrix
@@ -211,45 +211,42 @@ export default function TraceabilityMatrixView({
                 </div>
             ) : (
                 <div className="overflow-x-auto">
-                    <table className="w-full border-collapse">
+                    <table className="w-full border-collapse [&_tr>*:not(:last-child)]:border-r">
                         <thead>
-                            <tr className="border-y bg-gray-50">
-                                <th className="py-4 px-4 text-left font-medium border-r">
+                            <tr className="bg-background">
+                                <th className="py-4 px-4 text-center font-medium">
                                     Req ID
                                 </th>
-                                <th className="py-4 px-4 text-left font-medium border-r">
+                                <th className="py-4 px-4 text-center font-medium">
                                     Type
                                 </th>
-                                <th className="py-4 px-4 text-left font-medium border-r">
+                                <th className="py-4 px-4 text-center font-medium">
                                     Title
                                 </th>
                                 {testCases.map((testCase) => (
                                     <th
                                         key={testCase.id}
-                                        className="py-4 px-4 text-center font-medium border-r min-w-[120px]"
+                                        className="py-4 px-4 text-center font-medium min-w-[120px]"
                                     >
                                         {testCase.test_id || 'NULL-ID'}
                                     </th>
                                 ))}
-                                <th className="py-4 px-4 text-center font-medium">
-                                    Actions
-                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {requirements.map((requirement) => (
                                 <tr
                                     key={requirement.id}
-                                    className="border-t hover:bg-gray-50"
+                                    className="hover:bg-muted"
                                 >
-                                    <td className="py-4 px-4 border-r">
+                                    <td className="py-4 px-4">
                                         {requirement.external_id ||
                                             requirement.id.substring(0, 8)}
                                     </td>
-                                    <td className="py-4 px-4 border-r">
+                                    <td className="py-4 px-4">
                                         {requirement.level}
                                     </td>
-                                    <td className="py-4 px-4 border-r">
+                                    <td className="py-4 px-4">
                                         {requirement.name}
                                     </td>
                                     {testCases.map((testCase) => {
@@ -261,7 +258,7 @@ export default function TraceabilityMatrixView({
                                                     rt.testCaseId ===
                                                         testCase.id,
                                             );
-                                        const status = relationship?.status;
+                                        // const status = relationship?.status;
                                         const executionStatus =
                                             relationship?.execution_status as
                                                 | ExecutionStatus
@@ -270,16 +267,16 @@ export default function TraceabilityMatrixView({
                                         return (
                                             <td
                                                 key={`${requirement.id}-${testCase.id}`}
-                                                className="py-4 px-4 text-center border-r"
+                                                className="py-4 px-4 text-center"
                                             >
                                                 {relationship ? (
-                                                    <Select
-                                                        value={
+                                                    <TestStatusIndicator
+                                                        status={
                                                             executionStatus ||
                                                             'not_executed'
                                                         }
-                                                        onValueChange={(
-                                                            value: ExecutionStatus,
+                                                        onStatusChange={(
+                                                            value,
                                                         ) =>
                                                             updateTestStatus(
                                                                 requirement.id,
@@ -287,63 +284,7 @@ export default function TraceabilityMatrixView({
                                                                 value,
                                                             )
                                                         }
-                                                    >
-                                                        <SelectTrigger className="w-[130px] mx-auto">
-                                                            <SelectValue>
-                                                                <div className="flex items-center space-x-2">
-                                                                    <div
-                                                                        className={`w-3 h-3 rounded-full ${
-                                                                            executionStatus ===
-                                                                            'passed'
-                                                                                ? 'bg-green-500'
-                                                                                : executionStatus ===
-                                                                                    'failed'
-                                                                                  ? 'bg-red-500'
-                                                                                  : executionStatus ===
-                                                                                      'blocked'
-                                                                                    ? 'bg-yellow-500'
-                                                                                    : executionStatus ===
-                                                                                        'in_progress'
-                                                                                      ? 'bg-blue-500'
-                                                                                      : executionStatus ===
-                                                                                          'skipped'
-                                                                                        ? 'bg-gray-400'
-                                                                                        : 'bg-gray-300'
-                                                                        }`}
-                                                                    />
-                                                                    <span className="capitalize">
-                                                                        {(
-                                                                            executionStatus ||
-                                                                            'not_executed'
-                                                                        ).replace(
-                                                                            '_',
-                                                                            ' ',
-                                                                        )}
-                                                                    </span>
-                                                                </div>
-                                                            </SelectValue>
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="not_executed">
-                                                                Not Executed
-                                                            </SelectItem>
-                                                            <SelectItem value="in_progress">
-                                                                In Progress
-                                                            </SelectItem>
-                                                            <SelectItem value="passed">
-                                                                Passed
-                                                            </SelectItem>
-                                                            <SelectItem value="failed">
-                                                                Failed
-                                                            </SelectItem>
-                                                            <SelectItem value="blocked">
-                                                                Blocked
-                                                            </SelectItem>
-                                                            <SelectItem value="skipped">
-                                                                Skipped
-                                                            </SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
+                                                    />
                                                 ) : (
                                                     <button
                                                         onClick={() =>
@@ -360,20 +301,6 @@ export default function TraceabilityMatrixView({
                                             </td>
                                         );
                                     })}
-                                    <td className="py-4 px-4 text-center">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => {
-                                                setCurrentRequirementId(
-                                                    requirement.id,
-                                                );
-                                                setShowAddTestModal(true);
-                                            }}
-                                        >
-                                            Add Test
-                                        </Button>
-                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -387,10 +314,10 @@ export default function TraceabilityMatrixView({
                 onOpenChange={setShowAddRequirementModal}
             >
                 <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Select Requirements</DialogTitle>
+                    </DialogHeader>
                     <div className="p-6">
-                        <h3 className="text-lg font-medium mb-4">
-                            Select Requirements
-                        </h3>
                         <div className="max-h-96 overflow-y-auto mb-4">
                             {allRequirements?.map((req) => (
                                 <div

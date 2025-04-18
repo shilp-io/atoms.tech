@@ -1,9 +1,10 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import debounce from 'lodash/debounce';
+import { useCallback, useState, useMemo } from 'react';
+import { Search } from 'lucide-react';
 
-import Pagination from '@/components/custom/TestBed/pagination';
 import { TestReq } from '@/components/custom/TestBed/types';
 import {
     useLinkedRequirementsCount,
@@ -11,9 +12,12 @@ import {
 } from '@/components/custom/TestBed/useTestReq';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Database } from '@/types/base/database.types';
+
+import { DataTable, columns } from './TanstackTestTable';
 
 interface TestCaseViewProps {
     projectId: string;
@@ -27,80 +31,60 @@ type TestData = {
     method: Database['public']['Enums']['test_method'];
     priority: Database['public']['Enums']['test_priority'];
     status: Database['public']['Enums']['test_status'];
+    test_id?: string | null;
 };
 
-interface TestCaseRowProps {
-    testCase: TestReq;
-    getStatusStyle: (status: string) => string;
-    getPriorityStyle: (priority: string) => string;
-    onEdit: (testCase: TestReq) => void;
-    onDelete: (id: string) => void;
-}
+// Separate search input component to prevent main table re-renders
+function SearchInput({ onSearch }: { onSearch: (value: string) => void }) {
+    const [value, setValue] = useState('');
 
-function TestCaseRow({
-    testCase,
-    getStatusStyle,
-    getPriorityStyle,
-    onEdit,
-    onDelete,
-}: TestCaseRowProps) {
-    const { data: linkedCount = 0 } = useLinkedRequirementsCount(
-        testCase.id || '',
+    const debouncedSearch = useMemo(
+        () => debounce((searchValue: string) => {
+            onSearch(searchValue);
+        }, 300),
+        [onSearch]
     );
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = e.target.value;
+        setValue(newValue);
+        debouncedSearch(newValue);
+    };
+
     return (
-        <tr className="border-t hover:bg-gray-50 cursor-pointer">
-            <td className="py-4 px-4">{testCase.id?.substring(0, 6) || ''}</td>
-            <td className="py-4 px-4">{testCase.title}</td>
-            <td className="py-4 px-4">{testCase.test_type}</td>
-            <td className="py-4 px-4">{testCase.method}</td>
-            <td className="py-4 px-4">
-                <span
-                    className={`px-2 py-1 rounded text-xs ${getStatusStyle(testCase.status)}`}
-                >
-                    {testCase.status.replace('_', ' ')}
-                </span>
-            </td>
-            <td className="py-4 px-4">
-                <span className={getPriorityStyle(testCase.priority)}>
-                    {testCase.priority}
-                </span>
-            </td>
-            <td className="py-4 px-4">
-                {testCase.result === 'Pass' && (
-                    <span className="text-green-600">Pass</span>
-                )}
-                {testCase.result === 'Fail' && (
-                    <span className="text-red-600">Fail</span>
-                )}
-                {testCase.result === 'Not Run' && <span>Not Run</span>}
-            </td>
-            <td className="py-4 px-4">{linkedCount}</td>
-            <td className="py-4 px-4 text-center">
-                <div className="flex space-x-2 justify-center">
-                    <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(testCase);
-                        }}
-                    >
-                        Edit
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onDelete(testCase.id || '');
-                        }}
-                    >
-                        Delete
-                    </Button>
-                </div>
-            </td>
-        </tr>
+        <div className="relative w-72">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+                placeholder="Search test cases..."
+                value={value}
+                onChange={handleChange}
+                className="pl-9"
+            />
+        </div>
+    );
+}
+
+// Separate pagination size selector to prevent re-renders
+function PageSizeSelector({ pageSize, onPageSizeChange, totalItems }: { 
+    pageSize: number, 
+    onPageSizeChange: (size: number) => void,
+    totalItems: number 
+}) {
+    return (
+        <select
+            className="p-2 border rounded-md bg-background"
+            value={pageSize === totalItems ? 'all' : pageSize}
+            onChange={(e) => {
+                const value = e.target.value === 'all' ? totalItems : parseInt(e.target.value, 10);
+                onPageSizeChange(value);
+            }}
+        >
+            <option value="5">5 per page</option>
+            <option value="10">10 per page</option>
+            <option value="20">20 per page</option>
+            <option value="50">50 per page</option>
+            <option value="all">All</option>
+        </select>
     );
 }
 
@@ -116,6 +100,17 @@ export default function TestCaseView({ projectId }: TestCaseViewProps) {
     });
 
     const queryClient = useQueryClient();
+
+    const handleSearch = useCallback((value: string) => {
+        setFilters(prev => ({
+            ...prev,
+            search: value
+        }));
+    }, []);
+
+    const handlePageSizeChange = useCallback((newPageSize: number) => {
+        setPageSize(newPageSize);
+    }, []);
 
     // Fetch test cases with pagination
     const {
@@ -191,6 +186,7 @@ export default function TestCaseView({ projectId }: TestCaseViewProps) {
                     method: editingTest.method,
                     status: editingTest.status,
                     priority: editingTest.priority,
+                    test_id: editingTest.test_id,
                 },
             });
 
@@ -248,6 +244,7 @@ export default function TestCaseView({ projectId }: TestCaseViewProps) {
             method: testCase.method,
             status: testCase.status,
             priority: testCase.priority,
+            test_id: testCase.test_id,
         });
         setShowEditModal(true);
     };
@@ -269,107 +266,35 @@ export default function TestCaseView({ projectId }: TestCaseViewProps) {
     const totalPages = Math.ceil(totalItems / pageSize);
 
     return (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-            <div className="p-4 border-b flex justify-between items-center">
-                <div className="text-lg font-medium">
+        <div className="bg-background">
+            <div className="p-4 border-b flex items-center space-x-4">
+                <div className="text-lg font-medium flex-shrink-0">
                     Test Cases ({totalItems})
                 </div>
-                <div className="flex items-center space-x-4">
-                    <div>
-                        <select
-                            className="p-2 border rounded"
-                            value={pageSize}
-                            onChange={(e) =>
-                                setPageSize(Number(e.target.value))
-                            }
-                        >
-                            <option value={5}>5 per page</option>
-                            <option value={10}>10 per page</option>
-                            <option value={20}>20 per page</option>
-                        </select>
-                    </div>
-                    <div>
-                        <input
-                            type="text"
-                            placeholder="Search test cases..."
-                            className="p-2 border rounded w-64"
-                            value={filters.search}
-                            onChange={(e) =>
-                                setFilters({
-                                    ...filters,
-                                    search: e.target.value,
-                                })
-                            }
-                        />
-                    </div>
+                <SearchInput onSearch={handleSearch} />
+                <div className="flex-shrink-0">
+                    <PageSizeSelector 
+                        pageSize={pageSize} 
+                        onPageSizeChange={handlePageSizeChange}
+                        totalItems={totalItems}
+                    />
                 </div>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-y bg-gray-50">
-                            <th className="py-4 px-4 text-left font-medium">
-                                Test ID
-                            </th>
-                            <th className="py-4 px-4 text-left font-medium">
-                                Title
-                            </th>
-                            <th className="py-4 px-4 text-left font-medium">
-                                Type
-                            </th>
-                            <th className="py-4 px-4 text-left font-medium">
-                                Method
-                            </th>
-                            <th className="py-4 px-4 text-left font-medium">
-                                Status
-                            </th>
-                            <th className="py-4 px-4 text-left font-medium">
-                                Priority
-                            </th>
-                            <th className="py-4 px-4 text-left font-medium">
-                                Result
-                            </th>
-                            <th className="py-4 px-4 text-left font-medium">
-                                Linked Reqs
-                            </th>
-                            <th className="py-4 px-4 text-center font-medium">
-                                Actions
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {testCases.map((testCase) => (
-                            <TestCaseRow
-                                key={testCase.id}
-                                testCase={testCase}
-                                getStatusStyle={getStatusStyle}
-                                getPriorityStyle={getPriorityStyle}
-                                onEdit={handleEdit}
-                                onDelete={handleDeleteTest}
-                            />
-                        ))}
-
-                        {testCases.length === 0 && (
-                            <tr>
-                                <td
-                                    colSpan={9}
-                                    className="py-8 text-center text-gray-500"
-                                >
-                                    No test cases found. Add some test cases to
-                                    get started.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                onPageChange={setCurrentPage}
+            <DataTable
+                data={testCases}
+                columns={columns}
+                pageCount={totalPages}
+                pageSize={pageSize}
+                pageIndex={currentPage - 1}
+                onPaginationChange={(pageIndex, newPageSize) => {
+                    setCurrentPage(pageIndex + 1);
+                    setPageSize(newPageSize);
+                }}
+                getStatusStyle={getStatusStyle}
+                getPriorityStyle={getPriorityStyle}
+                onEdit={handleEdit}
+                onDelete={handleDeleteTest}
             />
 
             {/* Edit Test Modal */}
@@ -382,6 +307,24 @@ export default function TestCaseView({ projectId }: TestCaseViewProps) {
 
                         {editingTest && (
                             <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Test ID
+                                    </label>
+                                    <input
+                                        type="text"
+                                        className="w-full p-2 border rounded"
+                                        value={editingTest.test_id || ''}
+                                        onChange={(e) =>
+                                            setEditingTest({
+                                                ...editingTest,
+                                                test_id: e.target.value,
+                                            })
+                                        }
+                                        placeholder="Enter test ID"
+                                    />
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium mb-1">
                                         Title

@@ -39,8 +39,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useDocumentStore } from '@/lib/store/document.store';
 import { Block } from '@/types';
-// Unused but might be needed in the future
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Json } from '@/types/base/database.types';
 
 const dropAnimationConfig = {
