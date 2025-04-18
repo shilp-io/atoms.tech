@@ -67,6 +67,10 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     const { userProfile } = useAuth();
     const { currentOrganization } = useOrganization();
     const params = useParams();
+    
+    // Use a ref to track if we're in the middle of adding a block
+    // This helps prevent unnecessary re-renders
+    const isAddingBlockRef = React.useRef(false);
 
     // Get org_id and project_id from URL params for new blocks
     const orgId = currentOrganization?.id as string;
@@ -79,6 +83,12 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
 
     // Adapt the blocks to include order property
     useEffect(() => {
+        // Skip re-processing if we're in the middle of adding a block
+        // This prevents unnecessary re-renders
+        if (isAddingBlockRef.current) {
+            return;
+        }
+        
         if (originalBlocks) {
             const blocksWithOrder = originalBlocks.map(
                 (block: BlockWithRequirements, index: number) => {
@@ -122,7 +132,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     );
 
     const {
-        handleAddBlock,
+        handleAddBlock: originalHandleAddBlock,
         handleUpdateBlock,
         handleDeleteBlock,
         handleReorder,
@@ -135,6 +145,24 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
         orgId,
         projectId,
     });
+    
+    // Wrap handleAddBlock to manage the isAddingBlock flag
+    const handleAddBlock = useCallback(async (type: BlockType, content: Json) => {
+        console.log('Adding block of type:', type, 'with content:', content);
+        // Set flag to prevent re-renders during block addition
+        isAddingBlockRef.current = true;
+        try {
+            const result = await originalHandleAddBlock(type, content);
+            console.log('Block added successfully:', result);
+            return result;
+        } catch (error) {
+            console.error('Error adding block:', error);
+            throw error;
+        } finally {
+            // Reset flag after block is added
+            isAddingBlockRef.current = false;
+        }
+    }, [originalHandleAddBlock]);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -175,6 +203,11 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             setIsEditMode,
         ],
     );
+    
+    // Memoize the blocks to prevent unnecessary re-renders
+    const memoizedBlocks = React.useMemo(() => {
+        return enhancedBlocks?.map(renderBlock) || [];
+    }, [enhancedBlocks, renderBlock]);
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as string);
@@ -262,9 +295,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                     strategy={verticalListSortingStrategy}
                 >
                     <div className="space-y-4">
-                        {enhancedBlocks?.map((block: BlockWithRequirements) =>
-                            renderBlock(block),
-                        )}
+                        {memoizedBlocks}
                     </div>
                 </SortableContext>
 
@@ -288,23 +319,39 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() =>
+                    onClick={() => {
+                        // Set edit mode to true when creating a text block
+                        if (!isEditMode) {
+                            setIsEditMode(true);
+                        }
+                        // Create the text block and focus it
                         handleAddBlock(BlockType.text, {
                             format: 'markdown',
                             text: '',
                         })
-                    }
+                        .then((newBlock) => {
+                            if (newBlock) {
+                                setSelectedBlockId(newBlock.id);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Failed to add text block:', error);
+                        });
+                    }}
                 >
                     <Type className="h-4 w-4" />
                 </Button>
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() =>
+                    onClick={() => {
                         handleAddBlock(BlockType.table, {
                             requirements: [],
                         })
-                    }
+                        .catch(error => {
+                            console.error('Failed to add table block:', error);
+                        });
+                    }}
                 >
                     <Table className="h-4 w-4" />
                 </Button>
