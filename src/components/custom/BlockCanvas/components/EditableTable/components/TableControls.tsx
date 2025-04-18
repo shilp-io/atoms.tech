@@ -61,19 +61,26 @@ export function TableControls<T extends Record<string, unknown>>({
     const [isAddColumnOpen, setIsAddColumnOpen] = useState(false);
     const { userProfile } = useAuth();
 
-    const canPerformAction = (action: string) => {
-        const rolePermissions = {
-            owner: ['addColumn', 'addRow'],
-            admin: ['addColumn', 'addRow'],
-            maintainer: ['addColumn', 'addRow'],
-            editor: ['addRow'],
-            viewer: [],
-        };
+    // Define rolePermissions with explicit type
+    const rolePermissions: Record<
+        'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
+        string[]
+    > = {
+        owner: ['addColumn', 'addRow'],
+        admin: ['addColumn', 'addRow'],
+        maintainer: ['addColumn', 'addRow'],
+        editor: ['addRow'],
+        viewer: [],
+    };
 
-        const userRole =
-            (userProfile as { role?: keyof typeof rolePermissions })?.role ||
-            'viewer';
-        console.log('Project ID:', projectId); // Ensure projectId is logged for debugging
+    // Explicitly type userRole
+    const userRole: keyof typeof rolePermissions =
+        (userProfile as { role?: keyof typeof rolePermissions })?.role ||
+        'viewer';
+
+    console.log('Project ID:', projectId); // Ensure projectId is logged for debugging
+
+    const canPerformAction = (action: string) => {
         return rolePermissions[userRole].includes(action);
     };
 

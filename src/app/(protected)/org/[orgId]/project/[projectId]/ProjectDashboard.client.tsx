@@ -176,7 +176,7 @@ export default function ProjectPage() {
         }
     };
 
-    const sortedDocuments = [...(documents || [])].sort((a, b) => {
+    const sortedDocuments = [...(documents || [])].sort(() => {
         return 0;
     });
 

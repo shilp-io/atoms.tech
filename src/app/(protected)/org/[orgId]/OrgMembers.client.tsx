@@ -53,7 +53,22 @@ export default function OrgMembers({ className }: OrgMembersProps) {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilters, setRoleFilters] = useState<EUserRoleType[]>([]);
-    const [userRole, setUserRole] = useState<EUserRoleType | null>(null);
+
+    // Define rolePermissions with explicit type
+    const rolePermissions: Record<
+        'owner' | 'super_admin' | 'admin' | 'member',
+        string[]
+    > = {
+        owner: ['assignToProject', 'changeRole', 'removeMember'],
+        super_admin: ['assignToProject', 'changeRole', 'removeMember'],
+        admin: ['assignToProject'],
+        member: [],
+    };
+
+    // Explicitly type userRole
+    const [userRole, setUserRole] = useState<
+        'owner' | 'super_admin' | 'admin' | 'member' | null
+    >(null);
 
     const {
         data: members = [],
@@ -106,13 +121,6 @@ export default function OrgMembers({ className }: OrgMembersProps) {
     }, [params?.orgId, user?.id]);
 
     const canPerformAction = (action: string) => {
-        const rolePermissions = {
-            owner: ['assignToProject', 'changeRole', 'removeMember'],
-            super_admin: ['assignToProject', 'changeRole', 'removeMember'],
-            admin: ['assignToProject'],
-            member: [],
-        };
-
         return rolePermissions[
             (userRole as keyof typeof rolePermissions) || 'member'
         ].includes(action);

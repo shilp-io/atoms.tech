@@ -89,8 +89,11 @@ export function EditableTable<
         console.error('User ID is missing from the user context.');
     }
 
-    // Define rolePermissions before using it
-    const rolePermissions = {
+    // Define rolePermissions with explicit type
+    const rolePermissions: Record<
+        'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
+        string[]
+    > = {
         owner: ['editTable', 'deleteRow', 'addRow'],
         admin: ['editTable', 'deleteRow', 'addRow'],
         maintainer: ['editTable', 'deleteRow', 'addRow'],
@@ -98,6 +101,7 @@ export function EditableTable<
         viewer: [],
     };
 
+    // Explicitly type the return value of getUserRole
     const getUserRole = async (): Promise<keyof typeof rolePermissions> => {
         try {
             const { data, error } = await supabase
@@ -122,11 +126,14 @@ export function EditableTable<
         }
     };
 
-    const canPerformAction = async (action: string) => {
-        const userRole = await getUserRole();
-        console.log('User role:', userRole);
-        return rolePermissions[userRole].includes(action);
-    };
+    const canPerformAction = useCallback(
+        async (action: string) => {
+            const userRole = await getUserRole();
+            console.log('User role:', userRole);
+            return rolePermissions[userRole].includes(action);
+        },
+        [getUserRole, rolePermissions], // Added dependencies
+    );
 
     // Effect to init edit data when entering edit mode
     useEffect(() => {
@@ -277,20 +284,20 @@ export function EditableTable<
         async (itemId: string, accessor: keyof T, value: CellValue) => {
             const canEdit = await canPerformAction('editTable');
             if (!canEdit) {
-                return; // Do nothing if the user does not have permission
+                return;
             }
             dispatch({
                 type: 'SET_CELL_VALUE',
                 payload: { itemId, accessor, value },
             });
         },
-        [canPerformAction], // Added `canPerformAction` to the dependency array
+        [canPerformAction], // Updated dependency
     );
 
     const handleAddNewRow = useCallback(async () => {
         const canAdd = await canPerformAction('addRow');
         if (!canAdd) {
-            return; // Do nothing if the user does not have permission
+            return;
         }
 
         // Create empty row
@@ -350,12 +357,12 @@ export function EditableTable<
         async (item: T) => {
             const canDelete = await canPerformAction('deleteRow');
             if (!canDelete) {
-                return; // Do nothing if the user does not have permission
+                return;
             }
 
             dispatch({ type: 'OPEN_DELETE_CONFIRM', payload: item });
         },
-        [canPerformAction], // Added `canPerformAction` to the dependency array
+        [canPerformAction], // Updated dependency
     );
 
     const handleDeleteConfirm = useCallback(async () => {

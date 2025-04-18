@@ -63,20 +63,25 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         queryFn: () => getProjectMembers(projectId),
     });
 
-    const userRole = members.find((member) => member.id === user?.id)?.role;
+    // Define rolePermissions with explicit type
+    const rolePermissions: Record<
+        'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
+        string[]
+    > = {
+        owner: ['changeRole', 'removeMember'],
+        admin: ['removeMember'],
+        maintainer: [],
+        editor: [],
+        viewer: [],
+    };
+
+    // Explicitly type userRole
+    const userRole: keyof typeof rolePermissions =
+        (members.find((member) => member.id === user?.id)
+            ?.role as keyof typeof rolePermissions) || 'viewer';
 
     const canPerformAction = (action: string) => {
-        const rolePermissions = {
-            owner: ['changeRole', 'removeMember'],
-            admin: ['removeMember'],
-            maintainer: [],
-            editor: [],
-            viewer: [],
-        };
-
-        return rolePermissions[
-            (userRole as keyof typeof rolePermissions) || 'viewer'
-        ].includes(action);
+        return rolePermissions[userRole].includes(action);
     };
 
     const sortedMembers = [...members].sort((a, b) => {

@@ -34,7 +34,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useDocumentStore } from '@/lib/store/document.store';
 // Unused but might be needed in the future
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
 
@@ -53,11 +52,26 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     });
     const { reorderBlocks, isEditMode, setIsEditMode } = useDocumentStore();
     const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
-    const [activeId, setActiveId] = useState<string | null>(null);
     const { userProfile } = useAuth();
     const { currentOrganization } = useOrganization();
     const params = useParams();
-    const [userRole, setUserRole] = useState<string | null>(null);
+
+    // Define rolePermissions with explicit type
+    const rolePermissions: Record<
+        'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
+        string[]
+    > = {
+        owner: ['editBlock', 'deleteBlock', 'addBlock'],
+        admin: ['editBlock', 'deleteBlock', 'addBlock'],
+        maintainer: ['editBlock', 'deleteBlock', 'addBlock'],
+        editor: ['editBlock', 'deleteBlock', 'addBlock'],
+        viewer: [],
+    };
+
+    // Explicitly type userRole
+    const [userRole, setUserRole] = useState<
+        'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer' | null
+    >(null);
 
     useEffect(() => {
         const fetchUserRole = async () => {
@@ -164,19 +178,14 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
         }),
     );
 
-    const canPerformAction = (action: string) => {
-        const rolePermissions = {
-            owner: ['editBlock', 'deleteBlock', 'addBlock'],
-            admin: ['editBlock', 'deleteBlock', 'addBlock'],
-            maintainer: ['editBlock', 'deleteBlock', 'addBlock'],
-            editor: ['editBlock', 'deleteBlock', 'addBlock'],
-            viewer: [],
-        };
-
-        return rolePermissions[
-            (userRole || 'viewer') as keyof typeof rolePermissions
-        ].includes(action);
-    };
+    const canPerformAction = useCallback(
+        (action: string) => {
+            return rolePermissions[
+                (userRole || 'viewer') as keyof typeof rolePermissions
+            ].includes(action);
+        },
+        [userRole],
+    );
 
     const renderBlock = useCallback(
         (block: BlockWithRequirements) => {
@@ -217,11 +226,10 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     );
 
     const handleDragStart = (event: DragStartEvent) => {
-        setActiveId(event.active.id as string);
+        setSelectedBlockId(event.active.id as string);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
-        setActiveId(null);
         const { active, over } = event;
 
         if (!over || active.id === over.id || !enhancedBlocks) {
