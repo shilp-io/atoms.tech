@@ -180,13 +180,13 @@ export function Navbar() {
                 <div className="container mx-auto flex justify-between items-center">
                     <Link href="/" className="atoms-logo flex">
                         <Image
-                            src="/atoms.png"
+                            src="/AtomsLogo.svg"
                             alt="Atoms logo"
-                            width={24}
-                            height={24}
-                            className="object-contain mx-2 w-auto h-auto sm:w-[28px] sm:h-[28px] md:w-[32px] md:h-[32px]"
+                            width={48}
+                            height={48}
+                            className="object-contain invert mx-2 w-auto h-auto sm:w-[28px] sm:h-[28px] md:w-[32px] md:h-[32px]"
                         />
-                        <span className="font-semibold text-base sm:text-lg md:text-xl">
+                        <span className="font-medium text-base sm:text-lg md:text-2xl">
                             ATOMS.TECH
                         </span>
                     </Link>
