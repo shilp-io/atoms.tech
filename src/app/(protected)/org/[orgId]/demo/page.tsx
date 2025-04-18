@@ -1,8 +1,7 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-
-import { useGumloop } from '@/hooks/useGumloop';
 
 import {
     ComplianceCard,
@@ -12,7 +11,8 @@ import {
     OriginalRequirementCard,
     RegulationFile,
     RequirementForm,
-} from './components';
+} from '@/app/(protected)/org/[orgId]/project/[projectId]/requirements/[requirementSlug]/components';
+import { useGumloop } from '@/hooks/useGumloop';
 
 interface AnalysisData {
     reqId: string;
@@ -30,12 +30,10 @@ interface AnalysisData {
 }
 
 export default function RequirementPage() {
+    const organizationId = usePathname().split('/')[2];
     const [reqText, setReqText] = useState<string>('');
     const [systemName, setSystemName] = useState<string>('');
     const [objective, setObjective] = useState<string>('');
-
-    const [missingReqError, setMissingReqError] = useState<string>('');
-    const [missingFilesError, setMissingFilesError] = useState<string>('');
 
     const [selectedFiles, setSelectedFiles] = useState<{
         [key: string]: RegulationFile;
@@ -49,26 +47,13 @@ export default function RequirementPage() {
         useState<string>('');
     const { data: analysisResponse } = getPipelineRun(
         analysisPipelineRunId,
-        '',
+        organizationId,
     );
     const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
 
     const handleAnalyze = async () => {
         setAnalysisData(null);
-
-        // check if the requirement is empty
-        if (!reqText) {
-            setMissingReqError('Requirement text is required');
-            return;
-        }
-        // or if no files are uploaded
-        if (Object.keys(selectedFiles).length === 0) {
-            setMissingFilesError('At least one file is required');
-            return;
-        }
         console.log('Starting analysis pipeline...');
-        setMissingReqError('');
-        setMissingFilesError('');
         setIsAnalysing(true);
 
         try {
@@ -192,6 +177,9 @@ export default function RequirementPage() {
                 <div className="space-y-4">
                     <h2 className="text-2xl font-bold mb-4">Requirement</h2>
                     <RequirementForm
+                        organizationId={organizationId}
+                        requirement={{ id: '' }}
+                        origReqText=""
                         reqText={reqText || ''}
                         setReqText={setReqText}
                         systemName={systemName}
@@ -202,9 +190,12 @@ export default function RequirementPage() {
                         setIsReasoning={setIsReasoning}
                         isAnalysing={isAnalysing}
                         handleAnalyze={handleAnalyze}
-                        missingReqError={missingReqError}
-                        missingFilesError={missingFilesError}
-                        setMissingFilesError={setMissingFilesError}
+                        isPersistent={false}
+                        handleSave={() => {}}
+                        isSaving={false}
+                        missingReqError={''}
+                        missingFilesError={''}
+                        setMissingFilesError={() => {}}
                         // isUploading={isUploading}
                         // uploadButtonText={uploadButtonText}
                         // handleFileUpload={handleFileUpload}
