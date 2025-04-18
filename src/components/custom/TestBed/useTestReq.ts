@@ -5,12 +5,19 @@ import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Database } from '@/types/base/database.types';
 
+interface TestFilters {
+    status?: Database['public']['Enums']['test_status'][];
+    priority?: Database['public']['Enums']['test_priority'][];
+    test_type?: Database['public']['Enums']['test_type'][];
+    search?: string;
+}
+
 /**
  * Hook to fetch test cases by project ID
  */
 export function useProjectTestCases(
     projectId: string,
-    filters: Record<string, any> = {},
+    filters: TestFilters = {},
     pagination = {
         page: 1,
         pageSize: 10,

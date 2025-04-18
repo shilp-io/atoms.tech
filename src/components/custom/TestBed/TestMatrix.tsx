@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
     useCreateRequirementTest,
@@ -24,6 +24,7 @@ import {
 } from '@/hooks/queries/useRequirement';
 import { queryKeys } from '@/lib/constants/queryKeys';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { cn } from '@/lib/utils';
 import { Database } from '@/types/base/database.types';
 
 import { TestStatusIndicator } from './TestStatusIndicator';
@@ -44,6 +45,24 @@ type TestData = {
 // Add new type for execution status
 type ExecutionStatus = Database['public']['Enums']['execution_status'];
 
+// Add this helper function at the top level
+const getTypeStyle = (type: string) => {
+    const styles = {
+        functional:
+            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+        performance:
+            'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+        security: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+        usability:
+            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+        compatibility:
+            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+        default:
+            'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+    };
+    return styles[type.toLowerCase() as keyof typeof styles] || styles.default;
+};
+
 export default function TraceabilityMatrixView({
     projectId,
 }: TraceabilityMatrixViewProps) {
@@ -53,7 +72,7 @@ export default function TraceabilityMatrixView({
     const [showAddRequirementModal, setShowAddRequirementModal] =
         useState(false);
     const [showAddTestModal, setShowAddTestModal] = useState(false);
-    const [currentRequirementId, setCurrentRequirementId] = useState<
+    const [currentRequirementId, _setCurrentRequirementId] = useState<
         string | null
     >(null);
     const [newTestData, setNewTestData] = useState<TestData>({
@@ -64,6 +83,7 @@ export default function TraceabilityMatrixView({
         priority: 'medium',
         status: 'draft',
     });
+    const testTableRef = useRef<HTMLDivElement>(null);
 
     const queryClient = useQueryClient();
 
@@ -116,16 +136,6 @@ export default function TraceabilityMatrixView({
         }
     };
 
-    // // Function to determine the status of a requirement-test relationship
-    // const getRelationshipStatus = (reqId: string, testId: string) => {
-    //     const relationship = requirementTests.find(
-    //         (rt) => rt.requirementId === reqId && rt.testCaseId === testId,
-    //     );
-
-    //     if (!relationship) return null;
-    //     return relationship.status;
-    // };
-
     // Handle creating a new test and linking to requirement
     const handleCreateTest = async () => {
         if (!currentRequirementId) return;
@@ -176,6 +186,29 @@ export default function TraceabilityMatrixView({
         setShowAddRequirementModal(false);
     };
 
+    // Handle horizontal scrolling with mouse wheel
+    useEffect(() => {
+        const handleWheel = (e: WheelEvent) => {
+            if (testTableRef.current) {
+                e.preventDefault();
+                testTableRef.current.scrollLeft += e.deltaY;
+            }
+        };
+
+        const tableElement = testTableRef.current;
+        if (tableElement) {
+            tableElement.addEventListener('wheel', handleWheel, {
+                passive: false,
+            });
+        }
+
+        return () => {
+            if (tableElement) {
+                tableElement.removeEventListener('wheel', handleWheel);
+            }
+        };
+    }, []);
+
     if (testCasesLoading) {
         return (
             <div className="p-6 text-center">
@@ -210,101 +243,174 @@ export default function TraceabilityMatrixView({
                     </Button>
                 </div>
             ) : (
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse [&_tr>*:not(:last-child)]:border-r">
-                        <thead>
-                            <tr className="bg-background">
-                                <th className="py-4 px-4 text-center font-medium">
-                                    Req ID
-                                </th>
-                                <th className="py-4 px-4 text-center font-medium">
-                                    Type
-                                </th>
-                                <th className="py-4 px-4 text-center font-medium">
-                                    Title
-                                </th>
-                                {testCases.map((testCase) => (
-                                    <th
-                                        key={testCase.id}
-                                        className="py-4 px-4 text-center font-medium min-w-[120px]"
-                                    >
-                                        {testCase.test_id || 'NULL-ID'}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {requirements.map((requirement) => (
-                                <tr
-                                    key={requirement.id}
-                                    className="hover:bg-muted"
-                                >
-                                    <td className="py-4 px-4">
-                                        {requirement.external_id ||
-                                            requirement.id.substring(0, 8)}
-                                    </td>
-                                    <td className="py-4 px-4">
-                                        {requirement.level}
-                                    </td>
-                                    <td className="py-4 px-4">
-                                        {requirement.name}
-                                    </td>
-                                    {testCases.map((testCase) => {
-                                        const relationship =
-                                            requirementTests.find(
-                                                (rt) =>
-                                                    rt.requirementId ===
-                                                        requirement.id &&
-                                                    rt.testCaseId ===
-                                                        testCase.id,
-                                            );
-                                        // const status = relationship?.status;
-                                        const executionStatus =
-                                            relationship?.execution_status as
-                                                | ExecutionStatus
-                                                | undefined;
-
-                                        return (
-                                            <td
-                                                key={`${requirement.id}-${testCase.id}`}
-                                                className="py-4 px-4 text-center"
-                                            >
-                                                {relationship ? (
-                                                    <TestStatusIndicator
-                                                        status={
-                                                            executionStatus ||
-                                                            'not_executed'
-                                                        }
-                                                        onStatusChange={(
-                                                            value,
-                                                        ) =>
-                                                            updateTestStatus(
-                                                                requirement.id,
-                                                                testCase.id,
-                                                                value,
-                                                            )
-                                                        }
-                                                    />
-                                                ) : (
-                                                    <button
-                                                        onClick={() =>
-                                                            handleLinkTest(
-                                                                requirement.id,
-                                                                testCase.id,
-                                                            )
-                                                        }
-                                                        className="text-xs text-blue-500 hover:underline"
-                                                    >
-                                                        Link
-                                                    </button>
-                                                )}
+                <div className="flex flex-col h-full">
+                    <div className="flex relative">
+                        {/* Fixed Requirements Section */}
+                        <div className="w-[40%] flex-shrink-0 border-r bg-background">
+                            <table className="w-full border-collapse">
+                                <thead>
+                                    <tr>
+                                        <th className="h-14 px-4 text-center font-medium w-[25%] border-b border-r sticky top-0 bg-background">
+                                            Req ID
+                                        </th>
+                                        <th className="h-14 px-4 text-center font-medium w-[20%] border-b border-r sticky top-0 bg-background">
+                                            Type
+                                        </th>
+                                        <th className="h-14 px-4 text-center font-medium border-b border-r sticky top-0 bg-background">
+                                            Title
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {requirements.map((requirement, index) => (
+                                        <tr
+                                            key={requirement.id}
+                                            data-row-index={index}
+                                            className="hover:bg-muted/50 group/row"
+                                            onMouseEnter={() => {
+                                                const testRow =
+                                                    document.querySelector(
+                                                        `[data-test-row-index="${index}"]`,
+                                                    );
+                                                testRow?.classList.add(
+                                                    'bg-muted/50',
+                                                );
+                                            }}
+                                            onMouseLeave={() => {
+                                                const testRow =
+                                                    document.querySelector(
+                                                        `[data-test-row-index="${index}"]`,
+                                                    );
+                                                testRow?.classList.remove(
+                                                    'bg-muted/50',
+                                                );
+                                            }}
+                                        >
+                                            <td className="h-[60px] px-4 border-r whitespace-nowrap font-mono text-sm text-muted-foreground">
+                                                {requirement.external_id ||
+                                                    requirement.id.substring(
+                                                        0,
+                                                        8,
+                                                    )}
                                             </td>
-                                        );
-                                    })}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                            <td className="h-[60px] px-4 border-r align-middle">
+                                                <div
+                                                    className={cn(
+                                                        'px-2.5 py-1 rounded-full text-xs font-medium inline-block',
+                                                        getTypeStyle(
+                                                            requirement.level,
+                                                        ),
+                                                    )}
+                                                >
+                                                    {requirement.level}
+                                                </div>
+                                            </td>
+                                            <td className="h-[60px] px-4 border-r font-medium group-hover/row:text-primary transition-colors">
+                                                {requirement.name}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Scrollable Test Cases Section */}
+                        <div className="flex-grow relative">
+                            <div className="absolute inset-0">
+                                <div
+                                    ref={testTableRef}
+                                    className="w-full h-full overflow-x-auto scrollbar-hide"
+                                >
+                                    <table className="w-auto border-collapse">
+                                        <thead>
+                                            <tr>
+                                                {testCases.map((testCase) => (
+                                                    <th
+                                                        key={testCase.id}
+                                                        className="h-14 px-2 text-center font-medium border-b border-r min-w-[80px] w-[80px] sticky top-0 bg-background"
+                                                    >
+                                                        <div className="truncate text-xs text-muted-foreground font-mono">
+                                                            {testCase.test_id ||
+                                                                'NULL-ID'}
+                                                        </div>
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {requirements.map(
+                                                (requirement, index) => (
+                                                    <tr
+                                                        key={requirement.id}
+                                                        data-test-row-index={
+                                                            index
+                                                        }
+                                                        className="transition-colors"
+                                                    >
+                                                        {testCases.map(
+                                                            (testCase) => {
+                                                                const relationship =
+                                                                    requirementTests.find(
+                                                                        (rt) =>
+                                                                            rt.requirementId ===
+                                                                                requirement.id &&
+                                                                            rt.testCaseId ===
+                                                                                testCase.id,
+                                                                    );
+                                                                const executionStatus =
+                                                                    relationship?.execution_status as
+                                                                        | ExecutionStatus
+                                                                        | undefined;
+
+                                                                return (
+                                                                    <td
+                                                                        key={`${requirement.id}-${testCase.id}`}
+                                                                        className="h-[60px] px-2 text-center border-r min-w-[80px] w-[80px] align-middle bg-background"
+                                                                    >
+                                                                        <div className="flex items-center justify-center h-full">
+                                                                            {relationship ? (
+                                                                                <TestStatusIndicator
+                                                                                    status={
+                                                                                        executionStatus ||
+                                                                                        'not_executed'
+                                                                                    }
+                                                                                    onStatusChange={(
+                                                                                        value,
+                                                                                    ) =>
+                                                                                        updateTestStatus(
+                                                                                            requirement.id,
+                                                                                            testCase.id,
+                                                                                            value,
+                                                                                        )
+                                                                                    }
+                                                                                />
+                                                                            ) : (
+                                                                                <button
+                                                                                    onClick={() =>
+                                                                                        handleLinkTest(
+                                                                                            requirement.id,
+                                                                                            testCase.id,
+                                                                                        )
+                                                                                    }
+                                                                                    className="text-xs text-blue-500 hover:underline"
+                                                                                >
+                                                                                    Link
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                );
+                                                            },
+                                                        )}
+                                                    </tr>
+                                                ),
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 

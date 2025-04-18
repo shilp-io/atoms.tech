@@ -8,12 +8,7 @@ import TraceabilityMatrixView from '@/components/custom/TestBed/TestMatrix';
 import TestCaseView from '@/components/custom/TestBed/TestTable';
 import { useCreateTestReq } from '@/components/custom/TestBed/useTestReq';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Database } from '@/types/base/database.types';
 
@@ -84,8 +79,10 @@ export default function TestBed() {
         <div className="container mx-auto p-8 max-w-7xl">
             <div className="flex flex-col gap-8">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-4xl font-light tracking-tight">Verification Tracing</h1>
-                    
+                    <h1 className="text-4xl font-light tracking-tight">
+                        Verification Tracing
+                    </h1>
+
                     <div className="flex items-center gap-3">
                         <div className="relative min-w-[180px]">
                             <select
@@ -94,7 +91,13 @@ export default function TestBed() {
                                          focus:ring-2 focus:ring-accent/20 focus:border-accent hover:border-accent/50 transition-colors
                                          dark:bg-background dark:border-border dark:text-foreground"
                                 value={viewMode}
-                                onChange={(e) => setViewMode(e.target.value as any)}
+                                onChange={(e) =>
+                                    setViewMode(
+                                        e.target.value as
+                                            | 'Test Cases'
+                                            | 'Traceability Matrix',
+                                    )
+                                }
                             >
                                 <option>Test Cases</option>
                                 <option>Traceability Matrix</option>
@@ -118,7 +121,9 @@ export default function TestBed() {
                     {viewMode === 'Test Cases' ? (
                         <TestCaseView projectId={projectId as string} />
                     ) : (
-                        <TraceabilityMatrixView projectId={projectId as string} />
+                        <TraceabilityMatrixView
+                            projectId={projectId as string}
+                        />
                     )}
                 </div>
             </div>
@@ -126,7 +131,9 @@ export default function TestBed() {
             <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
                 <DialogContent className="sm:max-w-[600px] border-0 p-0 bg-background dark:bg-background">
                     <div className="border-b border-border p-6">
-                        <DialogTitle className="text-xl font-light tracking-tight">Add New Test Case</DialogTitle>
+                        <DialogTitle className="text-xl font-light tracking-tight">
+                            Add New Test Case
+                        </DialogTitle>
                     </div>
 
                     <div className="space-y-6 p-6">
@@ -207,12 +214,22 @@ export default function TestBed() {
                                         }
                                     >
                                         <option value="unit">Unit</option>
-                                        <option value="integration">Integration</option>
+                                        <option value="integration">
+                                            Integration
+                                        </option>
                                         <option value="system">System</option>
-                                        <option value="acceptance">Acceptance</option>
-                                        <option value="performance">Performance</option>
-                                        <option value="security">Security</option>
-                                        <option value="usability">Usability</option>
+                                        <option value="acceptance">
+                                            Acceptance
+                                        </option>
+                                        <option value="performance">
+                                            Performance
+                                        </option>
+                                        <option value="security">
+                                            Security
+                                        </option>
+                                        <option value="usability">
+                                            Usability
+                                        </option>
                                         <option value="other">Other</option>
                                     </select>
                                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -236,7 +253,9 @@ export default function TestBed() {
                                             })
                                         }
                                     >
-                                        <option value="critical">Critical</option>
+                                        <option value="critical">
+                                            Critical
+                                        </option>
                                         <option value="high">High</option>
                                         <option value="medium">Medium</option>
                                         <option value="low">Low</option>
@@ -257,10 +276,14 @@ export default function TestBed() {
                         </Button>
                         <Button
                             onClick={handleCreateTest}
-                            disabled={!newTestData.title || createTestReq.isPending}
+                            disabled={
+                                !newTestData.title || createTestReq.isPending
+                            }
                             className="bg-accent text-accent-foreground hover:bg-accent/90 dark:bg-accent/90 dark:text-accent-foreground dark:hover:bg-accent/70"
                         >
-                            {createTestReq.isPending ? 'Creating...' : 'Create Test Case'}
+                            {createTestReq.isPending
+                                ? 'Creating...'
+                                : 'Create Test Case'}
                         </Button>
                     </div>
                 </DialogContent>

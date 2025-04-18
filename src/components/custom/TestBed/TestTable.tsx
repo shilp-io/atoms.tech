@@ -2,14 +2,11 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import debounce from 'lodash/debounce';
-import { useCallback, useState, useMemo } from 'react';
 import { Search } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { TestReq } from '@/components/custom/TestBed/types';
-import {
-    useLinkedRequirementsCount,
-    useProjectTestCases,
-} from '@/components/custom/TestBed/useTestReq';
+import { useProjectTestCases } from '@/components/custom/TestBed/useTestReq';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -34,15 +31,22 @@ type TestData = {
     test_id?: string | null;
 };
 
+type TestFilters = {
+    status: Database['public']['Enums']['test_status'][];
+    type: Database['public']['Enums']['test_type'][];
+    search: string;
+};
+
 // Separate search input component to prevent main table re-renders
 function SearchInput({ onSearch }: { onSearch: (value: string) => void }) {
     const [value, setValue] = useState('');
 
     const debouncedSearch = useMemo(
-        () => debounce((searchValue: string) => {
-            onSearch(searchValue);
-        }, 300),
-        [onSearch]
+        () =>
+            debounce((searchValue: string) => {
+                onSearch(searchValue);
+            }, 300),
+        [onSearch],
     );
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,17 +69,24 @@ function SearchInput({ onSearch }: { onSearch: (value: string) => void }) {
 }
 
 // Separate pagination size selector to prevent re-renders
-function PageSizeSelector({ pageSize, onPageSizeChange, totalItems }: { 
-    pageSize: number, 
-    onPageSizeChange: (size: number) => void,
-    totalItems: number 
+function PageSizeSelector({
+    pageSize,
+    onPageSizeChange,
+    totalItems,
+}: {
+    pageSize: number;
+    onPageSizeChange: (size: number) => void;
+    totalItems: number;
 }) {
     return (
         <select
             className="p-2 border rounded-md bg-background"
             value={pageSize === totalItems ? 'all' : pageSize}
             onChange={(e) => {
-                const value = e.target.value === 'all' ? totalItems : parseInt(e.target.value, 10);
+                const value =
+                    e.target.value === 'all'
+                        ? totalItems
+                        : parseInt(e.target.value, 10);
                 onPageSizeChange(value);
             }}
         >
@@ -93,18 +104,18 @@ export default function TestCaseView({ projectId }: TestCaseViewProps) {
     const [pageSize, setPageSize] = useState(6);
     const [editingTest, setEditingTest] = useState<TestData | null>(null);
     const [showEditModal, setShowEditModal] = useState(false);
-    const [filters, setFilters] = useState({
-        status: [] as string[],
-        type: [] as string[],
+    const [filters, setFilters] = useState<TestFilters>({
+        status: [],
+        type: [],
         search: '',
     });
 
     const queryClient = useQueryClient();
 
     const handleSearch = useCallback((value: string) => {
-        setFilters(prev => ({
+        setFilters((prev) => ({
             ...prev,
-            search: value
+            search: value,
         }));
     }, []);
 
@@ -273,8 +284,8 @@ export default function TestCaseView({ projectId }: TestCaseViewProps) {
                 </div>
                 <SearchInput onSearch={handleSearch} />
                 <div className="flex-shrink-0">
-                    <PageSizeSelector 
-                        pageSize={pageSize} 
+                    <PageSizeSelector
+                        pageSize={pageSize}
                         onPageSizeChange={handlePageSizeChange}
                         totalItems={totalItems}
                     />
