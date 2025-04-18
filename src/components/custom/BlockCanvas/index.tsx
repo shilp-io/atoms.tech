@@ -19,6 +19,7 @@ import {
 import { Table, Type } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
+import { Json } from '@/types/base/database.types';
 
 import { SortableBlock } from '@/components/custom/BlockCanvas/components/SortableBlock';
 import { TableBlockLoadingState } from '@/components/custom/BlockCanvas/components/TableBlockLoadingState';
@@ -37,6 +38,8 @@ import { useDocumentStore } from '@/lib/store/document.store';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
 
+
+import { defaultDropAnimation } from '@dnd-kit/core'; // Ensure this import is correct
 
 const dropAnimationConfig = {
     ...defaultDropAnimation,

@@ -325,7 +325,7 @@ export default function ProjectPage() {
                             variant="default"
                             onClick={() =>
                                 router.push(
-                                    `/org/${params.orgId}/project/${params.projectId}/testbed`,
+                                    `/org/${params?.orgId}/project/${params?.projectId}/testbed`,
                                 )
                             }
                         >
