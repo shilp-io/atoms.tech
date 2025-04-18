@@ -1,10 +1,9 @@
 'use client';
 
-import { ArrowDown, ArrowUp, FileBox, FolderArchive, Trash } from 'lucide-react';
+import { FileBox, FolderArchive, Trash } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,18 +14,12 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProjectDocuments } from '@/hooks/queries/useDocument';
 import { useProject } from '@/lib/providers/project.provider';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { useUser } from '@/lib/providers/user.provider';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Document } from '@/types/base/documents.types';
 
 import ProjectMembers from './ProjectMembers';
@@ -65,8 +58,11 @@ export default function ProjectPage() {
     const { user } = useUser();
     const [isDeleting, setIsDeleting] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
-    const { data: documents, isLoading: documentsLoading, refetch } =
-        useProjectDocuments(project?.id || '');
+    const {
+        data: documents,
+        isLoading: documentsLoading,
+        refetch,
+    } = useProjectDocuments(project?.id || '');
 
     console.log(userRole, 'userRole');
 
@@ -105,14 +101,29 @@ export default function ProjectPage() {
 
     const canPerformAction = (action: string) => {
         const rolePermissions = {
-            owner: ['changeRole', 'removeMember', 'addDocument', 'viewDocument', 'deleteDocument', 'editDocument'],
-            admin: ['removeMember', 'addDocument', 'viewDocument', 'deleteDocument', 'editDocument'],
+            owner: [
+                'changeRole',
+                'removeMember',
+                'addDocument',
+                'viewDocument',
+                'deleteDocument',
+                'editDocument',
+            ],
+            admin: [
+                'removeMember',
+                'addDocument',
+                'viewDocument',
+                'deleteDocument',
+                'editDocument',
+            ],
             maintainer: ['addDocument', 'viewDocument', 'editDocument'],
             editor: ['addDocument', 'viewDocument', 'editDocument'],
             viewer: ['viewDocument'],
         };
 
-        return rolePermissions[(userRole as keyof typeof rolePermissions) || 'viewer'].includes(action);
+        return rolePermissions[
+            (userRole as keyof typeof rolePermissions) || 'viewer'
+        ].includes(action);
     };
 
     const handleDocumentClick = (doc: Document) => {
@@ -141,7 +152,10 @@ export default function ProjectPage() {
                 .eq('document_id', documentToDelete.id);
 
             if (requirementsError) {
-                console.error('Error deleting requirements:', requirementsError);
+                console.error(
+                    'Error deleting requirements:',
+                    requirementsError,
+                );
                 throw requirementsError;
             }
 
@@ -302,7 +316,9 @@ export default function ProjectPage() {
                             {canPerformAction('addDocument') && (
                                 <Button
                                     variant="default"
-                                    onClick={() => setShowCreateDocumentPanel(true)}
+                                    onClick={() =>
+                                        setShowCreateDocumentPanel(true)
+                                    }
                                 >
                                     Add Requirement Document
                                 </Button>

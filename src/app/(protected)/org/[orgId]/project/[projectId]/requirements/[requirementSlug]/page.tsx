@@ -3,6 +3,7 @@
 import { useParams, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+import LayoutView from '@/components/views/LayoutView';
 import { useUpdateRequirement } from '@/hooks/mutations/useRequirementMutations';
 import { useProfile } from '@/hooks/queries/useProfile';
 import { useRequirement } from '@/hooks/queries/useRequirement';
@@ -19,7 +20,6 @@ import {
     RegulationFile,
     RequirementForm,
 } from './components';
-import LayoutView from '@/components/views/LayoutView';
 
 interface AnalysisData {
     reqId: string;
@@ -270,79 +270,85 @@ export default function RequirementPage() {
 
     return (
         <LayoutView>
-        <div className="container mx-auto p-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                    <h2 className="text-2xl font-bold mb-4">Requirement</h2>
-                    <RequirementForm
-                        organizationId={organizationId}
-                        requirement={requirement || { id: '' }}
-                        origReqText={requirement?.description || ''}
-                        reqText={reqText || ''}
-                        setReqText={setReqText}
-                        systemName={systemName}
-                        setSystemName={setSystemName}
-                        objective={objective}
-                        setObjective={setObjective}
-                        isReasoning={isReasoning}
-                        setIsReasoning={setIsReasoning}
-                        isAnalysing={isAnalysing}
-                        handleAnalyze={handleAnalyze}
-                        isPersistent={true}
-                        handleSave={handleSave}
-                        isSaving={isSaving}
-                        missingReqError={missingReqError}
-                        missingFilesError={''}
-                        setMissingFilesError={() => {}}
-                        // isUploading={isUploading}
-                        // uploadButtonText={uploadButtonText}
-                        // handleFileUpload={handleFileUpload}
-                        // existingDocs={existingDocs}
-                        // existingDocsValue={existingDocsValue}
-                        // handleExistingDocSelect={handleExistingDocSelect}
-                        selectedFiles={selectedFiles}
-                        setSelectedFiles={setSelectedFiles}
-                    />
-                </div>
+            <div className="container mx-auto p-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                        <h2 className="text-2xl font-bold mb-4">Requirement</h2>
+                        <RequirementForm
+                            organizationId={organizationId}
+                            requirement={requirement || { id: '' }}
+                            origReqText={requirement?.description || ''}
+                            reqText={reqText || ''}
+                            setReqText={setReqText}
+                            systemName={systemName}
+                            setSystemName={setSystemName}
+                            objective={objective}
+                            setObjective={setObjective}
+                            isReasoning={isReasoning}
+                            setIsReasoning={setIsReasoning}
+                            isAnalysing={isAnalysing}
+                            handleAnalyze={handleAnalyze}
+                            isPersistent={true}
+                            handleSave={handleSave}
+                            isSaving={isSaving}
+                            missingReqError={missingReqError}
+                            missingFilesError={''}
+                            setMissingFilesError={() => {}}
+                            // isUploading={isUploading}
+                            // uploadButtonText={uploadButtonText}
+                            // handleFileUpload={handleFileUpload}
+                            // existingDocs={existingDocs}
+                            // existingDocsValue={existingDocsValue}
+                            // handleExistingDocSelect={handleExistingDocSelect}
+                            selectedFiles={selectedFiles}
+                            setSelectedFiles={setSelectedFiles}
+                        />
+                    </div>
 
-                {/* Right Column - Analysis Blocks */}
-                <div className="space-y-4">
-                    <h2 className="text-2xl font-bold mb-4">AI Analysis</h2>
+                    {/* Right Column - Analysis Blocks */}
+                    <div className="space-y-4">
+                        <h2 className="text-2xl font-bold mb-4">AI Analysis</h2>
 
-                    <OriginalRequirementCard
-                        reqId={analysisData?.reqId}
-                        originalRequirement={analysisData?.originalRequirement}
-                    />
+                        <OriginalRequirementCard
+                            reqId={analysisData?.reqId}
+                            originalRequirement={
+                                analysisData?.originalRequirement
+                            }
+                        />
 
-                    <EarsCard
-                        earsPattern={analysisData?.earsPattern}
-                        earsRequirement={analysisData?.earsRequirement}
-                        earsTemplate={analysisData?.earsTemplate}
-                        onAccept={handleAcceptChange}
-                    />
+                        <EarsCard
+                            earsPattern={analysisData?.earsPattern}
+                            earsRequirement={analysisData?.earsRequirement}
+                            earsTemplate={analysisData?.earsTemplate}
+                            onAccept={handleAcceptChange}
+                        />
 
-                    <IncoseCard
-                        incoseFormat={analysisData?.incoseFormat}
-                        incoseFeedback={analysisData?.incoseFeedback}
-                        onAccept={handleAcceptChange}
-                    />
+                        <IncoseCard
+                            incoseFormat={analysisData?.incoseFormat}
+                            incoseFeedback={analysisData?.incoseFeedback}
+                            onAccept={handleAcceptChange}
+                        />
 
-                    <ComplianceCard
-                        complianceFeedback={analysisData?.complianceFeedback}
-                        relevantRegulations={analysisData?.relevantRegulations}
-                    />
+                        <ComplianceCard
+                            complianceFeedback={
+                                analysisData?.complianceFeedback
+                            }
+                            relevantRegulations={
+                                analysisData?.relevantRegulations
+                            }
+                        />
 
-                    <EnhancedCard
-                        enhancedReqEars={analysisData?.enhancedReqEars}
-                        enhancedReqIncose={analysisData?.enhancedReqIncose}
-                        enhancedGeneralFeedback={
-                            analysisData?.enhancedGeneralFeedback
-                        }
-                        onAccept={handleAcceptChange}
-                    />
+                        <EnhancedCard
+                            enhancedReqEars={analysisData?.enhancedReqEars}
+                            enhancedReqIncose={analysisData?.enhancedReqIncose}
+                            enhancedGeneralFeedback={
+                                analysisData?.enhancedGeneralFeedback
+                            }
+                            onAccept={handleAcceptChange}
+                        />
+                    </div>
                 </div>
             </div>
-        </div>
         </LayoutView>
     );
 }

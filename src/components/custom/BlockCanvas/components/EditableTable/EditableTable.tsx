@@ -1,12 +1,13 @@
 'use client';
 
+import { useParams } from 'next/navigation';
 import * as React from 'react';
 import { useCallback, useEffect, useReducer, useState } from 'react';
-import { useParams } from 'next/navigation';
 
 import { Table, TableBody } from '@/components/ui/table';
-import { RequirementAiAnalysis } from '@/types/base/requirements.types';
+import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { RequirementAiAnalysis } from '@/types/base/requirements.types';
 
 import {
     AddRowPlaceholder,
@@ -20,8 +21,6 @@ import {
 import { useTableSort } from './hooks/useTableSort';
 import { TableState, tableReducer } from './reducers/tableReducer';
 import { CellValue, EditableTableProps } from './types';
-import { useUser } from '@/lib/providers/user.provider';
-import { UserRoleType } from '@/types';
 
 export function EditableTable<
     T extends Record<string, CellValue> & {
@@ -105,7 +104,10 @@ export function EditableTable<
                 .from('project_members')
                 .select('role')
                 .eq('user_id', userId) // Use userId from useUser
-                .eq('project_id', Array.isArray(projectId) ? projectId[0] : projectId) // Ensure projectId is a string
+                .eq(
+                    'project_id',
+                    Array.isArray(projectId) ? projectId[0] : projectId,
+                ) // Ensure projectId is a string
                 .single();
 
             if (error) {
@@ -344,14 +346,17 @@ export function EditableTable<
         dispatch({ type: 'CANCEL_ADD_ROW' });
     }, []);
 
-    const handleDeleteClick = useCallback(async (item: T) => {
-        const canDelete = await canPerformAction('deleteRow');
-        if (!canDelete) {
-            return; // Do nothing if the user does not have permission
-        }
+    const handleDeleteClick = useCallback(
+        async (item: T) => {
+            const canDelete = await canPerformAction('deleteRow');
+            if (!canDelete) {
+                return; // Do nothing if the user does not have permission
+            }
 
-        dispatch({ type: 'OPEN_DELETE_CONFIRM', payload: item });
-    }, [userId]);
+            dispatch({ type: 'OPEN_DELETE_CONFIRM', payload: item });
+        },
+        [userId],
+    );
 
     const handleDeleteConfirm = useCallback(async () => {
         if (!itemToDelete || !onDelete) return;

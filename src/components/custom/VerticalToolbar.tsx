@@ -14,10 +14,10 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useDocumentStore } from '@/lib/store/document.store';
-import { cn } from '@/lib/utils';
 import { useUser } from '@/lib/providers/user.provider';
+import { useDocumentStore } from '@/lib/store/document.store';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { cn } from '@/lib/utils';
 
 import { LayoutViewToggle } from './toggles/LayoutViewToggle';
 
@@ -85,7 +85,9 @@ const VerticalToolbar = () => {
         fetchUserRole();
     }, [pathname, user?.id]);
 
-    const canEdit = ['owner', 'admin', 'editor', 'maintainer'].includes(userRole || '');
+    const canEdit = ['owner', 'admin', 'editor', 'maintainer'].includes(
+        userRole || '',
+    );
 
     const toggleEditMode = () => {
         if (!canEdit) {

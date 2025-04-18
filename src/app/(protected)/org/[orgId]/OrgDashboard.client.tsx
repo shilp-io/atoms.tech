@@ -33,11 +33,12 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useSetOrgMemberCount } from '@/hooks/mutations/useOrgMemberMutation';
 import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
+import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { ExternalDocument } from '@/types/base/documents.types';
 import { Organization } from '@/types/base/organizations.types';
 import { Project } from '@/types/base/projects.types';
-import { useUser } from '@/lib/providers/user.provider';
+
 import ExternalDocsPages from './(files)/externalDocs/ExternalDocs.client';
 import OrgInvitations from './OrgInvitations.client';
 
@@ -78,7 +79,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
     >(null);
 
     const [isCanvasDialogOpen, setIsCanvasDialogOpen] = useState(false);
-    const [selectedCanvasProjectId, setSelectedCanvasProjectId] = useState<string | null>(null);
+    const [selectedCanvasProjectId, setSelectedCanvasProjectId] = useState<
+        string | null
+    >(null);
     const { user } = useUser();
 
     const [userRole, setUserRole] = useState<string | null>(null);
@@ -216,7 +219,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
             member: ['viewProjects', 'viewDocs'],
         };
 
-        return rolePermissions[(userRole as keyof typeof rolePermissions) || 'member'].includes(action);
+        return rolePermissions[
+            (userRole as keyof typeof rolePermissions) || 'member'
+        ].includes(action);
     };
 
     return (
@@ -539,16 +544,17 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                 <PenTool className="w-4 h-4" />
                             </Button>
                         )}
-                        {props.organization?.type !== 'personal' && canPerformAction('goToAiAnalysis') && (
-                            <Button
-                                variant="outline"
-                                className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
-                                onClick={handleGoToAiAnalysis}
-                            >
-                                AI Analysis
-                                <Brain className="w-4 h-4" />
-                            </Button>
-                        )}
+                        {props.organization?.type !== 'personal' &&
+                            canPerformAction('goToAiAnalysis') && (
+                                <Button
+                                    variant="outline"
+                                    className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
+                                    onClick={handleGoToAiAnalysis}
+                                >
+                                    AI Analysis
+                                    <Brain className="w-4 h-4" />
+                                </Button>
+                            )}
                         {props.organization?.type === 'personal' && (
                             <Button
                                 className="bg-gradient-to-r from-blue-500 to-purple-600 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:from-blue-600 hover:to-purple-700 transition"
@@ -829,7 +835,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                     <Button variant="outline">
                                         {selectedCanvasProjectId
                                             ? props.projects?.find(
-                                                  (p) => p.id === selectedCanvasProjectId,
+                                                  (p) =>
+                                                      p.id ===
+                                                      selectedCanvasProjectId,
                                               )?.name
                                             : 'Choose a project'}
                                     </Button>
@@ -838,7 +846,11 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                     {props.projects?.map((project) => (
                                         <DropdownMenuItem
                                             key={project.id}
-                                            onClick={() => setSelectedCanvasProjectId(project.id)}
+                                            onClick={() =>
+                                                setSelectedCanvasProjectId(
+                                                    project.id,
+                                                )
+                                            }
                                         >
                                             {project.name}
                                         </DropdownMenuItem>

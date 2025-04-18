@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Filter, MoreHorizontal, Users, Trash2 } from 'lucide-react';
+import { Filter, MoreHorizontal, Users } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -113,7 +113,9 @@ export default function OrgMembers({ className }: OrgMembersProps) {
             member: [],
         };
 
-        return rolePermissions[(userRole as keyof typeof rolePermissions) || 'member'].includes(action);
+        return rolePermissions[
+            (userRole as keyof typeof rolePermissions) || 'member'
+        ].includes(action);
     };
 
     const handleRemoveMember = async (memberId: string) => {
@@ -131,11 +133,13 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         // Restrict super_admin from removing owner or other super_admins
         if (
             userRole === 'super_admin' &&
-            (targetMember?.role === 'owner' || targetMember?.role === 'super_admin')
+            (targetMember?.role === 'owner' ||
+                targetMember?.role === 'super_admin')
         ) {
             toast({
                 title: 'Error',
-                description: 'You cannot remove the owner or another super_admin.',
+                description:
+                    'You cannot remove the owner or another super_admin.',
                 variant: 'destructive',
             });
             return;
@@ -200,16 +204,20 @@ export default function OrgMembers({ className }: OrgMembersProps) {
             return;
         }
 
-        const targetMember = members.find((member) => member.id === activeMemberId);
+        const targetMember = members.find(
+            (member) => member.id === activeMemberId,
+        );
 
         // Restrict super_admin from changing roles of owner or other super_admins
         if (
             userRole === 'super_admin' &&
-            (targetMember?.role === 'owner' || targetMember?.role === 'super_admin')
+            (targetMember?.role === 'owner' ||
+                targetMember?.role === 'super_admin')
         ) {
             toast({
                 title: 'Error',
-                description: 'You cannot change the role of an owner or another super_admin.',
+                description:
+                    'You cannot change the role of an owner or another super_admin.',
                 variant: 'destructive',
             });
             return;
@@ -267,7 +275,8 @@ export default function OrgMembers({ className }: OrgMembersProps) {
         if (!canPerformAction('assignToProject')) {
             toast({
                 title: 'Error',
-                description: 'You do not have permission to assign members to projects.',
+                description:
+                    'You do not have permission to assign members to projects.',
                 variant: 'destructive',
             });
             return;
@@ -340,7 +349,8 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                 .includes(searchQuery.toLowerCase()) ||
             member.email?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesRoles =
-            roleFilters.length === 0 || roleFilters.includes(member.role as EUserRoleType);
+            roleFilters.length === 0 ||
+            roleFilters.includes(member.role as EUserRoleType);
         return matchesSearch && matchesRoles;
     });
 
@@ -454,10 +464,11 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                             member.role === 'owner'
                                                 ? 'bg-purple-100 text-purple-800'
                                                 : member.role === 'admin'
-                                                ? 'bg-blue-100 text-blue-800'
-                                                : member.role === 'super_admin'
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-green-100 text-green-800'
+                                                  ? 'bg-blue-100 text-blue-800'
+                                                  : member.role ===
+                                                      'super_admin'
+                                                    ? 'bg-red-100 text-red-800'
+                                                    : 'bg-green-100 text-green-800'
                                         }`}
                                     >
                                         {member.role}
@@ -580,25 +591,29 @@ export default function OrgMembers({ className }: OrgMembersProps) {
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
-                                        {['member', 'admin', ...(userRole === 'owner' ? ['super_admin'] : [])].map(
-                                            (role) => (
-                                                <DropdownMenuItem
-                                                    key={role}
-                                                    onClick={() =>
-                                                        setSelectedRole(
-                                                            role as EUserRoleType,
-                                                        )
-                                                    }
-                                                >
-                                                    {role === 'super_admin'
-                                                        ? 'Super Admin'
-                                                        : role
-                                                              .charAt(0)
-                                                              .toUpperCase() +
-                                                          role.slice(1)}
-                                                </DropdownMenuItem>
-                                            ),
-                                        )}
+                                        {[
+                                            'member',
+                                            'admin',
+                                            ...(userRole === 'owner'
+                                                ? ['super_admin']
+                                                : []),
+                                        ].map((role) => (
+                                            <DropdownMenuItem
+                                                key={role}
+                                                onClick={() =>
+                                                    setSelectedRole(
+                                                        role as EUserRoleType,
+                                                    )
+                                                }
+                                            >
+                                                {role === 'super_admin'
+                                                    ? 'Super Admin'
+                                                    : role
+                                                          .charAt(0)
+                                                          .toUpperCase() +
+                                                      role.slice(1)}
+                                            </DropdownMenuItem>
+                                        ))}
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </div>

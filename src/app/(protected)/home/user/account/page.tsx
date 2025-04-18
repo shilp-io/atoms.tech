@@ -1,12 +1,12 @@
 'use client';
 
-import { Pencil, User, Sun, Moon, Maximize2, Minimize2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Maximize2, Minimize2, Moon, Pencil, Sun, User } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@/lib/providers/user.provider';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
@@ -40,14 +40,19 @@ export default function AccountPage() {
         }
 
         if (!/^[a-zA-Z0-9\s]+$/.test(newName)) {
-            setError('Name can only contain alphanumeric characters and spaces.');
+            setError(
+                'Name can only contain alphanumeric characters and spaces.',
+            );
             return;
         }
 
         setLoading(true);
         const { error: updateError } = await supabase
             .from('profiles')
-            .update({ full_name: newName, pinned_organization_id: profile?.pinned_organization_id || null })
+            .update({
+                full_name: newName,
+                pinned_organization_id: profile?.pinned_organization_id || null,
+            })
             .eq('id', user?.id || '');
 
         if (updateError) {
@@ -132,14 +137,20 @@ export default function AccountPage() {
                                         variant="outline"
                                         onClick={() => {
                                             setEditingName(false);
-                                            setNewName(profile?.full_name || '');
+                                            setNewName(
+                                                profile?.full_name || '',
+                                            );
                                             setError('');
                                         }}
                                     >
                                         Cancel
                                     </Button>
                                 </div>
-                                {error && <p className="text-red-500 text-sm">{error}</p>}
+                                {error && (
+                                    <p className="text-red-500 text-sm">
+                                        {error}
+                                    </p>
+                                )}
                             </div>
                         ) : (
                             <div className="flex items-center space-x-2">
@@ -185,7 +196,10 @@ export default function AccountPage() {
                                                 damping: 30,
                                             }}
                                             style={{
-                                                left: theme === 'light' ? 0 : '50%',
+                                                left:
+                                                    theme === 'light'
+                                                        ? 0
+                                                        : '50%',
                                                 width: '50%',
                                             }}
                                         />
@@ -215,7 +229,8 @@ export default function AccountPage() {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-gray-600">
-                                        Switch between standard and wide layouts.
+                                        Switch between standard and wide
+                                        layouts.
                                     </span>
                                     <div className="relative flex space-x-0 border border-secondary rounded-md overflow-hidden w-21 ml-6">
                                         <motion.div
@@ -227,7 +242,10 @@ export default function AccountPage() {
                                                 damping: 30,
                                             }}
                                             style={{
-                                                left: layout === 'standard' ? 0 : '50%',
+                                                left:
+                                                    layout === 'standard'
+                                                        ? 0
+                                                        : '50%',
                                                 width: '50%',
                                             }}
                                         />

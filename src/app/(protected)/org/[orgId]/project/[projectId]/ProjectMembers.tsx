@@ -63,10 +63,6 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         queryFn: () => getProjectMembers(projectId),
     });
 
-    const isOwner = members.some(
-        (member) => member.id === user?.id && member.role === 'owner',
-    );
-
     const userRole = members.find((member) => member.id === user?.id)?.role;
 
     const canPerformAction = (action: string) => {
@@ -78,7 +74,9 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
             viewer: [],
         };
 
-        return rolePermissions[(userRole as keyof typeof rolePermissions) || 'viewer'].includes(action);
+        return rolePermissions[
+            (userRole as keyof typeof rolePermissions) || 'viewer'
+        ].includes(action);
     };
 
     const sortedMembers = [...members].sort((a, b) => {
@@ -278,45 +276,48 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                                     >
                                         {member.role}
                                     </span>
-                                    {canPerformAction('changeRole') && member.role !== 'owner' && (
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 w-8 p-0"
-                                                >
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem
-                                                    onClick={() => {
-                                                        setActiveMemberId(
-                                                            member.id,
-                                                        );
-                                                        setIsRolePromptOpen(
-                                                            true,
-                                                        );
-                                                    }}
-                                                >
-                                                    Change role
-                                                </DropdownMenuItem>
-                                                {canPerformAction('removeMember') && (
+                                    {canPerformAction('changeRole') &&
+                                        member.role !== 'owner' && (
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
                                                     <DropdownMenuItem
                                                         onClick={() => {
-                                                            handleRemoveMember(
+                                                            setActiveMemberId(
                                                                 member.id,
                                                             );
+                                                            setIsRolePromptOpen(
+                                                                true,
+                                                            );
                                                         }}
-                                                        className="text-red-600"
                                                     >
-                                                        Remove
+                                                        Change role
                                                     </DropdownMenuItem>
-                                                )}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    )}
+                                                    {canPerformAction(
+                                                        'removeMember',
+                                                    ) && (
+                                                        <DropdownMenuItem
+                                                            onClick={() => {
+                                                                handleRemoveMember(
+                                                                    member.id,
+                                                                );
+                                                            }}
+                                                            className="text-red-600"
+                                                        >
+                                                            Remove
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
                                 </div>
                             </div>
                         ))}

@@ -1,7 +1,7 @@
 'use client';
 
-import { File, Trash, Upload, Grid, List } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { File, Grid, List, Trash, Upload } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -21,8 +21,8 @@ import {
 } from '@/hooks/mutations/useExternalDocumentsMutations';
 import { useExternalDocumentsByOrg } from '@/hooks/queries/useExternalDocuments';
 import { useOrganization } from '@/lib/providers/organization.provider';
-import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { useUser } from '@/lib/providers/user.provider';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
 
 interface ExternalDocsPageProps {
     onTotalUsageUpdate?: (totalUsage: number) => void;
@@ -309,8 +309,8 @@ export default function ExternalDocsPage({
                             viewMode === 'list'
                                 ? 'text-white'
                                 : theme === 'dark'
-                                ? 'text-white'
-                                : 'text-black'
+                                  ? 'text-white'
+                                  : 'text-black'
                         }`}
                         onClick={() => setViewMode('list')}
                     >
@@ -322,8 +322,8 @@ export default function ExternalDocsPage({
                             viewMode === 'grid'
                                 ? 'text-white'
                                 : theme === 'dark'
-                                ? 'text-white'
-                                : 'text-black'
+                                  ? 'text-white'
+                                  : 'text-black'
                         }`}
                         onClick={() => setViewMode('grid')}
                     >

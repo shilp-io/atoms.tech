@@ -2,8 +2,8 @@
 
 import { motion } from 'framer-motion';
 import { Check, Edit2, Lock, Unlock } from 'lucide-react';
-import React, { memo } from 'react';
 import { useParams } from 'next/navigation';
+import React, { memo } from 'react';
 
 import BaseToggle from '@/components/custom/toggles/BaseToggle';
 import { useLayout } from '@/lib/providers/layout.provider';
@@ -24,7 +24,10 @@ const getUserRole = async (userId: string): Promise<string> => {
             .from('project_members')
             .select('role')
             .eq('user_id', userId)
-            .eq('project_id', Array.isArray(projectId) ? projectId[0] : projectId) // Ensure projectId is a string
+            .eq(
+                'project_id',
+                Array.isArray(projectId) ? projectId[0] : projectId,
+            ) // Ensure projectId is a string
             .single();
 
         if (error) {
@@ -44,8 +47,6 @@ export const EditModeFloatingToggle = memo(() => {
     const { isEditMode, setIsEditMode } = useLayout();
     const { user } = useUser(); // Fetch user using useUser()
     const userId = user?.id || ''; // Ensure userId is extracted correctly
-    const params = useParams();
-    const projectId = params?.projectId || ''; // Ensure projectId is extracted correctly
 
     const canPerformAction = async () => {
         const userRole = await getUserRole(userId);
@@ -84,8 +85,6 @@ export const EditModeToggle = memo(() => {
     const { isEditMode, setIsEditMode } = useLayout();
     const { user } = useUser(); // Fetch user using useUser()
     const userId = user?.id || ''; // Ensure userId is extracted correctly
-    const params = useParams();
-    const projectId = params?.projectId || ''; // Ensure projectId is extracted correctly
 
     const canPerformAction = async () => {
         const userRole = await getUserRole(userId);

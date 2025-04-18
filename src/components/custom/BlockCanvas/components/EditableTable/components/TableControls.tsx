@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { Columns, FilterIcon, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
 
 import {
     EditableColumn,
@@ -15,6 +14,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useAuth } from '@/hooks/useAuth';
 
 import { AddColumnDialog } from './AddColumnDialog';
 
@@ -70,7 +70,9 @@ export function TableControls<T extends Record<string, unknown>>({
             viewer: [],
         };
 
-        const userRole = (userProfile as { role?: keyof typeof rolePermissions })?.role || 'viewer';
+        const userRole =
+            (userProfile as { role?: keyof typeof rolePermissions })?.role ||
+            'viewer';
         console.log('Project ID:', projectId); // Ensure projectId is logged for debugging
         return rolePermissions[userRole].includes(action);
     };

@@ -3,7 +3,6 @@
 import {
     DndContext,
     DragEndEvent,
-    DragOverlay,
     DragStartEvent,
     KeyboardSensor,
     PointerSensor,
@@ -29,20 +28,16 @@ import {
     BlockCanvasProps,
     BlockType,
     BlockWithRequirements,
-    // Unused but might be needed in the future
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    Property,
 } from '@/components/custom/BlockCanvas/types';
 import { Button } from '@/components/ui/button';
 import { useDocumentRealtime } from '@/hooks/queries/useDocumentRealtime';
 import { useAuth } from '@/hooks/useAuth';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useDocumentStore } from '@/lib/store/document.store';
-import { Block } from '@/types';
 // Unused but might be needed in the future
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Json } from '@/types/base/database.types';
 import { supabase } from '@/lib/supabase/supabaseBrowser';
+import { Block } from '@/types';
 
 const dropAnimationConfig = {
     ...defaultDropAnimation,
@@ -181,7 +176,9 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
             viewer: [],
         };
 
-        return rolePermissions[(userRole || 'viewer') as keyof typeof rolePermissions].includes(action);
+        return rolePermissions[
+            (userRole || 'viewer') as keyof typeof rolePermissions
+        ].includes(action);
     };
 
     const renderBlock = useCallback(
