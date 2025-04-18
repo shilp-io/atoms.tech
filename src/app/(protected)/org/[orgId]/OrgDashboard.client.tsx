@@ -79,14 +79,12 @@ export default function OrgDashboard(props: OrgDashboardProps) {
     >(null);
 
     const [isCanvasDialogOpen, setIsCanvasDialogOpen] = useState(false);
+
     const [selectedCanvasProjectId, setSelectedCanvasProjectId] = useState<
         string | null
     >(null);
     const { user } = useUser();
-
     const [userRole, setUserRole] = useState<string | null>(null);
-
-    console.log(userRole, 'userRole');
 
     const { data: documents } = useQuery({
         queryKey: ['documents', selectedProjectId],
