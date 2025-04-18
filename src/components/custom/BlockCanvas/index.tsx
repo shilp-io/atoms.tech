@@ -38,22 +38,22 @@ import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
 import { Json } from '@/types/base/database.types';
 
-const rolePermissions = React.useMemo(
-    () =>
-        ({
-            owner: ['editBlock', 'deleteBlock', 'addBlock'],
-            admin: ['editBlock', 'deleteBlock', 'addBlock'],
-            maintainer: ['editBlock', 'deleteBlock', 'addBlock'],
-            editor: ['editBlock', 'deleteBlock', 'addBlock'],
-            viewer: [],
-        }) as Record<
-            'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
-            string[]
-        >,
-    [],
-);
-
 export function BlockCanvas({ documentId }: BlockCanvasProps) {
+    const rolePermissions = React.useMemo(
+        () =>
+            ({
+                owner: ['editBlock', 'deleteBlock', 'addBlock'],
+                admin: ['editBlock', 'deleteBlock', 'addBlock'],
+                maintainer: ['editBlock', 'deleteBlock', 'addBlock'],
+                editor: ['editBlock', 'deleteBlock', 'addBlock'],
+                viewer: [],
+            }) as Record<
+                'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
+                string[]
+            >,
+        [],
+    );
+
     const {
         blocks: originalBlocks,
         loading,
