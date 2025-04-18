@@ -172,7 +172,7 @@ function AppSidebar() {
                     <SidebarGroupLabel className="flex items-center gap-2 px-1 mb-4">
                         <Link href="/" className="flex items-center gap-2">
                             <Image
-                                src="/atoms.png"
+                                src="/AtomsLogo.svg"
                                 alt="Atoms logo"
                                 width={20}
                                 height={20}
@@ -291,7 +291,9 @@ function AppSidebar() {
                                 className="w-[--radix-popper-anchor-width] text-xs"
                             >
                                 <DropdownMenuItem asChild>
-                                    <Link href="user/account">Account</Link>
+                                    <Link href="/home/user/account">
+                                        Account
+                                    </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
                                     <Link href="/billing">Billing</Link>
