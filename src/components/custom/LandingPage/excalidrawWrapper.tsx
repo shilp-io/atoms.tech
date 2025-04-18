@@ -8,7 +8,7 @@ import type {
     ExcalidrawImperativeAPI,
     ExcalidrawInitialDataState,
 } from '@excalidraw/excalidraw/types';
-import { Pencil, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { supabase } from '@/lib/supabase/supabaseBrowser';
@@ -68,12 +68,14 @@ interface ExcalidrawWrapperProps {
     }) => void;
     diagramId?: string | null;
     onDiagramSaved?: (id: string) => void;
+    onDiagramNameChange?: (name: string) => void;
 }
 
 const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     onMounted,
     diagramId: externalDiagramId,
     onDiagramSaved,
+    onDiagramNameChange,
 }) => {
     const [diagramId, setDiagramId] = useState<string | null>(
         externalDiagramId || null,
@@ -736,28 +738,20 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         };
     }, []);
 
+    // Notify parent component when diagram name changes
+    useEffect(() => {
+        if (onDiagramNameChange) {
+            onDiagramNameChange(diagramName);
+        }
+    }, [diagramName, onDiagramNameChange]);
+
     if (isLoading) {
         return <div>Loading...</div>;
     }
 
     return (
         <div className="h-full w-full min-h-[500px] relative">
-            <div className="absolute top-2.5 left-2.5 flex items-center gap-2.5 z-[1000]">
-                <div className="bg-white dark:bg-sidebar px-2.5 py-1 rounded border border-gray-200 dark:border-sidebar-foreground flex items-center gap-2">
-                    <span className="font-medium text-sm">{diagramName}</span>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                            setNewDiagramName(diagramName);
-                            setIsRenameDialogOpen(true);
-                        }}
-                        className="h-7 w-7 p-0 hover:bg-gray-100 dark:hover:bg-sidebar-foreground"
-                    >
-                        <Pencil size={14} />
-                    </Button>
-                </div>
-
+            <div className="absolute top-2.5 right-2.5 flex items-center gap-2.5 z-[1000]">
                 <Button
                     variant="outline"
                     size="sm"
@@ -773,7 +767,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             </div>
 
             {lastSaved && (
-                <div className="absolute top-2.5 right-2.5 text-xs text-gray-400 dark:text-gray-400 z-[1000]">
+                <div className="absolute top-2.5 right-20 text-xs text-gray-400 dark:text-gray-400 z-[1000]">
                     Last saved: {lastSaved.toLocaleTimeString()}
                 </div>
             )}
@@ -798,40 +792,6 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     excalidrawApiRef.current = api;
                 }}
             />
-
-            {/* Rename Dialog */}
-            <Dialog
-                open={isRenameDialogOpen}
-                onOpenChange={setIsRenameDialogOpen}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Rename Diagram</DialogTitle>
-                    </DialogHeader>
-                    <div className="py-4">
-                        <Input
-                            value={newDiagramName}
-                            onChange={(e) => setNewDiagramName(e.target.value)}
-                            placeholder="Diagram name"
-                            className="mb-4"
-                        />
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsRenameDialogOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleRename}
-                                disabled={!newDiagramName.trim()}
-                            >
-                                Rename
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             {/* Save As Dialog */}
             <Dialog
