@@ -86,50 +86,55 @@ export function EditableTable<
         console.error('User ID is missing from the user context.');
     }
 
-    // Define rolePermissions with explicit type
-    const rolePermissions: Record<
-        'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
-        string[]
-    > = {
-        owner: ['editTable', 'deleteRow', 'addRow'],
-        admin: ['editTable', 'deleteRow', 'addRow'],
-        maintainer: ['editTable', 'deleteRow', 'addRow'],
-        editor: ['editTable', 'deleteRow', 'addRow'],
-        viewer: [],
-    };
-
-    // Explicitly type the return value of getUserRole
-    const getUserRole = async (): Promise<keyof typeof rolePermissions> => {
-        try {
-            const { data, error } = await supabase
-                .from('project_members')
-                .select('role')
-                .eq('user_id', userId) // Use userId from useUser
-                .eq(
-                    'project_id',
-                    Array.isArray(projectId) ? projectId[0] : projectId,
-                ) // Ensure projectId is a string
-                .single();
-
-            if (error) {
-                console.error('Error fetching user role:', error);
-                return 'viewer'; // Default to 'viewer' if there's an error
-            }
-
-            return data?.role || 'viewer'; // Default to 'viewer' if role is undefined
-        } catch (err) {
-            console.error('Unexpected error fetching user role:', err);
-            return 'viewer';
-        }
-    };
+    // Define rolePermissions with useMemo
+    const rolePermissions = React.useMemo(
+        () =>
+            ({
+                owner: ['editTable', 'deleteRow', 'addRow'],
+                admin: ['editTable', 'deleteRow', 'addRow'],
+                maintainer: ['editTable', 'deleteRow', 'addRow'],
+                editor: ['editTable', 'deleteRow', 'addRow'],
+                viewer: [],
+            }) as Record<
+                'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
+                string[]
+            >,
+        [],
+    );
 
     const canPerformAction = useCallback(
         async (action: string) => {
+            const getUserRole = async (): Promise<
+                keyof typeof rolePermissions
+            > => {
+                try {
+                    const { data, error } = await supabase
+                        .from('project_members')
+                        .select('role')
+                        .eq('user_id', userId) // Use userId from useUser
+                        .eq(
+                            'project_id',
+                            Array.isArray(projectId) ? projectId[0] : projectId,
+                        ) // Ensure projectId is a string
+                        .single();
+
+                    if (error) {
+                        console.error('Error fetching user role:', error);
+                        return 'viewer'; // Default to 'viewer' if there's an error
+                    }
+
+                    return data?.role || 'viewer'; // Default to 'viewer' if role is undefined
+                } catch (err) {
+                    console.error('Unexpected error fetching user role:', err);
+                    return 'viewer';
+                }
+            };
+
             const userRole = await getUserRole();
             console.log('User role:', userRole);
             return rolePermissions[userRole].includes(action);
         },
-        [getUserRole, rolePermissions], // Added dependencies
+        [userId, projectId, rolePermissions], // Updated dependencies
     );
 
     // Effect to init edit data when entering edit mode

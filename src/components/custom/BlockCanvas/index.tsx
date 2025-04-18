@@ -19,7 +19,6 @@ import {
 import { Table, Type } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Json } from '@/types/base/database.types';
 
 import { SortableBlock } from '@/components/custom/BlockCanvas/components/SortableBlock';
 import { TableBlockLoadingState } from '@/components/custom/BlockCanvas/components/TableBlockLoadingState';
@@ -37,14 +36,22 @@ import { useDocumentStore } from '@/lib/store/document.store';
 // Unused but might be needed in the future
 import { supabase } from '@/lib/supabase/supabaseBrowser';
 import { Block } from '@/types';
+import { Json } from '@/types/base/database.types';
 
-
-import { defaultDropAnimation } from '@dnd-kit/core'; // Ensure this import is correct
-
-const dropAnimationConfig = {
-    ...defaultDropAnimation,
-    dragSourceOpacity: 0.5,
-};
+const rolePermissions = React.useMemo(
+    () =>
+        ({
+            owner: ['editBlock', 'deleteBlock', 'addBlock'],
+            admin: ['editBlock', 'deleteBlock', 'addBlock'],
+            maintainer: ['editBlock', 'deleteBlock', 'addBlock'],
+            editor: ['editBlock', 'deleteBlock', 'addBlock'],
+            viewer: [],
+        }) as Record<
+            'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
+            string[]
+        >,
+    [],
+);
 
 export function BlockCanvas({ documentId }: BlockCanvasProps) {
     const {
@@ -64,17 +71,6 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
     const { userProfile } = useAuth();
     const { currentOrganization } = useOrganization();
     const params = useParams();
-
-    const rolePermissions: Record<
-        'owner' | 'admin' | 'maintainer' | 'editor' | 'viewer',
-        string[]
-    > = {
-        owner: ['editBlock', 'deleteBlock', 'addBlock'],
-        admin: ['editBlock', 'deleteBlock', 'addBlock'],
-        maintainer: ['editBlock', 'deleteBlock', 'addBlock'],
-        editor: ['editBlock', 'deleteBlock', 'addBlock'],
-        viewer: [],
-    };
 
     // Explicitly type userRole
     const [userRole, setUserRole] = useState<
@@ -106,7 +102,7 @@ export function BlockCanvas({ documentId }: BlockCanvasProps) {
 
         fetchUserRole();
     }, [params?.projectId, userProfile?.id]);
-          
+
     // Use a ref to track if we're in the middle of adding a block
     // This helps prevent unnecessary re-renders
     const isAddingBlockRef = React.useRef(false);
