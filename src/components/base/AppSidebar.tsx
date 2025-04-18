@@ -35,6 +35,7 @@ import { useSignOut } from '@/hooks/useSignOut';
 import { useOrganization } from '@/lib/providers/organization.provider';
 import { useUser } from '@/lib/providers/user.provider';
 import { OrganizationType } from '@/types';
+import { supabase } from '@/lib/supabase/supabaseBrowser';
 
 interface MenuItem {
     title: string;
@@ -69,10 +70,10 @@ function AppSidebar() {
     // Define primaryEnterpriseOrg based on enterpriseOrg
     const primaryEnterpriseOrg = enterpriseOrg;
 
-    const _isOrgPage = pathname.startsWith('/org');
+    const _isOrgPage = pathname?.startsWith('/org') ?? false;
     const _isPlaygroundPage =
         currentOrganization?.type === OrganizationType.personal;
-    const _isUserDashboardPage = pathname.startsWith('/home/user');
+    const _isUserDashboardPage = pathname?.startsWith('/home/user') ?? false;
 
     // Check if user has only a personal org and no other memberships
     const _hasOnlyPersonalOrg =
@@ -105,6 +106,50 @@ function AppSidebar() {
             console.log('No enterprise organization found');
         }
     }, [primaryEnterpriseOrg, router]);
+
+    const navigateToPinnedOrganization = useCallback(async () => {
+        try {
+            // Fetch the user's profile to get pinned_organization_id and personal_organization_id
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('pinned_organization_id, personal_organization_id')
+                .eq('id', user?.id || '')
+                .single();
+
+            if (error) {
+                console.error('Error fetching user profile:', error);
+                return;
+            }
+
+            if (data) {
+                let targetOrgId = data.pinned_organization_id;
+
+                if (!targetOrgId && data.personal_organization_id) {
+                    // If no pinned organization, set it to personal_organization_id by default
+                    const { error: updateError } = await supabase
+                        .from('profiles')
+                        .update({ pinned_organization_id: data.personal_organization_id })
+                        .eq('id', user?.id || '');
+
+                    if (!updateError) {
+                        targetOrgId = data.personal_organization_id;
+                    } else {
+                        console.error('Error updating pinned organization:', updateError);
+                        return;
+                    }
+                }
+
+                if (targetOrgId) {
+                    console.log('Navigating to pinned organization:', targetOrgId);
+                    router.push(`/org/${targetOrgId}`);
+                } else {
+                    console.log('No pinned or personal organization found');
+                }
+            }
+        } catch (err) {
+            console.error('Unexpected error:', err);
+        }
+    }, [user?.id, router]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -157,7 +202,7 @@ function AppSidebar() {
                                         <Button
                                             variant="ghost"
                                             className="w-full justify-start"
-                                            onClick={navigateToEnterprise}
+                                            onClick={navigateToPinnedOrganization}
                                         >
                                             <LayoutDashboard className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                                             <span className="text-xs font-medium">
