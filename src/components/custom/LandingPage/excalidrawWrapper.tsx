@@ -90,7 +90,6 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     const [authError, setAuthError] = useState<string | null>(null);
     const [isSaveAsDialogOpen, setIsSaveAsDialogOpen] = useState(false);
     const [newDiagramName, setNewDiagramName] = useState('');
-    const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
 
     const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
         undefined,
@@ -168,11 +167,17 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
 
                 if (error) {
                     console.error('Error loading diagram:', error);
-                    if (error.message.includes("multiple (or no) rows returned")) {
-                        console.log('No diagram found with ID:', id, '- treating as new diagram');
+                    if (
+                        error.message.includes('multiple (or no) rows returned')
+                    ) {
+                        console.log(
+                            'No diagram found with ID:',
+                            id,
+                            '- treating as new diagram',
+                        );
                         return false;
                     }
-                    
+
                     //handle it as a real error
                     setAuthError('Error loading diagram: ' + error.message);
                     return false;
@@ -641,64 +646,6 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         // Close the dialog
         setIsSaveAsDialogOpen(false);
         setNewDiagramName('');
-    };
-
-    // Handle rename operation
-    const handleRename = async () => {
-        if (!diagramId || !newDiagramName.trim()) return;
-
-        console.log('Renaming diagram:', diagramId, newDiagramName.trim());
-
-        try {
-            // Store the trimmed name value
-            const trimmedName = newDiagramName.trim();
-
-            // Get current diagram state
-            if (excalidrawApiRef.current) {
-                // Get current diagram data
-                const elements = excalidrawApiRef.current.getSceneElements();
-                const appState = excalidrawApiRef.current.getAppState();
-                const files = excalidrawApiRef.current.getFiles();
-
-                // Use saveDiagram directly with the new name - one operation for everything
-                await saveDiagram(
-                    elements,
-                    appState,
-                    files,
-                    undefined,
-                    trimmedName,
-                    true,
-                );
-                console.log(
-                    'Diagram renamed and saved successfully with name:',
-                    trimmedName,
-                );
-            } else {
-                // Fallback if we can't get excalidraw state
-                const { error } = await supabase
-                    .from('excalidraw_diagrams')
-                    .update({ name: trimmedName })
-                    .eq('id', diagramId);
-
-                if (error) {
-                    console.error('Error renaming diagram:', error);
-                    return;
-                }
-
-                // Update local state
-                setDiagramName(trimmedName);
-                console.log(
-                    'Diagram renamed with name-only update:',
-                    trimmedName,
-                );
-            }
-
-            // Close dialog and reset input
-            setIsRenameDialogOpen(false);
-            setNewDiagramName('');
-        } catch (err) {
-            console.error('Error in handleRename:', err);
-        }
     };
 
     // Debounced save function to avoid too many API calls

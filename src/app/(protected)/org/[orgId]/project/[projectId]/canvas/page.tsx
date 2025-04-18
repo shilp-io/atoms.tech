@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, CircleAlert, Grid, Pencil, PenTool } from 'lucide-react';
+import { ChevronDown, CircleAlert, Grid, PenTool, Pencil } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { usePathname, useSearchParams } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -67,8 +67,10 @@ export default function Draw() {
     const [error, setError] = useState<string>('');
 
     // Diagram name management
-    const [currentDiagramName, setCurrentDiagramName] = useState<string>('Untitled Diagram');
-    const [isRenameDialogOpen, setIsRenameDialogOpen] = useState<boolean>(false);
+    const [currentDiagramName, setCurrentDiagramName] =
+        useState<string>('Untitled Diagram');
+    const [isRenameDialogOpen, setIsRenameDialogOpen] =
+        useState<boolean>(false);
     const [newDiagramName, setNewDiagramName] = useState<string>('');
 
     // Read diagram ID and diagram prompt from URL on mount
@@ -412,7 +414,7 @@ export default function Draw() {
 
             // Update local state
             setCurrentDiagramName(newDiagramName.trim());
-            
+
             // Close dialog and reset input
             setIsRenameDialogOpen(false);
             setNewDiagramName('');
@@ -432,7 +434,9 @@ export default function Draw() {
                 <div className="flex items-center gap-2">
                     {activeTab === 'editor' && selectedDiagramId ? (
                         <>
-                            <h1 className="text-2xl font-bold">{currentDiagramName}</h1>
+                            <h1 className="text-2xl font-bold">
+                                {currentDiagramName}
+                            </h1>
                             <Button
                                 variant="ghost"
                                 size="sm"
