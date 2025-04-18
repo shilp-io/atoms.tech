@@ -225,16 +225,16 @@ export const TextBlock: React.FC<BlockProps> = ({
         },
         onUpdate: ({ editor }) => {
             if (!isEditMode) return;
-            
+
             // Check if editor is completely empty (only has an empty paragraph)
             const isEmpty = editor.isEmpty;
             let newContent = editor.getHTML();
-            
+
             // If editor is empty, set content to empty string instead of <p></p>
             if (isEmpty || newContent === '<p></p>') {
                 newContent = '';
             }
-            
+
             // Update local content immediately to trigger placeholder if needed
             setLocalContent(newContent);
         },
@@ -244,7 +244,7 @@ export const TextBlock: React.FC<BlockProps> = ({
     React.useEffect(() => {
         if (editor) {
             editor.setEditable(Boolean(isEditMode));
-            
+
             // Focus the editor when entering edit mode
             if (isEditMode && content?.text === '<p></p>') {
                 setTimeout(() => {
@@ -258,8 +258,11 @@ export const TextBlock: React.FC<BlockProps> = ({
     React.useEffect(() => {
         if (!isEditMode && localContent !== lastSavedContent.current) {
             // If content is empty or just empty paragraph tags, save as empty string
-            const contentToSave = localContent === '' || localContent === '<p></p>' ? '' : localContent;
-            
+            const contentToSave =
+                localContent === '' || localContent === '<p></p>'
+                    ? ''
+                    : localContent;
+
             lastSavedContent.current = contentToSave;
             onUpdate({
                 text: contentToSave,
@@ -271,7 +274,7 @@ export const TextBlock: React.FC<BlockProps> = ({
     // Save content when editor loses focus
     const handleBlur = React.useCallback(() => {
         if (!editor || !isEditMode) return;
-        
+
         const editorContent = editor.getHTML();
         if (editorContent !== lastSavedContent.current) {
             lastSavedContent.current = editorContent;
@@ -282,7 +285,7 @@ export const TextBlock: React.FC<BlockProps> = ({
     // Add blur handler to editor
     React.useEffect(() => {
         if (!editor) return;
-        
+
         editor.on('blur', handleBlur);
         return () => {
             editor.off('blur', handleBlur);
@@ -295,11 +298,11 @@ export const TextBlock: React.FC<BlockProps> = ({
 
         // Handle empty content case
         const textContent = content?.text || '';
-        
+
         if (textContent !== lastSavedContent.current) {
             lastSavedContent.current = textContent;
             setLocalContent(textContent);
-            
+
             // If content is empty, set empty paragraph that will show placeholder
             if (textContent === '') {
                 editor.commands.clearContent();
@@ -366,8 +369,12 @@ export const TextBlock: React.FC<BlockProps> = ({
                 <style>{customStyles}</style>
                 <div className="relative min-h-[1.5em]">
                     {/* Show placeholder for empty text blocks regardless of edit mode */}
-                    {(!localContent || localContent === '' || localContent === '<p></p>') && (
-                        <div className="empty-editor-placeholder">Enter text here...</div>
+                    {(!localContent ||
+                        localContent === '' ||
+                        localContent === '<p></p>') && (
+                        <div className="empty-editor-placeholder">
+                            Enter text here...
+                        </div>
                     )}
                     <EditorContent
                         editor={editor}

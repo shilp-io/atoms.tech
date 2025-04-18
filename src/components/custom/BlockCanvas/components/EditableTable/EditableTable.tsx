@@ -382,13 +382,14 @@ export function EditableTable<
                             )}
 
                             {/* Add new row placeholder */}
-                            {!isAddingNew && (localIsEditMode || alwaysShowAddRow) && (
-                                <AddRowPlaceholder
-                                    columns={columns}
-                                    onClick={handleAddNewRow}
-                                    isEditMode={localIsEditMode}
-                                />
-                            )}
+                            {!isAddingNew &&
+                                (localIsEditMode || alwaysShowAddRow) && (
+                                    <AddRowPlaceholder
+                                        columns={columns}
+                                        onClick={handleAddNewRow}
+                                        isEditMode={localIsEditMode}
+                                    />
+                                )}
                         </TableBody>
                     </Table>
                 </div>

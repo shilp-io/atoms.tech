@@ -55,13 +55,15 @@ export function useProjectRequirements(projectId: string) {
             // Get all requirements that belong to documents in this project
             const { data, error } = await supabase
                 .from('requirements')
-                .select(`
+                .select(
+                    `
                     *,
                     documents!inner (
                         id,
                         project_id
                     )
-                `)
+                `,
+                )
                 .eq('documents.project_id', projectId)
                 .eq('is_deleted', false)
                 .order('created_at', { ascending: false });

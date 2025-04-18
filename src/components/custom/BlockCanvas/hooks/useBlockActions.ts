@@ -241,7 +241,7 @@ export const useBlockActions = ({
             const tempId = uuidv4();
             const position = blocks?.length || 0;
             const blockName = `${type.toString().charAt(0).toUpperCase() + type.toString().slice(1)} Block`;
-            
+
             // Create a temporary block for immediate UI update
             const tempBlock: BlockWithRequirements = {
                 id: tempId,
@@ -290,14 +290,20 @@ export const useBlockActions = ({
 
             // Update the document store with the real block
             addBlock(createdBlock);
-            
+
             // Replace the temporary block with the real one
             setLocalBlocks((prevBlocks) => {
-                return prevBlocks.map(block => 
-                    block.id === tempId ? { ...createdBlock, requirements: [], order: block.order } : block
+                return prevBlocks.map((block) =>
+                    block.id === tempId
+                        ? {
+                              ...createdBlock,
+                              requirements: [],
+                              order: block.order,
+                          }
+                        : block,
                 );
             });
-            
+
             console.log('Local state updated with new block');
 
             // If it's a table block, create columns based on base properties

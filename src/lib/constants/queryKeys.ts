@@ -1,6 +1,8 @@
-import { PaginationParams, TestReqFilter } from '@/components/custom/TestBed/types';
+import {
+    PaginationParams,
+    TestReqFilter,
+} from '@/components/custom/TestBed/types';
 import { QueryFilters } from '@/types/base/filters.types';
-
 
 /**
  * Centralized query key factory for React Query
@@ -180,17 +182,20 @@ export const queryKeys = {
         root: ['test_req'] as const,
         list: ['test_req', 'list'] as const,
         detail: (id: string) => ['test_req', 'detail', id] as const,
-        byProject: (projectId: string) => ['test_req', 'byProject', projectId] as const,
-        byRequirement: (requirementId: string) => ['test_req', 'byRequirement', requirementId] as const,
+        byProject: (projectId: string) =>
+            ['test_req', 'byProject', projectId] as const,
+        byRequirement: (requirementId: string) =>
+            ['test_req', 'byRequirement', requirementId] as const,
     },
     requirementTests: {
         root: ['requirement_tests'] as const,
         list: ['requirement_tests', 'list'] as const,
         detail: (id: string) => ['requirement_tests', 'detail', id] as const,
-        byRequirement: (requirementId: string) => ['requirement_tests', 'byRequirement', requirementId] as const,
-        byTest: (testId: string) => ['requirement_tests', 'byTest', testId] as const,
+        byRequirement: (requirementId: string) =>
+            ['requirement_tests', 'byRequirement', requirementId] as const,
+        byTest: (testId: string) =>
+            ['requirement_tests', 'byTest', testId] as const,
     },
-    
 } as const;
 
 export type QueryKeys = typeof queryKeys;
