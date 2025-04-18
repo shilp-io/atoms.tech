@@ -19,7 +19,7 @@ export function FeatureDemo({ className }: FeatureDemoProps) {
             id: 'writing',
             title: 'Writing Requirements',
             description: 'Write requirements in a natural, human way with our intuitive interface.',
-            gifPath: '/WriteReq2.gif'
+            gifPath: '/WriteRequirement.gif'
         },
         {
             id: 'analysis',
@@ -31,7 +31,7 @@ export function FeatureDemo({ className }: FeatureDemoProps) {
             id: 'diagram',
             title: 'Requirement to Diagram',
             description: 'Automatically generate visual diagrams from your written requirements.',
-            gifPath: '/ReqToDiagram.gif'
+            gifPath: '/RequirementToDiagram.gif'
         }
     ];
 
