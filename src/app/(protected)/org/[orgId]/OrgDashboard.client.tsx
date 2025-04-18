@@ -78,12 +78,10 @@ export default function OrgDashboard(props: OrgDashboardProps) {
     >(null);
 
     const [isCanvasDialogOpen, setIsCanvasDialogOpen] = useState(false);
+
     const [selectedCanvasProjectId, setSelectedCanvasProjectId] = useState<string | null>(null);
     const { user } = useUser();
-
     const [userRole, setUserRole] = useState<string | null>(null);
-
-    console.log(userRole, 'userRole');
 
     const { data: documents } = useQuery({
         queryKey: ['documents', selectedProjectId],
@@ -829,7 +827,9 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                     <Button variant="outline">
                                         {selectedCanvasProjectId
                                             ? props.projects?.find(
-                                                  (p) => p.id === selectedCanvasProjectId,
+                                                  (p) =>
+                                                      p.id ===
+                                                      selectedCanvasProjectId,
                                               )?.name
                                             : 'Choose a project'}
                                     </Button>
@@ -838,7 +838,11 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                     {props.projects?.map((project) => (
                                         <DropdownMenuItem
                                             key={project.id}
-                                            onClick={() => setSelectedCanvasProjectId(project.id)}
+                                            onClick={() =>
+                                                setSelectedCanvasProjectId(
+                                                    project.id,
+                                                )
+                                            }
                                         >
                                             {project.name}
                                         </DropdownMenuItem>
