@@ -41,7 +41,7 @@ const LayoutView = memo(({ children, className }: LayoutViewProps) => {
             }}
             className={cn(
                 'flex flex-col bg-background text-foreground mx-auto ',
-                
+
                 className,
             )}
         >
