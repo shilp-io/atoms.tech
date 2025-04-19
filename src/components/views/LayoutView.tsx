@@ -19,7 +19,7 @@ const layoutVariants = {
     },
     wide: {
         width: '100%',
-        maxWidth: '100rem',
+        maxWidth: '100%',
     },
 };
 
@@ -41,8 +41,7 @@ const LayoutView = memo(({ children, className }: LayoutViewProps) => {
             }}
             className={cn(
                 'flex flex-col bg-background text-foreground mx-auto',
-                // Add responsive padding that scales with viewport
-                'px-4 sm:px-6 md:px-8',
+                
                 className,
             )}
         >
