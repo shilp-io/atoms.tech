@@ -13,10 +13,7 @@ export function CTA() {
                     SOFTWARE CRUMBLE UNDER ITS OWN WEIGHT.
                 </p>
                 <div className="flex flex-col md:flex-row justify-start space-y-8 md:space-y-0 md:space-x-12">
-                    <Button
-                        variant="default"
-                        className=""
-                    >
+                    <Button variant="default" className="">
                         SCHEDULE A DEMO
                     </Button>
                 </div>

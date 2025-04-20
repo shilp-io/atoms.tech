@@ -10,7 +10,8 @@ const industries = [
     {
         name: 'HEALTHCARE',
         icon: Activity,
-        description: 'Align medical devices with key standards—such as ISO 13485, ISO 14971, and IEC 62304.',
+        description:
+            'Align medical devices with key standards—such as ISO 13485, ISO 14971, and IEC 62304.',
     },
     {
         name: 'AEROSPACE',
@@ -33,8 +34,7 @@ const industries = [
     {
         name: 'DEFENSE / DoD',
         icon: Shield,
-        description:
-            'Deliver bulletproof compliance for high-stakes programs.',
+        description: 'Deliver bulletproof compliance for high-stakes programs.',
     },
 ];
 

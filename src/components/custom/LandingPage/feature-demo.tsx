@@ -19,15 +19,13 @@ export function FeatureDemo({ className }: FeatureDemoProps) {
         {
             id: 'writing',
             title: 'Write Requirements',
-            description:
-                'Type naturally; cells expand like a doc.',
+            description: 'Type naturally; cells expand like a doc.',
             gifPath: '/WriteRequirement.gif',
         },
         {
             id: 'analysis',
             title: 'Analyze Requirements',
-            description:
-                'AI rewrites, checks compliance, and grades clarity.',
+            description: 'AI rewrites, checks compliance, and grades clarity.',
             gifPath: '/Analysis.gif',
         },
         {

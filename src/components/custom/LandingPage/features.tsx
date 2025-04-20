@@ -1,17 +1,24 @@
-import { Brain, FileCheck, FileText, GitMerge, TestTube, Zap } from 'lucide-react';
+import {
+    Brain,
+    FileCheck,
+    FileText,
+    GitMerge,
+    TestTube,
+    Zap,
+} from 'lucide-react';
 
 const features = [
     {
         icon: FileText,
         title: 'TYPE LIKE A HUMAN',
         description:
-            "Draft requirements in a familiar editor—no clunky forms or modal hell.",
+            'Draft requirements in a familiar editor—no clunky forms or modal hell.',
     },
     {
         icon: Brain,
         title: 'AI REWRITES & CHECKS',
         description:
-            "One click to restructure text into industry formats (EARS, INCOSE) and flag missing details.",
+            'One click to restructure text into industry formats (EARS, INCOSE) and flag missing details.',
     },
     {
         icon: FileCheck,
@@ -23,19 +30,19 @@ const features = [
         icon: GitMerge,
         title: 'BYE-BYE EXCEL HELL',
         description:
-            "Visual traceability without monstrous spreadsheets—relationships update in real time.",
+            'Visual traceability without monstrous spreadsheets—relationships update in real time.',
     },
     {
         icon: Zap,
         title: 'SNAPPY & LIGHTWEIGHT',
         description:
-            "Loads fast, saves instantly, and stays smooth even with thousands of requirements.",
+            'Loads fast, saves instantly, and stays smooth even with thousands of requirements.',
     },
     {
         icon: TestTube,
         title: 'ONE-CLICK TEST CASES',
         description:
-            "Generate structured test cases directly from every requirement—no manual scripting.",
+            'Generate structured test cases directly from every requirement—no manual scripting.',
     },
 ];
 
