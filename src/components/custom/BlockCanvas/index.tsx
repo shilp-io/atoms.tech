@@ -333,7 +333,7 @@ export function BlockCanvas({
     }
 
     return (
-        <div className="relative min-h-[500px] space-y-4">
+        <div className="relative min-h-[500px] space-y-4 pl-4">
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
