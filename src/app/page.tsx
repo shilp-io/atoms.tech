@@ -10,6 +10,7 @@ import { Industries } from '@/components/custom/LandingPage/industries';
 import { Navbar } from '@/components/custom/LandingPage/navbar';
 import { TimeSavingEdge } from '@/components/custom/LandingPage/time-saving-edge';
 import { ProfilerWrapper } from '@/components/custom/ProfilerWrapper';
+import { ProblemSnapshot } from '@/components/custom/LandingPage/problem-snapshot';
 
 export default async function Home() {
     return (
@@ -20,7 +21,16 @@ export default async function Home() {
                     <main className="space-y-64">
                         <Hero />
                         <div className="section-divider">
+                        
+                        </div>
+                        <div className="section-divider">
                             <Features />
+                        </div>
+                        <div className="section-divider">
+                        <ProblemSnapshot
+                            painPoint="Writing compliant requirements is slow, error‑prone—and bogged down by bloated legacy tools."
+                            solution="A Word‑simple, spreadsheet‑smart workspace with built‑in AI that cuts effort by 50%—checking compliance, sharpening language, and keeping everything traceable."
+                        />
                         </div>
                         <div className="section-divider">
                             <FeatureDemo />
