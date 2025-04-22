@@ -626,6 +626,8 @@ export function TanStackEditableTable<
                     }}
                     isVisible={true}
                     orgId=""
+                    projectId=""
+                    documentId=""
                 />
             )}
             <div

@@ -447,6 +447,8 @@ export function EditableTable<
                     }}
                     isVisible={true}
                     orgId=""
+                    projectId=""
+                    documentId=""
                 />
             )}
             <div
