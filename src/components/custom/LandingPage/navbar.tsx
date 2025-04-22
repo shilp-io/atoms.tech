@@ -53,11 +53,6 @@ export function Navbar() {
 
     const navLinks = [
         { href: '/#features', label: 'Features' },
-        {
-            href: '/#how-it-works',
-            label: 'How It Works',
-            shortLabel: 'How It Works',
-        },
         { href: '/#industries', label: 'Industries' },
         { href: '/#contact', label: 'Contact' },
     ];
@@ -65,11 +60,9 @@ export function Navbar() {
     const NavLink = ({
         href,
         label,
-        shortLabel,
     }: {
         href: string;
         label: string;
-        shortLabel?: string;
     }) => (
         <Link
             href={href}
@@ -77,7 +70,7 @@ export function Navbar() {
             onClick={() => setIsMenuOpen(false)}
         >
             <span className="hidden md:inline lg:hidden">
-                {shortLabel || label}
+                {label}
             </span>
             <span className="inline md:hidden lg:inline">{label}</span>
             <div className="absolute w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
