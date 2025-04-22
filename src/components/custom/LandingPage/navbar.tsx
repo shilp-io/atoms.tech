@@ -177,7 +177,7 @@ export function Navbar() {
     }, []);
 
     return (
-        <header className="fixed top-0 left-0 right-0 min-h-8 bg-black/90 backdrop-blur-md text-white border-b border-1px border-white z-50">
+        <header className="fixed top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-md text-white border-b border-1px border-white z-50">
             {/* Show full-screen loading overlay when navigating to dashboard */}
             {loadingStates.dashboard && (
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
@@ -193,8 +193,8 @@ export function Navbar() {
                 </div>
             )}
 
-            <div className="relative">
-                <div className="container mx-auto flex justify-between items-center">
+            <div className="relative h-full">
+                <div className="container mx-auto flex justify-between items-center h-full">
                     <Link
                         href="/"
                         className="atoms-logo flex items-center group justify-center"
@@ -206,7 +206,7 @@ export function Navbar() {
                             }
                         }}
                     >
-                        <div className="flex items-center justify-center relative mx-1 sm:mx-2 h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10">
+                        <div className="flex items-center justify-center relative mx-1 sm:mx-2 h-10 w-10">
                             <Image
                                 src="/AtomsLogo.svg"
                                 alt="Atoms logo"
@@ -244,7 +244,7 @@ export function Navbar() {
                     {/* Mobile Menu Button */}
                     <div className="flex items-center gap-2 sm:gap-4">
                         {isLoading ? (
-                            <div className="h-9 w-24 bg-gray-700 animate-pulse"></div>
+                            <div className="h-50px w-75px bg-muted animate-pulse"></div>
                         ) : isAuthenticated ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
