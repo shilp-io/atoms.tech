@@ -5,7 +5,7 @@ import { useCookies } from 'next-client-cookies';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -195,8 +195,8 @@ export function Navbar() {
 
             <div className="relative">
                 <div className="container mx-auto flex justify-between items-center">
-                    <Link 
-                        href="/" 
+                    <Link
+                        href="/"
                         className="atoms-logo flex items-center group"
                         onMouseEnter={() => {
                             setIsAnimating(true);
@@ -215,7 +215,7 @@ export function Navbar() {
                                 className={`object-contain invert absolute transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
                                 priority
                             />
-                            <video 
+                            <video
                                 ref={videoRef}
                                 className={`atoms-logo-video object-contain absolute transition-opacity duration-300 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
                                 width={48}
