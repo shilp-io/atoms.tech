@@ -162,21 +162,23 @@ export function Navbar() {
     }, []);
 
     return (
-        <header className="fixed top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-md text-white border-b border-1px border-white z-50">
-            {/* Show full-screen loading overlay when navigating to dashboard */}
+        <>
             {loadingStates.dashboard && (
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
-                    <div className="flex flex-col items-center space-y-4 text-center px-4">
-                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
-                            Loading dashboard...
-                        </h2>
-                        <p className="text-sm sm:text-base text-muted-foreground">
-                            We&apos;re preparing your organization workspace
-                        </p>
-                    </div>
+                <div className="flex flex-col items-center space-y-4 text-center px-4">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+                        Loading dashboard...
+                    </h2>
+                    <p className="text-sm sm:text-base text-muted-foreground">
+                        We&apos;re preparing your organization workspace
+                    </p>
                 </div>
-            )}
+            </div>
+        )}
+        <header className="fixed top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-md text-white border-b border-1px border-white z-50">
+            {/* Show full-screen loading overlay when navigating to dashboard */}
+            
 
             <div className="relative h-full">
                 <div className="container mx-auto flex justify-between items-center h-full">
@@ -411,5 +413,6 @@ export function Navbar() {
                 <GridBackground />
             </div>
         </header>
+        </>
     );
 }
