@@ -798,7 +798,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                         <div className="flex justify-end mt-4 space-x-2">
                             <Button
                                 variant="outline"
-                                className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-muted"
                                 onClick={() => {
                                     setIsAiAnalysisDialogOpen(false);
                                     setSelectedProjectId(null);
@@ -825,7 +825,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
             {/* Canvas Dialog */}
             {isCanvasDialogOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white dark:bg-gray-800 shadow-lg p-6 w-96 border border-gray-300 dark:border-gray-700 rounded-lg">
+                    <div className="bg-white dark:bg-black shadow-lg p-6 w-96 border border-gray-300 dark:border-muted rounded-lg">
                         <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">
                             Select a Project for Canvas
                         </h3>
@@ -861,7 +861,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                         <div className="flex justify-end mt-4 space-x-2">
                             <Button
                                 variant="outline"
-                                className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-muted"
                                 onClick={() => {
                                     setIsCanvasDialogOpen(false);
                                     setSelectedCanvasProjectId(null);
