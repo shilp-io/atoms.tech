@@ -10,6 +10,8 @@ import React, {
     useState,
 } from 'react';
 
+import { useDocumentStore } from '@/store/document.store';
+
 // Define comprehensive viewport breakpoints
 export const BREAKPOINTS = {
     xs: 480,
@@ -21,7 +23,6 @@ export const BREAKPOINTS = {
 };
 
 // Comprehensive layout state type
-export type ViewMode = 'normal' | 'compact';
 export type LayoutViewMode = 'standard' | 'wide';
 export type SidebarState = 'expanded' | 'collapsed';
 
@@ -38,10 +39,6 @@ export interface LayoutState {
     isTablet: boolean;
     isDesktop: boolean;
     currentBreakpoint: keyof typeof BREAKPOINTS;
-
-    // View modes
-    viewMode: ViewMode;
-    setViewMode: (mode: ViewMode) => void;
 
     // Layout view (width)
     layoutViewMode: LayoutViewMode;
@@ -81,13 +78,12 @@ export const LayoutProvider = ({ children }: LayoutProviderProps) => {
     const [currentBreakpoint, setCurrentBreakpoint] =
         useState<keyof typeof BREAKPOINTS>('lg');
 
-    // View modes
-    const [viewMode, setViewMode] = useState<ViewMode>('normal');
+    // Layout view (width)
     const [layoutViewMode, setLayoutViewMode] =
         useState<LayoutViewMode>('standard');
 
-    // Edit mode
-    const [isEditMode, setIsEditMode] = useState(false);
+    // Get edit mode from document store
+    const { isEditMode, setIsEditMode } = useDocumentStore();
 
     // Navigation state
     const [currentPath, setCurrentPath] = useState('');
@@ -185,8 +181,6 @@ export const LayoutProvider = ({ children }: LayoutProviderProps) => {
             isTablet,
             isDesktop,
             currentBreakpoint,
-            viewMode,
-            setViewMode,
             layoutViewMode,
             setLayoutViewMode,
             isEditMode,
@@ -204,12 +198,12 @@ export const LayoutProvider = ({ children }: LayoutProviderProps) => {
             isTablet,
             isDesktop,
             currentBreakpoint,
-            viewMode,
             layoutViewMode,
             isEditMode,
             currentPath,
             documentName,
             isDocumentPage,
+            setIsEditMode,
         ],
     );
 

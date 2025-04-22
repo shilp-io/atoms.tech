@@ -280,7 +280,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                         className="flex items-center gap-2"
                     >
                         <FileBox className="h-4 w-4" />
-                        <span>Requirements Documents</span>
+                        <span>Organization Documents</span>
                     </TabsTrigger>
                     {props.organization?.type === 'enterprise' &&
                         !['admin', 'member'].includes(userRole || '') && (
@@ -412,7 +412,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
 
                 {/* Projects Tab */}
                 <TabsContent value="projects" className="space-y-6">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center justify-between space-x-2">
                         <div className="flex w-full md:w-auto space-x-2">
                             <Input
                                 type="text"
@@ -523,44 +523,46 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
-                        {canPerformAction('createProjects') && (
-                            <Button
-                                className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium"
-                                onClick={handleCreateProject}
-                            >
-                                Create Project
-                                <Folder className="w-4 h-4" />
-                            </Button>
-                        )}
-                        {canPerformAction('goToCanvas') && (
-                            <Button
-                                variant="outline"
-                                className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
-                                onClick={handleGoToCanvas}
-                            >
-                                Canvas
-                                <PenTool className="w-4 h-4" />
-                            </Button>
-                        )}
-                        {props.organization?.type !== 'personal' &&
-                            canPerformAction('goToAiAnalysis') && (
+                        <div className="flex items-center space-x-2">
+                            {canPerformAction('createProjects') && (
+                                <Button
+                                    className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm font-medium"
+                                    onClick={handleCreateProject}
+                                >
+                                    Create Project
+                                    <Folder className="w-4 h-4" />
+                                </Button>
+                            )}
+                            {canPerformAction('goToCanvas') && (
                                 <Button
                                     variant="outline"
                                     className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
-                                    onClick={handleGoToAiAnalysis}
+                                    onClick={handleGoToCanvas}
                                 >
-                                    AI Analysis
-                                    <Brain className="w-4 h-4" />
+                                    Canvas
+                                    <PenTool className="w-4 h-4" />
                                 </Button>
                             )}
-                        {props.organization?.type === 'personal' && (
-                            <Button
-                                className="bg-gradient-to-r from-blue-500 to-purple-600 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:from-blue-600 hover:to-purple-700 transition"
-                                onClick={props.onDemoClick}
-                            >
-                                Try Demo
-                            </Button>
-                        )}
+                            {props.organization?.type !== 'personal' &&
+                                canPerformAction('goToAiAnalysis') && (
+                                    <Button
+                                        variant="outline"
+                                        className="bg-primary text-primary-foreground text-sm hover:bg-primary/90"
+                                        onClick={handleGoToAiAnalysis}
+                                    >
+                                        AI Analysis
+                                        <Brain className="w-4 h-4" />
+                                    </Button>
+                                )}
+                            {props.organization?.type === 'personal' && (
+                                <Button
+                                    className="bg-gradient-to-r from-blue-500 to-purple-600 text-primary-foreground px-4 py-2 rounded-md text-sm font-medium hover:from-blue-600 hover:to-purple-700 transition"
+                                    onClick={props.onDemoClick}
+                                >
+                                    Try Demo
+                                </Button>
+                            )}
+                        </div>
                     </div>
                     {props.projectsLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -796,7 +798,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                         <div className="flex justify-end mt-4 space-x-2">
                             <Button
                                 variant="outline"
-                                className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-muted"
                                 onClick={() => {
                                     setIsAiAnalysisDialogOpen(false);
                                     setSelectedProjectId(null);
@@ -823,7 +825,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
             {/* Canvas Dialog */}
             {isCanvasDialogOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                    <div className="bg-white dark:bg-gray-800 shadow-lg p-6 w-96 border border-gray-300 dark:border-gray-700 rounded-lg">
+                    <div className="bg-white dark:bg-black shadow-lg p-6 w-96 border border-gray-300 dark:border-muted rounded-lg">
                         <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">
                             Select a Project for Canvas
                         </h3>
@@ -859,7 +861,7 @@ export default function OrgDashboard(props: OrgDashboardProps) {
                         <div className="flex justify-end mt-4 space-x-2">
                             <Button
                                 variant="outline"
-                                className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                                className="border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-muted"
                                 onClick={() => {
                                     setIsCanvasDialogOpen(false);
                                     setSelectedCanvasProjectId(null);

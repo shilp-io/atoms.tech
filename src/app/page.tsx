@@ -6,10 +6,9 @@ import { Features } from '@/components/custom/LandingPage/features';
 import { Footer } from '@/components/custom/LandingPage/footer';
 import { GridBackground } from '@/components/custom/LandingPage/grid-background';
 import { Hero } from '@/components/custom/LandingPage/hero';
-import { HowItWorks } from '@/components/custom/LandingPage/how-it-works';
 import { Industries } from '@/components/custom/LandingPage/industries';
 import { Navbar } from '@/components/custom/LandingPage/navbar';
-import { Testimonials } from '@/components/custom/LandingPage/testimonials';
+import { ProblemSnapshot } from '@/components/custom/LandingPage/problem-snapshot';
 import { TimeSavingEdge } from '@/components/custom/LandingPage/time-saving-edge';
 import { ProfilerWrapper } from '@/components/custom/ProfilerWrapper';
 
@@ -21,18 +20,23 @@ export default async function Home() {
                     <Navbar />
                     <main className="space-y-64">
                         <Hero />
+                        <div className="section-divider"></div>
                         <div className="section-divider">
                             <Features />
                         </div>
                         <div className="section-divider">
+                            <ProblemSnapshot
+                                painPoint="Writing compliant requirements is slow, error‑prone—and bogged down by bloated legacy tools."
+                                solution="A Word‑simple, spreadsheet‑smart workspace with built‑in AI that cuts effort by 50%—checking compliance, sharpening language, and keeping everything traceable."
+                            />
+                        </div>
+                        <div className="section-divider">
                             <FeatureDemo />
                         </div>
-                        <HowItWorks />
                         <TimeSavingEdge />
                         <div className="section-divider">
                             <Industries />
                         </div>
-                        <Testimonials />
                         <div className="section-divider">
                             <CTA />
                         </div>

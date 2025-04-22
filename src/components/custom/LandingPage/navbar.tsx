@@ -5,7 +5,7 @@ import { useCookies } from 'next-client-cookies';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,6 +32,8 @@ export function Navbar() {
         billing: false,
     });
     const [, setPreferredOrgId] = useState<string | null>(null);
+    const [isAnimating, setIsAnimating] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
         const cookieOrgId = cookies.get('preferred_org_id');
@@ -51,32 +53,17 @@ export function Navbar() {
 
     const navLinks = [
         { href: '/#features', label: 'Features' },
-        {
-            href: '/#how-it-works',
-            label: 'How It Works',
-            shortLabel: 'How It Works',
-        },
         { href: '/#industries', label: 'Industries' },
         { href: '/#contact', label: 'Contact' },
     ];
 
-    const NavLink = ({
-        href,
-        label,
-        shortLabel,
-    }: {
-        href: string;
-        label: string;
-        shortLabel?: string;
-    }) => (
+    const NavLink = ({ href, label }: { href: string; label: string }) => (
         <Link
             href={href}
             className="relative group text-lg text-white hover:text-gray-300 transition-colors uppercase font-bold whitespace-nowrap"
             onClick={() => setIsMenuOpen(false)}
         >
-            <span className="hidden md:inline lg:hidden">
-                {shortLabel || label}
-            </span>
+            <span className="hidden md:inline lg:hidden">{label}</span>
             <span className="inline md:hidden lg:inline">{label}</span>
             <div className="absolute w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-300" />
         </Link>
@@ -175,7 +162,7 @@ export function Navbar() {
     }, []);
 
     return (
-        <header className="fixed top-0 left-0 right-0 min-h-16 px-4 sm:px-6 py-3 bg-black text-white border-b border-1px border-white z-50">
+        <header className="fixed top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-md text-white border-b border-1px border-white z-50">
             {/* Show full-screen loading overlay when navigating to dashboard */}
             {loadingStates.dashboard && (
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center z-50">
@@ -191,19 +178,44 @@ export function Navbar() {
                 </div>
             )}
 
-            <div className="relative">
-                <div className="container mx-auto flex justify-between items-center">
-                    <Link href="/" className="atoms-logo flex items-center">
-                        <Image
-                            src="/AtomsLogo.svg"
-                            alt="Atoms logo"
-                            width={48}
-                            height={48}
-                            className="object-contain invert mx-1 sm:mx-2 h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10"
-                            priority
-                        />
+            <div className="relative h-full">
+                <div className="container mx-auto flex justify-between items-center h-full">
+                    <Link
+                        href="/"
+                        className="atoms-logo flex items-center group justify-center"
+                        onMouseEnter={() => {
+                            setIsAnimating(true);
+                            if (videoRef.current) {
+                                videoRef.current.currentTime = 0;
+                                videoRef.current.play();
+                            }
+                        }}
+                    >
+                        <div className="flex items-center justify-center relative mx-1 sm:mx-2 h-10 w-10">
+                            <Image
+                                src="/AtomsLogo.svg"
+                                alt="Atoms logo"
+                                width={32}
+                                height={32}
+                                className={`object-contain invert absolute transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}
+                                priority
+                            />
+                            <video
+                                ref={videoRef}
+                                className={`atoms-logo-video object-contain absolute transition-opacity duration-300 ${isAnimating ? 'opacity-100' : 'opacity-0'}`}
+                                width={32}
+                                height={32}
+                                playsInline
+                                preload="auto"
+                                muted
+                                aria-label="Atoms logo animation"
+                                src="/AtomsAnimation.mp4"
+                                poster="/AtomsLogo.svg"
+                                onEnded={() => setIsAnimating(false)}
+                            />
+                        </div>
                         <span className="font-medium text-base sm:text-lg md:text-2xl tracking-tight">
-                            ATOMS.TECH
+                            ATOMS
                         </span>
                     </Link>
 
@@ -217,7 +229,7 @@ export function Navbar() {
                     {/* Mobile Menu Button */}
                     <div className="flex items-center gap-2 sm:gap-4">
                         {isLoading ? (
-                            <div className="h-9 w-24 bg-gray-700 animate-pulse rounded-md"></div>
+                            <div className="h-9 w-24 bg-muted animate-pulse"></div>
                         ) : isAuthenticated ? (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -309,7 +321,7 @@ export function Navbar() {
                             </Button>
                         )}
                         <button
-                            className="lg:hidden text-white p-1.5 sm:p-2 rounded-md hover:bg-white/10 transition-colors touch-manipulation"
+                            className="lg:hidden text-white p-1.5 sm:p-2 hover:bg-white/10 transition-colors touch-manipulation"
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
                         >
@@ -379,7 +391,7 @@ export function Navbar() {
                             ) : (
                                 <Button
                                     variant="outline"
-                                    className="btn-secondary bg-black hover:bg-white hover:text-black w-full mt-2"
+                                    className="btn-secondary bg-black hover:bg-white hover:text-black w-full px-0 py-0 pt-0 pb-0"
                                     onClick={handleSignIn}
                                     disabled={loadingStates.signIn}
                                 >

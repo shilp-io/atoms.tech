@@ -246,9 +246,19 @@ export default function RequirementPage() {
         setIsAnalysing(false);
     }, [analysisResponse]);
 
-    const handleAcceptChange = async (text: string | undefined) => {
+    // Create a ref for the textarea to focus it when needed
+    // const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const handleAcceptChange = async (
+        text: string | undefined,
+        autosave: boolean,
+    ) => {
         if (!text || !requirement) {
             return;
+        }
+        if (autosave) {
+            await updateRequirementWithHistory(text);
+            setReqText(text);
         }
         navigator.clipboard.writeText(text);
     };
@@ -270,7 +280,7 @@ export default function RequirementPage() {
 
     return (
         <LayoutView>
-            <div className="container mx-auto p-6">
+            <div className="container sm:p-6">
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     <div className="space-y-4">
                         <h2 className="text-2xl font-bold mb-4">Requirement</h2>
