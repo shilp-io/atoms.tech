@@ -436,10 +436,6 @@ export function EditableTable<
             {showFilter && (
                 <TableControls
                     filterComponent={filterComponent}
-                    sortKey={sortKey}
-                    sortOrder={sortOrder}
-                    onSort={handleSort}
-                    columns={columns}
                     showFilter={showFilter}
                     onNewRow={handleAddNewRow}
                     onEnterEditMode={() => {
