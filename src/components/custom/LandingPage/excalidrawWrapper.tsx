@@ -743,12 +743,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     <MainMenu.DefaultItems.LoadScene />
                     <MainMenu.DefaultItems.SaveToActiveFile />
                     <MainMenu.DefaultItems.SaveAsImage />
-                    <MainMenu.DefaultItems.CommandPalette />
-                    <MainMenu.DefaultItems.SearchMenu />
-                    <MainMenu.DefaultItems.Help />
                     <MainMenu.DefaultItems.ClearCanvas />
-                    <MainMenu.DefaultItems.ToggleTheme />
-                    <MainMenu.DefaultItems.ChangeCanvasBackground />
                     <MainMenu.DefaultItems.Export />
                 </MainMenu>
             </Excalidraw>
