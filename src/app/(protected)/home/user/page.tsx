@@ -2,7 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Building, Folder, Pin, Plus, Sparkles, Users } from 'lucide-react'; // Import Pin icon
+import { Building, Folder, Pin, Plus, Users } from 'lucide-react'; // Import Pin icon
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -245,9 +245,13 @@ export default function UserDashboard() {
                 .toLowerCase()
                 .includes(searchTerm.toLowerCase());
             if (activeTab === 'all')
-                return matchesSearch && org.type === OrganizationType.enterprise;
+                return (
+                    matchesSearch && org.type === OrganizationType.enterprise
+                );
             if (activeTab === 'enterprise')
-                return matchesSearch && org.type === OrganizationType.enterprise;
+                return (
+                    matchesSearch && org.type === OrganizationType.enterprise
+                );
             if (activeTab === 'team')
                 return (
                     matchesSearch &&
