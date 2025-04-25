@@ -379,8 +379,17 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     }));
                 }
 
+                // Collect new element IDs for selection
+                const newElementIds = excalidrawElements.map(el => el.id);
+                const selectedElementIds = Object.fromEntries(newElementIds.map(id => [id, true as const]));
+
                 excalidrawApiRef.current.updateScene({
                     elements: [...currentElements, ...excalidrawElements],
+                    appState: {
+                        // preserve theme and other appState, but set selection
+                        ...(excalidrawApiRef.current.getAppState?.() || {}),
+                        selectedElementIds,
+                    },
                 });
 
                 //scroll to new content
