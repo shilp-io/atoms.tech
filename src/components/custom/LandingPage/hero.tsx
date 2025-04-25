@@ -38,7 +38,9 @@ export function Hero() {
             return;
         }
         // Try to use the user's personal org, otherwise fallback to default demo org
-        const orgId = userProfile?.personal_organization_id || 'ef53ba82-f2fc-46f5-8b51-9c54db9690f3';
+        const orgId =
+            userProfile?.personal_organization_id ||
+            'ef53ba82-f2fc-46f5-8b51-9c54db9690f3';
         router.push(`/org/${orgId}/demo`);
     };
 

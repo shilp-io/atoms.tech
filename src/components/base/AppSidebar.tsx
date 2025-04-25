@@ -175,8 +175,7 @@ function AppSidebar() {
                                 src="/atom.png"
                                 alt="Atoms logo"
                                 width={32}
-                                height={32
-                                }
+                                height={32}
                                 className="object-contain dark:invert"
                             />
                             <span className="font-semibold text-base">
