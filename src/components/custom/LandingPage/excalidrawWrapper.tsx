@@ -378,9 +378,16 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                 let offsetX = 0,
                     offsetY = 0;
                 if (existingBox && newBox) {
+                    //place to the right
                     const margin = 80;
                     offsetX = existingBox.maxX - newBox.minX + margin;
                     offsetY = 0;
+                } else if (!existingBox && newBox) {
+                    //center the new diagram at (0,0)
+                    const centerX = newBox.minX + newBox.width / 2;
+                    const centerY = newBox.minY + newBox.height / 2;
+                    offsetX = -centerX;
+                    offsetY = -centerY;
                 }
 
                 //Offset new elements
