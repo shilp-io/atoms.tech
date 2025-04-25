@@ -424,6 +424,7 @@ export default function Draw() {
                             diagramId={selectedDiagramId}
                             onDiagramSaved={handleDiagramSaved}
                             onDiagramNameChange={handleDiagramNameChange}
+                            onDiagramIdChange={setSelectedDiagramId}
                             key={instanceKey}
                         />
                     </div>

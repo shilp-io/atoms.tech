@@ -69,6 +69,7 @@ interface ExcalidrawWrapperProps {
     diagramId?: string | null;
     onDiagramSaved?: (id: string) => void;
     onDiagramNameChange?: (name: string) => void;
+    onDiagramIdChange?: (id: string | null) => void;
 }
 
 const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
@@ -76,6 +77,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     diagramId: externalDiagramId,
     onDiagramSaved,
     onDiagramNameChange,
+    onDiagramIdChange,
 }) => {
     const [diagramId, setDiagramId] = useState<string | null>(
         externalDiagramId || null,
@@ -764,6 +766,13 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             onDiagramNameChange(diagramName);
         }
     }, [diagramName, onDiagramNameChange]);
+
+    // Whenever diagramId changes, notify parent
+    useEffect(() => {
+        if (onDiagramIdChange) {
+            onDiagramIdChange(diagramId);
+        }
+    }, [diagramId, onDiagramIdChange]);
 
     if (isLoading) {
         return <div>Loading...</div>;
