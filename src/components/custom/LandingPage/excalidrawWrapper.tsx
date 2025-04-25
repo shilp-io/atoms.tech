@@ -338,16 +338,58 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             const { elements: skeletonElements } =
                 await parseMermaidToExcalidraw(mermaidSyntax);
 
-            const excalidrawElements =
+            let excalidrawElements =
                 convertToExcalidrawElements(skeletonElements);
 
             if (excalidrawApiRef.current) {
                 const currentElements =
                     excalidrawApiRef.current.getSceneElements();
-                // Add new elements to existing ones
+
+                // Calculate bounding boxes
+                const getBoundingBox = (elements: readonly ExcalidrawElement[]) => {
+                    if (!elements.length) return null;
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    for (const el of elements) {
+                        if (el.isDeleted) continue;
+                        minX = Math.min(minX, el.x);
+                        minY = Math.min(minY, el.y);
+                        maxX = Math.max(maxX, el.x + (el.width || 0));
+                        maxY = Math.max(maxY, el.y + (el.height || 0));
+                    }
+                    return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+                };
+
+                const existingBox = getBoundingBox(currentElements);
+                const newBox = getBoundingBox(excalidrawElements);
+
+                // Find non-overlapping position
+                let offsetX = 0, offsetY = 0;
+                if (existingBox && newBox) {
+                    const margin = 80;
+                    offsetX = existingBox.maxX - newBox.minX + margin;
+                    offsetY = 0;
+                }
+
+                //Offset new elements
+                if (offsetX !== 0 || offsetY !== 0) {
+                    excalidrawElements = excalidrawElements.map(el => ({
+                        ...el,
+                        x: el.x + offsetX,
+                        y: el.y + offsetY,
+                    }));
+                }
+
                 excalidrawApiRef.current.updateScene({
                     elements: [...currentElements, ...excalidrawElements],
                 });
+
+                //scroll to new content
+                setTimeout(() => {
+                    excalidrawApiRef.current?.scrollToContent(
+                        excalidrawElements,
+                        { fitToContent: true, animate: true, duration: 600 }
+                    );
+                }, 50);
             }
         } catch (error) {
             console.error('Error converting mermaid to excalidraw:', error);
