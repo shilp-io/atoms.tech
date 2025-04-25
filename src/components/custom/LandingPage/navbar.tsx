@@ -5,7 +5,7 @@ import { useCookies } from 'next-client-cookies';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,8 +32,6 @@ export function Navbar() {
         billing: false,
     });
     const [, setPreferredOrgId] = useState<string | null>(null);
-    const [isAnimating, setIsAnimating] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
         const cookieOrgId = cookies.get('preferred_org_id');
