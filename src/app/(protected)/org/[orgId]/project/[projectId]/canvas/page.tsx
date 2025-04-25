@@ -2,7 +2,7 @@
 
 import { ChevronDown, CircleAlert, Grid, PenTool, Pencil } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,6 @@ type DiagramType = 'flowchart' | 'sequence' | 'class';
 export default function Draw() {
     // const organizationId = '9badbbf0-441c-49f6-91e7-3d9afa1c13e6';
     const organizationId = usePathname().split('/')[2];
-    const searchParams = useSearchParams();
     const [prompt, setPrompt] = useState('');
     const [diagramType, setDiagramType] = useState<DiagramType>('flowchart');
     const [excalidrawApi, setExcalidrawApi] = useState<{

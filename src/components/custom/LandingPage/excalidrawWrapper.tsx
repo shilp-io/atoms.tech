@@ -346,9 +346,14 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     excalidrawApiRef.current.getSceneElements();
 
                 // Calculate bounding boxes
-                const getBoundingBox = (elements: readonly ExcalidrawElement[]) => {
+                const getBoundingBox = (
+                    elements: readonly ExcalidrawElement[],
+                ) => {
                     if (!elements.length) return null;
-                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    let minX = Infinity,
+                        minY = Infinity,
+                        maxX = -Infinity,
+                        maxY = -Infinity;
                     for (const el of elements) {
                         if (el.isDeleted) continue;
                         minX = Math.min(minX, el.x);
@@ -356,14 +361,22 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                         maxX = Math.max(maxX, el.x + (el.width || 0));
                         maxY = Math.max(maxY, el.y + (el.height || 0));
                     }
-                    return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+                    return {
+                        minX,
+                        minY,
+                        maxX,
+                        maxY,
+                        width: maxX - minX,
+                        height: maxY - minY,
+                    };
                 };
 
                 const existingBox = getBoundingBox(currentElements);
                 const newBox = getBoundingBox(excalidrawElements);
 
                 // Find non-overlapping position
-                let offsetX = 0, offsetY = 0;
+                let offsetX = 0,
+                    offsetY = 0;
                 if (existingBox && newBox) {
                     const margin = 80;
                     offsetX = existingBox.maxX - newBox.minX + margin;
@@ -372,7 +385,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
 
                 //Offset new elements
                 if (offsetX !== 0 || offsetY !== 0) {
-                    excalidrawElements = excalidrawElements.map(el => ({
+                    excalidrawElements = excalidrawElements.map((el) => ({
                         ...el,
                         x: el.x + offsetX,
                         y: el.y + offsetY,
@@ -380,8 +393,10 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                 }
 
                 // Collect new element IDs for selection
-                const newElementIds = excalidrawElements.map(el => el.id);
-                const selectedElementIds = Object.fromEntries(newElementIds.map(id => [id, true as const]));
+                const newElementIds = excalidrawElements.map((el) => el.id);
+                const selectedElementIds = Object.fromEntries(
+                    newElementIds.map((id) => [id, true as const]),
+                );
 
                 excalidrawApiRef.current.updateScene({
                     elements: [...currentElements, ...excalidrawElements],
@@ -396,7 +411,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                 setTimeout(() => {
                     excalidrawApiRef.current?.scrollToContent(
                         excalidrawElements,
-                        { fitToContent: true, animate: true, duration: 600 }
+                        { fitToContent: true, animate: true, duration: 600 },
                     );
                 }, 50);
             }
