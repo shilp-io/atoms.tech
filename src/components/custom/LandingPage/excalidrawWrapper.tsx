@@ -837,19 +837,19 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             debouncedSave(elements, appState, files);
 
             // Check if canvas position or zoom has changed
-            const hasCanvasMoved = 
+            const hasCanvasMoved =
                 prevScrollXRef.current !== null &&
                 prevScrollYRef.current !== null &&
                 prevZoomRef.current !== null &&
                 (prevScrollXRef.current !== appState.scrollX ||
-                prevScrollYRef.current !== appState.scrollY ||
-                prevZoomRef.current !== appState.zoom.value);
-            
+                    prevScrollYRef.current !== appState.scrollY ||
+                    prevZoomRef.current !== appState.zoom.value);
+
             // Update previous values
             prevScrollXRef.current = appState.scrollX;
             prevScrollYRef.current = appState.scrollY;
             prevZoomRef.current = appState.zoom.value;
-            
+
             // Clear tooltip and bounding box if canvas has moved
             if (hasCanvasMoved) {
                 setLinkTooltip(null);
@@ -867,22 +867,29 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     prevSelectedElementRef.current = selectedId;
 
                     const selEl = elements.find((el) => el.id === selectedId);
-                    const reqId = (selEl as ElementWithRequirementProps)?.requirementId;
-                    const docId = (selEl as ElementWithRequirementProps)?.documentId;
+                    const reqId = (selEl as ElementWithRequirementProps)
+                        ?.requirementId;
+                    const docId = (selEl as ElementWithRequirementProps)
+                        ?.documentId;
 
                     if (selEl && reqId) {
                         // Find all elements with the same requirementId
                         const allSameRequirementElements = elements.filter(
-                            (el) => (el as ElementWithRequirementProps)?.requirementId === reqId
+                            (el) =>
+                                (el as ElementWithRequirementProps)
+                                    ?.requirementId === reqId,
                         );
-                        
+
                         // Get connected elements
-                        const relatedElements = getSpatialCluster(allSameRequirementElements, selEl);
-                        
-                        
-                        const boundingBox = calculateBoundingBox(relatedElements);
-                        
-                        // Update the bounding box 
+                        const relatedElements = getSpatialCluster(
+                            allSameRequirementElements,
+                            selEl,
+                        );
+
+                        const boundingBox =
+                            calculateBoundingBox(relatedElements);
+
+                        // Update the bounding box
                         setBoundingBoxOverlay({
                             x: boundingBox.minX,
                             y: boundingBox.minY,
@@ -890,16 +897,20 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                             height: boundingBox.height,
                             requirementId: reqId,
                         });
-                        
+
                         const zoom = appState.zoom.value;
                         const { scrollX, scrollY } = appState;
                         const tooltipWidth = 120; // Approximate width of tooltip in pixels
-                        const boxRightX = boundingBox.minX + boundingBox.width - (tooltipWidth / zoom) - 5; // Account for tooltip width
+                        const boxRightX =
+                            boundingBox.minX +
+                            boundingBox.width -
+                            tooltipWidth / zoom -
+                            5; // Account for tooltip width
                         const boxTopY = boundingBox.minY - 5; // Place it slightly above the top edge
-                        
+
                         const screenX = (boxRightX + scrollX) * zoom;
                         const screenY = (boxTopY + scrollY) * zoom;
-                        
+
                         setLinkTooltip({
                             x: screenX,
                             y: screenY,
@@ -929,48 +940,48 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         if (!elements.length) {
             return { minX: 0, minY: 0, maxX: 0, maxY: 0, width: 0, height: 0 };
         }
-        
+
         let minX = Infinity;
         let minY = Infinity;
         let maxX = -Infinity;
         let maxY = -Infinity;
-        
+
         elements.forEach((el) => {
             if (el.isDeleted) return;
-            
+
             // Get coordinates
             const x = el.x;
             const y = el.y;
             const width = el.width || 0;
             const height = el.height || 0;
-            
+
             // Update bounds
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);
             maxX = Math.max(maxX, x + width);
             maxY = Math.max(maxY, y + height);
         });
-        
+
         // Calculate dimensions
         const width = maxX - minX;
         const height = maxY - minY;
-        
+
         return { minX, minY, maxX, maxY, width, height };
     };
-    
+
     // Function to cluster elements based on spatial proximity
     const getSpatialCluster = (
         elements: readonly ExcalidrawElement[],
         selectedElement: ExcalidrawElement,
-        proximityThreshold = 100 // Adjust this value to control clustering sensitivity
+        proximityThreshold = 100, // Adjust this value to control clustering sensitivity
     ): ExcalidrawElement[] => {
         if (!elements.length) return [];
-        
+
         // Initialize with the selected element
         const cluster: ExcalidrawElement[] = [selectedElement];
         const processedIds = new Set<string>([selectedElement.id]);
-        let elementsToProcess = [selectedElement];
-        
+        const elementsToProcess = [selectedElement];
+
         // Keep adding elements to the cluster as long as we find new connected elements
         while (elementsToProcess.length > 0) {
             const currentElement = elementsToProcess.shift()!;
@@ -978,43 +989,51 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                 x1: currentElement.x,
                 y1: currentElement.y,
                 x2: currentElement.x + (currentElement.width || 0),
-                y2: currentElement.y + (currentElement.height || 0)
+                y2: currentElement.y + (currentElement.height || 0),
             };
-            
+
             // Find all nearby elements not already in the cluster
-            const nearbyElements = elements.filter(el => {
+            const nearbyElements = elements.filter((el) => {
                 if (processedIds.has(el.id) || el.isDeleted) return false;
-                
+
                 const elBounds = {
                     x1: el.x,
                     y1: el.y,
                     x2: el.x + (el.width || 0),
-                    y2: el.y + (el.height || 0)
+                    y2: el.y + (el.height || 0),
                 };
-                
+
                 // Calculate the distance between bounding boxes
                 const xDistance = Math.max(
                     0,
-                    Math.max(currentBounds.x1 - elBounds.x2, elBounds.x1 - currentBounds.x2)
+                    Math.max(
+                        currentBounds.x1 - elBounds.x2,
+                        elBounds.x1 - currentBounds.x2,
+                    ),
                 );
                 const yDistance = Math.max(
                     0,
-                    Math.max(currentBounds.y1 - elBounds.y2, elBounds.y1 - currentBounds.y2)
+                    Math.max(
+                        currentBounds.y1 - elBounds.y2,
+                        elBounds.y1 - currentBounds.y2,
+                    ),
                 );
-                
+
                 // Use Euclidean distance
-                const distance = Math.sqrt(xDistance * xDistance + yDistance * yDistance);
+                const distance = Math.sqrt(
+                    xDistance * xDistance + yDistance * yDistance,
+                );
                 return distance <= proximityThreshold;
             });
-            
+
             // Add all nearby elements to the cluster and queue them for processing
-            nearbyElements.forEach(el => {
+            nearbyElements.forEach((el) => {
                 cluster.push(el);
                 processedIds.add(el.id);
                 elementsToProcess.push(el);
             });
         }
-        
+
         return cluster;
     };
 
@@ -1142,8 +1161,14 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     }}
                     onClick={() => {
                         if (typeof window !== 'undefined') {
-                            sessionStorage.setItem('jumpToRequirementId', linkTooltip.requirementId);
-                            console.log('Set requirementId in sessionStorage:', linkTooltip.requirementId);
+                            sessionStorage.setItem(
+                                'jumpToRequirementId',
+                                linkTooltip.requirementId,
+                            );
+                            console.log(
+                                'Set requirementId in sessionStorage:',
+                                linkTooltip.requirementId,
+                            );
                         }
                         router.push(
                             `/org/${organizationId}/project/${projectId}/documents/${linkTooltip.documentId}`,
@@ -1159,10 +1184,22 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                 <div
                     className="absolute z-[1000] pointer-events-none border-2 border-primary rounded-md"
                     style={{
-                        left: (boundingBoxOverlay.x + excalidrawApiRef.current.getAppState().scrollX) * excalidrawApiRef.current.getAppState().zoom.value,
-                        top: (boundingBoxOverlay.y + excalidrawApiRef.current.getAppState().scrollY) * excalidrawApiRef.current.getAppState().zoom.value,
-                        width: boundingBoxOverlay.width * excalidrawApiRef.current.getAppState().zoom.value,
-                        height: boundingBoxOverlay.height * excalidrawApiRef.current.getAppState().zoom.value,
+                        left:
+                            (boundingBoxOverlay.x +
+                                excalidrawApiRef.current.getAppState()
+                                    .scrollX) *
+                            excalidrawApiRef.current.getAppState().zoom.value,
+                        top:
+                            (boundingBoxOverlay.y +
+                                excalidrawApiRef.current.getAppState()
+                                    .scrollY) *
+                            excalidrawApiRef.current.getAppState().zoom.value,
+                        width:
+                            boundingBoxOverlay.width *
+                            excalidrawApiRef.current.getAppState().zoom.value,
+                        height:
+                            boundingBoxOverlay.height *
+                            excalidrawApiRef.current.getAppState().zoom.value,
                         opacity: 0.5,
                     }}
                 />

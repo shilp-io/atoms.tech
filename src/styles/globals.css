@@ -241,11 +241,12 @@
 }
 
 @keyframes highlight-pulse {
-    0%, 100% { 
-        background-color: transparent; 
+    0%,
+    100% {
+        background-color: transparent;
     }
-    50% { 
-        background-color: rgba(162, 59, 246, 0.3); 
+    50% {
+        background-color: rgba(162, 59, 246, 0.3);
     }
 }
 
