@@ -73,24 +73,32 @@ export default function Draw() {
     const [newDiagramName, setNewDiagramName] = useState<string>('');
 
     // Add state for pending requirementId
-    const [pendingRequirementId, setPendingRequirementId] = useState<string | null>(null);
+    const [pendingRequirementId, setPendingRequirementId] = useState<
+        string | null
+    >(null);
 
     // Add state for pending documentId
-    const [pendingDocumentId, setPendingDocumentId] = useState<string | null>(null);
+    const [pendingDocumentId, setPendingDocumentId] = useState<string | null>(
+        null,
+    );
 
     // On mount, check sessionStorage for pending diagram prompt and requirementId
     useEffect(() => {
         if (typeof window === 'undefined') return;
         const pendingPrompt = sessionStorage.getItem('pendingDiagramPrompt');
-        const pendingReqId = sessionStorage.getItem('pendingDiagramRequirementId');
+        const pendingReqId = sessionStorage.getItem(
+            'pendingDiagramRequirementId',
+        );
         const pendingDocId = sessionStorage.getItem('pendingDiagramDocumentId');
-        
-        console.log('[Canvas] Reading sessionStorage:', { 
-            pendingPrompt: pendingPrompt ? pendingPrompt.substring(0, 20) + '...' : null,
+
+        console.log('[Canvas] Reading sessionStorage:', {
+            pendingPrompt: pendingPrompt
+                ? pendingPrompt.substring(0, 20) + '...'
+                : null,
             pendingReqId,
-            pendingDocId
+            pendingDocId,
         });
-        
+
         if (pendingPrompt) {
             setPrompt(pendingPrompt);
             sessionStorage.removeItem('pendingDiagramPrompt');
