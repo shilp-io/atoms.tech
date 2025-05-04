@@ -72,13 +72,28 @@ export default function Draw() {
         useState<boolean>(false);
     const [newDiagramName, setNewDiagramName] = useState<string>('');
 
-    // On mount, check sessionStorage for pending diagram prompt
+    // Add state for pending requirementId
+    const [pendingRequirementId, setPendingRequirementId] = useState<string | null>(null);
+
+    // On mount, check sessionStorage for pending diagram prompt and requirementId
     useEffect(() => {
         if (typeof window === 'undefined') return;
         const pendingPrompt = sessionStorage.getItem('pendingDiagramPrompt');
+        const pendingReqId = sessionStorage.getItem('pendingDiagramRequirementId');
+        
+        console.log('[Canvas] Reading sessionStorage:', { 
+            pendingPrompt: pendingPrompt ? pendingPrompt.substring(0, 20) + '...' : null,
+            pendingReqId 
+        });
+        
         if (pendingPrompt) {
             setPrompt(pendingPrompt);
             sessionStorage.removeItem('pendingDiagramPrompt');
+        }
+        // Read requirementId
+        if (pendingReqId) {
+            setPendingRequirementId(pendingReqId);
+            sessionStorage.removeItem('pendingDiagramRequirementId');
         }
     }, []);
 
@@ -425,7 +440,8 @@ export default function Draw() {
                             onDiagramSaved={handleDiagramSaved}
                             onDiagramNameChange={handleDiagramNameChange}
                             onDiagramIdChange={setSelectedDiagramId}
-                            key={instanceKey}
+                            key={`pendingReq-${pendingRequirementId}-${instanceKey}`}
+                            pendingRequirementId={pendingRequirementId}
                         />
                     </div>
                     <div className="flex-shrink-0 flex flex-col gap-2.5 p-5 bg-gray-100 dark:bg-sidebar rounded-lg h-fit">

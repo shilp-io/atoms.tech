@@ -70,6 +70,16 @@ interface ExcalidrawWrapperProps {
     onDiagramSaved?: (id: string) => void;
     onDiagramNameChange?: (name: string) => void;
     onDiagramIdChange?: (id: string | null) => void;
+    pendingRequirementId?: string | null;
+}
+
+// Utility to add requirementId to elements
+function addRequirementIdToElements<T extends ExcalidrawElement>(
+    elements: readonly T[] | T[],
+    requirementId: string | null,
+): T[] {
+    if (!requirementId) return elements as T[];
+    return elements.map((el) => ({ ...el, requirementId })) as T[];
 }
 
 const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
@@ -78,6 +88,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     onDiagramSaved,
     onDiagramNameChange,
     onDiagramIdChange,
+    pendingRequirementId,
 }) => {
     const [diagramId, setDiagramId] = useState<string | null>(
         externalDiagramId || null,
@@ -331,6 +342,9 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             });
         }
 
+        console.log('created new diagram');
+
+
         setIsLoading(false);
     }, [projectId, isDarkMode]);
 
@@ -342,6 +356,21 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
 
             let excalidrawElements =
                 convertToExcalidrawElements(skeletonElements);
+
+            // Attach requirementId if present (for requirement→diagram flow)
+            console.log('Before check');
+            if (pendingRequirementId) {
+                console.log('pendingrequirementId was present', pendingRequirementId);
+                excalidrawElements = addRequirementIdToElements(
+                    excalidrawElements as unknown as ExcalidrawElement[],
+                    pendingRequirementId,
+                ) as any;
+                console.log('[Excalidraw] requirementId attached to mermaid elements', {
+                    pendingRequirementId,
+                    elementCount: excalidrawElements.length,
+                    elements: excalidrawElements,
+                });
+            }
 
             if (excalidrawApiRef.current) {
                 const currentElements =
@@ -433,9 +462,10 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     // Expose the addMermaidDiagram function to parent
     useEffect(() => {
         if (onMounted) {
+            console.log('onMounted called, pendingRequirementId:', pendingRequirementId);
             onMounted({ addMermaidDiagram });
         }
-    }, [onMounted]);
+    }, [onMounted, pendingRequirementId]);
 
     // Watch for external diagramId changes
     useEffect(() => {
@@ -532,6 +562,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         externalDiagramId,
         loadDiagram,
         createNewDiagram,
+        pendingRequirementId,
     ]);
 
     const hasChanges = useCallback(

@@ -77,11 +77,11 @@ export function DataTableRow<
     };
 
     const handleNavigateToDiagram = () => {
-        // Use the property name (column header/accessor) for the description.
-        // Update 'Description' if your property is named differently.
         const description = String(item['Description'] || '');
         if (typeof window !== 'undefined') {
             sessionStorage.setItem('pendingDiagramPrompt', description);
+            sessionStorage.setItem('pendingDiagramRequirementId', item.id);
+            console.log('requirementId', item.id);
         }
         router.push(`/org/${orgId}/project/${projectId}/canvas`);
     };
