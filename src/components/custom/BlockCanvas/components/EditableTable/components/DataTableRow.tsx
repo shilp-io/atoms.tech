@@ -79,11 +79,14 @@ export function DataTableRow<
     const handleNavigateToDiagram = () => {
         const description = String(item['Description'] || '');
         if (typeof window !== 'undefined') {
+            const documentId = (currentDocument?.id || params.documentId) as string;
             sessionStorage.setItem('pendingDiagramPrompt', description);
             sessionStorage.setItem('pendingDiagramRequirementId', item.id);
-            console.log('requirementId', item.id);
+            sessionStorage.setItem('pendingDiagramDocumentId', documentId);
+            console.log('requirementId', item.id, 'documentId', documentId);
         }
-        router.push(`/org/${orgId}/project/${projectId}/canvas`);
+        const ts = Date.now();
+        router.push(`/org/${orgId}/project/${projectId}/canvas?ts=${ts}`);
     };
 
     return (

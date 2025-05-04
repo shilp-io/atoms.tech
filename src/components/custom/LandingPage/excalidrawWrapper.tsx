@@ -21,7 +21,7 @@ import {
 } from '@excalidraw/excalidraw';
 import { parseMermaidToExcalidraw } from '@excalidraw/mermaid-to-excalidraw';
 import { useTheme } from 'next-themes';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Button } from '@/components/ui/button';
@@ -71,15 +71,21 @@ interface ExcalidrawWrapperProps {
     onDiagramNameChange?: (name: string) => void;
     onDiagramIdChange?: (id: string | null) => void;
     pendingRequirementId?: string | null;
+    pendingDocumentId?: string | null;
 }
 
-// Utility to add requirementId to elements
+// Utility to add requirementId and documentId to elements
 function addRequirementIdToElements<T extends ExcalidrawElement>(
     elements: readonly T[] | T[],
     requirementId: string | null,
+    documentId: string | null = null,
 ): T[] {
     if (!requirementId) return elements as T[];
-    return elements.map((el) => ({ ...el, requirementId })) as T[];
+    return elements.map((el) => ({ 
+        ...el, 
+        requirementId,
+        documentId: documentId || undefined 
+    })) as T[];
 }
 
 const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
@@ -89,6 +95,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     onDiagramNameChange,
     onDiagramIdChange,
     pendingRequirementId,
+    pendingDocumentId,
 }) => {
     const [diagramId, setDiagramId] = useState<string | null>(
         externalDiagramId || null,
@@ -125,6 +132,12 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
     const { user } = useUser();
     const organizationId = usePathname().split('/')[2];
     const projectId = usePathname().split('/')[4];
+    const router = useRouter();
+
+    // Tooltip state for selected requirement-linked element
+    const [linkTooltip, setLinkTooltip] = useState<{x:number; y:number; requirementId:string; documentId?:string} | null>(null);
+    // Keep track of previously selected element to prevent update loops
+    const prevSelectedElementRef = useRef<string | null>(null);
 
     // Function to generate a thumbnail of the current diagram
     const generateThumbnail = useCallback(
@@ -364,9 +377,11 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                 excalidrawElements = addRequirementIdToElements(
                     excalidrawElements as unknown as ExcalidrawElement[],
                     pendingRequirementId,
+                    pendingDocumentId,
                 ) as any;
                 console.log('[Excalidraw] requirementId attached to mermaid elements', {
                     pendingRequirementId,
+                    documentId: pendingDocumentId,
                     elementCount: excalidrawElements.length,
                     elements: excalidrawElements,
                 });
@@ -563,6 +578,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         loadDiagram,
         createNewDiagram,
         pendingRequirementId,
+        pendingDocumentId,
     ]);
 
     const hasChanges = useCallback(
@@ -771,6 +787,7 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
         [saveDiagram],
     );
 
+    // Modify handleChange to update tooltip and position it over the element
     const handleChange = useCallback(
         (
             elements: readonly ExcalidrawElement[],
@@ -778,6 +795,47 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             files: BinaryFiles,
         ) => {
             debouncedSave(elements, appState, files);
+
+            // Determine if a single element with requirementId is selected
+            const selectedIds = Object.keys(appState.selectedElementIds || {});
+            if (selectedIds.length === 1 && excalidrawApiRef.current) {
+                const selectedId = selectedIds[0];
+                // Only process if this is a new selection
+                if (prevSelectedElementRef.current !== selectedId) {
+                    prevSelectedElementRef.current = selectedId;
+                    
+                    const selEl = elements.find((el) => el.id === selectedId);
+                    const reqId = (selEl as any)?.requirementId as string | undefined;
+                    const docId = (selEl as any)?.documentId as string | undefined;
+                    
+                    if (selEl && reqId) {
+                        // Position tooltip above the element
+                        const zoom = appState.zoom.value;
+                        const { scrollX, scrollY } = appState;
+                        
+                        // Calculate element's center position in screen coordinates
+                        const elementCenterX = selEl.x + (selEl.width || 0) / 2;
+                        const elementCenterY = selEl.y - 10; // Position above the element
+                        
+                        // Convert to screen coordinates
+                        const screenX = (elementCenterX + scrollX) * zoom;
+                        const screenY = (elementCenterY + scrollY) * zoom;
+                        
+                        setLinkTooltip({ 
+                            x: screenX,
+                            y: screenY, 
+                            requirementId: reqId,
+                            documentId: docId
+                        });
+                    } else {
+                        setLinkTooltip(null);
+                    }
+                }
+            } else if (selectedIds.length === 0 && prevSelectedElementRef.current !== null) {
+                // Clear selection tracking and tooltip when nothing is selected
+                prevSelectedElementRef.current = null;
+                setLinkTooltip(null);
+            }
         },
         [debouncedSave],
     );
@@ -894,6 +952,24 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Tooltip for requirement link */}
+            {linkTooltip && (
+                <div
+                    className="absolute z-[1001] px-2 py-1 bg-primary text-white text-xs rounded shadow cursor-pointer transform -translate-x-1/2"
+                    style={{ 
+                        left: linkTooltip.x, 
+                        top: linkTooltip.y 
+                    }}
+                    onClick={() => {
+                        
+                            router.push(`/org/${organizationId}/project/${projectId}/documents/${linkTooltip.documentId}`);
+                        
+                    }}
+                >
+                    Jump to Requirement
+                </div>
+            )}
         </div>
     );
 };
