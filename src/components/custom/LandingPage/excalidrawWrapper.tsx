@@ -993,6 +993,10 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
                         top: linkTooltip.y,
                     }}
                     onClick={() => {
+                        if (typeof window !== 'undefined') {
+                            sessionStorage.setItem('jumpToRequirementId', linkTooltip.requirementId);
+                            console.log('Set requirementId in sessionStorage:', linkTooltip.requirementId);
+                        }
                         router.push(
                             `/org/${organizationId}/project/${projectId}/documents/${linkTooltip.documentId}`,
                         );
